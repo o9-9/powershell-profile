@@ -280,11 +280,11 @@ function hb {
         return
     }
     
-    $uri = "https://www.toptal.com/developers/hastebin/documents"
+    $uri = "http://bin.christitus.com/documents"
     try {
         $response = Invoke-RestMethod -Uri $uri -Method Post -Body $Content -ErrorAction Stop
         $hasteKey = $response.key
-        $url = "https://www.toptal.com/developers/hastebin/$hasteKey"
+        $url = "http://bin.christitus.com/$hasteKey"
 	Set-Clipboard $url
         Write-Output $url
     } catch {
