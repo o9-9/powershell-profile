@@ -195,13 +195,13 @@ function ff($name) {
 function Get-PubIP { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 # Open WinUtil full-release
-function winutil {
-	irm https://github.com/o9-9/winutil/raw/main/winutil.ps1 | iex
+function o9 {
+	irm https://github.com/o9-9/o9/raw/main/o9.ps1 | iex
 }
 
 # Open WinUtil pre-release
-function winutildev {
-	irm https://github.com/o9-9/winutil/raw/main/windev.ps1 | iex
+function o9dev {
+	irm https://github.com/o9-9/o9/raw/main/o9dev.ps1 | iex
 }
 
 # System Utilities
@@ -550,9 +550,9 @@ $($PSStyle.Foreground.Green)ff$($PSStyle.Reset) <name> - Finds files recursively
 
 $($PSStyle.Foreground.Green)Get-PubIP$($PSStyle.Reset) - Retrieves the public IP address of the machine.
 
-$($PSStyle.Foreground.Green)winutil$($PSStyle.Reset) - Runs the latest WinUtil full-release script from o9.
+$($PSStyle.Foreground.Green)o9$($PSStyle.Reset) - Runs the latest WinUtil full-release script from o9.
 
-$($PSStyle.Foreground.Green)winutildev$($PSStyle.Reset) - Runs the latest WinUtil pre-release script from o9.
+$($PSStyle.Foreground.Green)o9dev$($PSStyle.Reset) - Runs the latest WinUtil pre-release script from o9.
 
 $($PSStyle.Foreground.Green)uptime$($PSStyle.Reset) - Displays the system uptime.
 
