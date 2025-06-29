@@ -196,12 +196,12 @@ function Get-PubIP { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 # Open WinUtil full-release
 function o9 {
-	irm https://github.com/o9-9/o9/raw/main/o9.ps1 | iex
+	irm https://raw.githubusercontent.com/o9-9/o9/main/o9.ps1 | iex
 }
 
 # Open WinUtil pre-release
 function o9dev {
-	irm https://github.com/o9-9/o9/raw/main/o9dev.ps1 | iex
+	irm https://raw.githubusercontent.com/o9-9/o9/main/o9dev.ps1.ps1 | iex
 }
 
 # System Utilities
