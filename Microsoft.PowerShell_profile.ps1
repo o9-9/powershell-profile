@@ -1,6 +1,3 @@
-### PowerShell Profile Refactor
-### Version 1.03 - Refactored
-
 $debug = $false
 
 # Define the path to the file that stores the last execution time
@@ -15,30 +12,14 @@ if ($debug) {
     Write-Host "#          ONLY FOR DEVELOPMENT       #" -ForegroundColor Red
     Write-Host "#                                     #" -ForegroundColor Red
     Write-Host "#       IF YOU ARE NOT DEVELOPING     #" -ForegroundColor Red
-    Write-Host "#       JUST RUN \`Update-Profile\`     #" -ForegroundColor Red
+    Write-Host "#       JUST RUN \`Update-Profile\`   #" -ForegroundColor Red
     Write-Host "#        to discard all changes       #" -ForegroundColor Red
     Write-Host "#   and update to the latest profile  #" -ForegroundColor Red
     Write-Host "#               version               #" -ForegroundColor Red
     Write-Host "#######################################" -ForegroundColor Red
 }
 
-
-#################################################################################################################################
-############                                                                                                         ############
-############                                          !!!   WARNING:   !!!                                           ############
-############                                                                                                         ############
-############                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.                  ############
-############                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO                      ############
-############                       https://github.com/o9-9/powershell-profile.git.                                   ############
-############                                                                                                         ############
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
-############                                                                                                         ############
-############                      IF YOU WANT TO MAKE CHANGES, USE THE Edit-Profile FUNCTION                         ############
-############                              AND SAVE YOUR CHANGES IN THE FILE CREATED.                                 ############
-############                                                                                                         ############
-#################################################################################################################################
-
-#opt-out of telemetry before doing anything, only if PowerShell is run as admin
+# opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
@@ -88,12 +69,12 @@ if (-not $debug -and `
     $currentTime | Out-File -FilePath $timeFilePath
 
 } elseif ($debug) {
-    Write-Warning "Skipping profile update check in debug mode"
+    Write-Warning "Skip Profile Update Check in Debug Mode"
 }
 
 function Update-PowerShell {
     try {
-        Write-Host "Checking for PowerShell updates..." -ForegroundColor Cyan
+        Write-Host "Check PowerShell Updates..." -ForegroundColor Cyan
         $updateNeeded = $false
         $currentVersion = $PSVersionTable.PSVersion.ToString()
         $gitHubApiUrl = "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
@@ -106,9 +87,9 @@ function Update-PowerShell {
         if ($updateNeeded) {
             Write-Host "Updating PowerShell..." -ForegroundColor Yellow
             Start-Process powershell.exe -ArgumentList "-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements" -Wait -NoNewWindow
-            Write-Host "PowerShell has been updated. Please restart your shell to reflect changes" -ForegroundColor Magenta
+            Write-Host "PowerShell has been updated. Please Restart Terminal" -ForegroundColor Magenta
         } else {
-            Write-Host "Your PowerShell is up to date." -ForegroundColor Green
+            Write-Host "PowerShell is Up to Date." -ForegroundColor Green
         }
     } catch {
         Write-Error "Failed to update PowerShell. Error: $_"
@@ -126,7 +107,7 @@ if (-not $debug -and `
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
     $currentTime | Out-File -FilePath $timeFilePath
 } elseif ($debug) {
-    Write-Warning "Skipping PowerShell update in debug mode"
+    Write-Warning "Skipping PowerShell update in Debug Mode"
 }
 
 function Clear-Cache {
@@ -168,23 +149,19 @@ function Test-CommandExists {
 }
 
 # Editor Configuration
-$EDITOR = if (Test-CommandExists nvim) { 'nvim' }
-          elseif (Test-CommandExists pvim) { 'pvim' }
-          elseif (Test-CommandExists vim) { 'vim' }
-          elseif (Test-CommandExists vi) { 'vi' }
-          elseif (Test-CommandExists code) { 'code' }
+$EDITOR = if (Test-CommandExists code) { 'code' }
           elseif (Test-CommandExists notepad++) { 'notepad++' }
           elseif (Test-CommandExists sublime_text) { 'sublime_text' }
           else { 'notepad' }
 Set-Alias -Name vim -Value $EDITOR
 
 # Quick Access to Editing the Profile
-function Edit-Profile {
+function o9op {
     vim $PROFILE.CurrentUserAllHosts
 }
-Set-Alias -Name ep -Value Edit-Profile
+Set-Alias -Name o9o -Value o9op
 
-function touch($file) { "" | Out-File $file -Encoding ASCII }
+function o9cr($file) { "" | Out-File $file -Encoding ASCII }
 function ff($name) {
     Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output "$($_.FullName)"
@@ -192,16 +169,16 @@ function ff($name) {
 }
 
 # Network Utilities
-function Get-PubIP { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+function o9ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
-# Open WinUtil full-release
+# Open o9
 function o9 {
 	irm https://raw.githubusercontent.com/o9-9/o9/main/o9.ps1 | iex
 }
 
-# Open WinUtil pre-release
-function o9dev {
-	irm https://raw.githubusercontent.com/o9-9/o9/main/o9dev.ps1.ps1 | iex
+# Open setup
+function setup {
+	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
 }
 
 # System Utilities
@@ -217,7 +194,7 @@ function admin {
 # Set UNIX-like aliases for the admin command, so sudo <command> will run the command with elevated rights.
 Set-Alias -Name su -Value admin
 
-function uptime {
+function o9t {
     try {
         # find date/time format
         $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
@@ -239,24 +216,24 @@ function uptime {
         $formattedBootTime = $bootTime.ToString("dddd, MMMM dd, yyyy HH:mm:ss", [System.Globalization.CultureInfo]::InvariantCulture) + " [$lastBoot]"
         Write-Host "System started on: $formattedBootTime" -ForegroundColor DarkGray
 
-        # calculate uptime
-        $uptime = (Get-Date) - $bootTime
+        # calculate o9t
+        $o9t = (Get-Date) - $bootTime
 
-        # Uptime in days, hours, minutes, and seconds
-        $days = $uptime.Days
-        $hours = $uptime.Hours
-        $minutes = $uptime.Minutes
-        $seconds = $uptime.Seconds
+        # o9t in days, hours, minutes, and seconds
+        $days = $o9t.Days
+        $hours = $o9t.Hours
+        $minutes = $o9t.Minutes
+        $seconds = $o9t.Seconds
 
-        # Uptime output
-        Write-Host ("Uptime: {0} days, {1} hours, {2} minutes, {3} seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
+        # o9t output
+        Write-Host ("o9t: {0} days, {1} hours, {2} minutes, {3} seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
 
     } catch {
-        Write-Error "An error occurred while retrieving system uptime."
+        Write-Error "An error occurred while retrieving system o9t."
     }
 }
 
-function reload-profile {
+function o9rp {
     & $profile
 }
 
@@ -303,11 +280,11 @@ function df {
     get-volume
 }
 
-function sed($file, $find, $replace) {
+function o9r($file, $find, $replace) {
     (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
-function which($name) {
+function o9pa($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
@@ -315,20 +292,20 @@ function export($name, $value) {
     set-item -force -path "env:$name" -value $value;
 }
 
-function pkill($name) {
+function o9ki($name) {
     Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function pgrep($name) {
+function pget($name) {
     Get-Process $name
 }
 
-function head {
+function o9fl {
   param($Path, $n = 10)
   Get-Content $Path -Head $n
 }
 
-function tail {
+function o9lf {
   param($Path, $n = 10, [switch]$f = $false)
   Get-Content $Path -Tail $n -Wait:$f
 }
@@ -337,7 +314,7 @@ function tail {
 function nf { param($name) New-Item -ItemType "file" -Path . -Name $name }
 
 # Directory Management
-function mkcd { param($dir) mkdir $dir -Force; Set-Location $dir }
+function o9cd { param($dir) mkdir $dir -Force; Set-Location $dir }
 
 function trash($path) {
     $fullPath = (Resolve-Path -Path $path).Path
@@ -370,22 +347,22 @@ function trash($path) {
 ### Quality of Life Aliases
 
 # Navigation Shortcuts
-function docs { 
-    $docs = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
-    Set-Location -Path $docs
+function o9d { 
+    $o9d = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
+    Set-Location -Path $o9d
 }
     
-function dtop { 
-    $dtop = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Documents"}
-    Set-Location -Path $dtop
+function o9dt { 
+    $o9dt = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Documents"}
+    Set-Location -Path $o9dt
 }
 
 # Simplified Process Management
 function k9 { Stop-Process -Name $args[0] }
 
 # Enhanced Listing
-function la { Get-ChildItem | Format-Table -AutoSize }
-function ll { Get-ChildItem -Force | Format-Table -AutoSize }
+function o99 { Get-ChildItem | Format-Table -AutoSize }
+function o96 { Get-ChildItem -Force | Format-Table -AutoSize }
 
 # Git Shortcuts
 function gs { git status }
@@ -411,18 +388,18 @@ function lazyg {
 }
 
 # Quick Access to System Information
-function sysinfo { Get-ComputerInfo }
+function o9i { Get-ComputerInfo }
 
 # Networking Utilities
-function flushdns {
+function o9dns {
 	Clear-DnsClientCache
 	Write-Host "DNS has been flushed"
 }
 
 # Clipboard Utilities
-function cpy { Set-Clipboard $args[0] }
+function o9c { Set-Clipboard $args[0] }
 
-function pst { Get-Clipboard }
+function o9p { Get-Clipboard }
 
 # Enhanced PowerShell Experience
 # Enhanced PSReadLine Configuration
@@ -533,94 +510,94 @@ Set-Alias -Name z -Value __zoxide_z -Option AllScope -Scope Global -Force
 Set-Alias -Name zi -Value __zoxide_zi -Option AllScope -Scope Global -Force
 
 # Help Function
-function Show-Help {
+function Help {
     $helpText = @"
 $($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
 
-$($PSStyle.Foreground.Green)Update-Profile$($PSStyle.Reset) - Checks for profile updates from a remote repository and updates if necessary.
+$($PSStyle.Foreground.Green)Update-Profile$($PSStyle.Reset) - Checks Updates Profile.
 
-$($PSStyle.Foreground.Green)Update-PowerShell$($PSStyle.Reset) - Checks for the latest PowerShell release and updates if a new version is available.
+$($PSStyle.Foreground.Green)Update-PowerShell$($PSStyle.Reset) - Checks Updates PowerShell.
 
-$($PSStyle.Foreground.Green)Edit-Profile$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
+$($PSStyle.Foreground.Green)o9op$($PSStyle.Reset) - Opens o9 Profile.
 
-$($PSStyle.Foreground.Green)touch$($PSStyle.Reset) <file> - Creates a new empty file.
+$($PSStyle.Foreground.Green)o9cr$($PSStyle.Reset) <file> - Creates Empty File.
 
-$($PSStyle.Foreground.Green)ff$($PSStyle.Reset) <name> - Finds files recursively with the specified name.
+$($PSStyle.Foreground.Green)ff$($PSStyle.Reset) <name> - Finds Files.
 
-$($PSStyle.Foreground.Green)Get-PubIP$($PSStyle.Reset) - Retrieves the public IP address of the machine.
+$($PSStyle.Foreground.Green)o9ip$($PSStyle.Reset) - Get Public IP.
 
-$($PSStyle.Foreground.Green)o9$($PSStyle.Reset) - Runs the latest WinUtil full-release script from o9.
+$($PSStyle.Foreground.Green)o9$($PSStyle.Reset) - Runs o9.
 
-$($PSStyle.Foreground.Green)o9dev$($PSStyle.Reset) - Runs the latest WinUtil pre-release script from o9.
+$($PSStyle.Foreground.Green)setup$($PSStyle.Reset) - Runs setup.
 
-$($PSStyle.Foreground.Green)uptime$($PSStyle.Reset) - Displays the system uptime.
+$($PSStyle.Foreground.Green)o9t$($PSStyle.Reset) - Displays time.
 
-$($PSStyle.Foreground.Green)reload-profile$($PSStyle.Reset) - Reloads the current user's PowerShell profile.
+$($PSStyle.Foreground.Green)o9rp$($PSStyle.Reset) - Reloads o9 Profile.
 
-$($PSStyle.Foreground.Green)unzip$($PSStyle.Reset) <file> - Extracts a zip file to the current directory.
+$($PSStyle.Foreground.Green)unzip$($PSStyle.Reset) <file> - Extracts Zip File.
 
-$($PSStyle.Foreground.Green)hb$($PSStyle.Reset) <file> - Uploads the specified file's content to a hastebin-like service and returns the URL.
+$($PSStyle.Foreground.Green)hb$($PSStyle.Reset) <file> - Uploads Files Returns URL.
 
-$($PSStyle.Foreground.Green)grep$($PSStyle.Reset) <regex> [dir] - Searches for a regex pattern in files within the specified directory or from the pipeline input.
+$($PSStyle.Foreground.Green)grep$($PSStyle.Reset) <regex> [dir] - Searches Regex Pattern.
 
-$($PSStyle.Foreground.Green)df$($PSStyle.Reset) - Displays information about volumes.
+$($PSStyle.Foreground.Green)df$($PSStyle.Reset) - Displays Information.
 
-$($PSStyle.Foreground.Green)sed$($PSStyle.Reset) <file> <find> <replace> - Replaces text in a file.
+$($PSStyle.Foreground.Green)o9r$($PSStyle.Reset) <file> <find> <replace> - Replaces Text in File.
 
-$($PSStyle.Foreground.Green)which$($PSStyle.Reset) <name> - Shows the path of the command.
+$($PSStyle.Foreground.Green)o9pa$($PSStyle.Reset) <name> - Shows Path of Command.
 
-$($PSStyle.Foreground.Green)export$($PSStyle.Reset) <name> <value> - Sets an environment variable.
+$($PSStyle.Foreground.Green)export$($PSStyle.Reset) <name> <value> - Sets an Environment Variable.
 
-$($PSStyle.Foreground.Green)pkill$($PSStyle.Reset) <name> - Kills processes by name.
+$($PSStyle.Foreground.Green)o9ki$($PSStyle.Reset) <name> - Kills Processes by Name.
 
-$($PSStyle.Foreground.Green)pgrep$($PSStyle.Reset) <name> - Lists processes by name.
+$($PSStyle.Foreground.Green)pget$($PSStyle.Reset) <name> - Lists Processes by Name.
 
-$($PSStyle.Foreground.Green)head$($PSStyle.Reset) <path> [n] - Displays the first n lines of a file (default 10).
+$($PSStyle.Foreground.Green)o9fl$($PSStyle.Reset) <path> [n] - Displays First Lines of File.
 
-$($PSStyle.Foreground.Green)tail$($PSStyle.Reset) <path> [n] - Displays the last n lines of a file (default 10).
+$($PSStyle.Foreground.Green)o9lf$($PSStyle.Reset) <path> [n] - Displays last Lines of File.
 
-$($PSStyle.Foreground.Green)nf$($PSStyle.Reset) <name> - Creates a new file with the specified name.
+$($PSStyle.Foreground.Green)nf$($PSStyle.Reset) <name> - Creates new File With Specified Name.
 
-$($PSStyle.Foreground.Green)mkcd$($PSStyle.Reset) <dir> - Creates and changes to a new directory.
+$($PSStyle.Foreground.Green)o9cd$($PSStyle.Reset) <dir> - Creates and Changes to new Directory.
 
-$($PSStyle.Foreground.Green)docs$($PSStyle.Reset) - Changes the current directory to the user's Documents folder.
+$($PSStyle.Foreground.Green)o9d$($PSStyle.Reset) - Changes Directory to o9 Documents.
 
-$($PSStyle.Foreground.Green)dtop$($PSStyle.Reset) - Changes the current directory to the user's Desktop folder.
+$($PSStyle.Foreground.Green)o9dt$($PSStyle.Reset) - Changes Directory to o9 Desktop.
 
-$($PSStyle.Foreground.Green)ep$($PSStyle.Reset) - Opens the profile for editing.
+$($PSStyle.Foreground.Green)o9o$($PSStyle.Reset) - Opens o9 Profile.
 
-$($PSStyle.Foreground.Green)k9$($PSStyle.Reset) <name> - Kills a process by name.
+$($PSStyle.Foreground.Green)k9$($PSStyle.Reset) <name> - Kills Process by Name.
 
-$($PSStyle.Foreground.Green)la$($PSStyle.Reset) - Lists all files in the current directory with detailed formatting.
+$($PSStyle.Foreground.Green)o99$($PSStyle.Reset) - Lists All Files.
 
-$($PSStyle.Foreground.Green)ll$($PSStyle.Reset) - Lists all files, including hidden, in the current directory with detailed formatting.
+$($PSStyle.Foreground.Green)o96$($PSStyle.Reset) - Lists All Files With Hidden.
 
-$($PSStyle.Foreground.Green)gs$($PSStyle.Reset) - Shortcut for 'git status'.
+$($PSStyle.Foreground.Green)gs$($PSStyle.Reset) - Shortcut 'git status'.
 
-$($PSStyle.Foreground.Green)ga$($PSStyle.Reset) - Shortcut for 'git add .'.
+$($PSStyle.Foreground.Green)ga$($PSStyle.Reset) - Shortcut 'git add .'.
 
-$($PSStyle.Foreground.Green)gc$($PSStyle.Reset) <message> - Shortcut for 'git commit -m'.
+$($PSStyle.Foreground.Green)gc$($PSStyle.Reset) <message> - Shortcut 'git commit -m'.
 
-$($PSStyle.Foreground.Green)gp$($PSStyle.Reset) - Shortcut for 'git push'.
+$($PSStyle.Foreground.Green)gp$($PSStyle.Reset) - Shortcut 'git push'.
 
-$($PSStyle.Foreground.Green)g$($PSStyle.Reset) - Changes to the GitHub directory.
+$($PSStyle.Foreground.Green)g$($PSStyle.Reset) - Changes to GitHub Directory.
 
-$($PSStyle.Foreground.Green)gcom$($PSStyle.Reset) <message> - Adds all changes and commits with the specified message.
+$($PSStyle.Foreground.Green)gcom$($PSStyle.Reset) <message> - Adds All Changes and Commits.
 
-$($PSStyle.Foreground.Green)lazyg$($PSStyle.Reset) <message> - Adds all changes, commits with the specified message, and pushes to the remote repository.
+$($PSStyle.Foreground.Green)lazyg$($PSStyle.Reset) <message> - Adds All Changes Commits, and Pushes to Remote Repository.
 
-$($PSStyle.Foreground.Green)sysinfo$($PSStyle.Reset) - Displays detailed system information.
+$($PSStyle.Foreground.Green)o9i$($PSStyle.Reset) - Displays Detailed System Information.
 
-$($PSStyle.Foreground.Green)flushdns$($PSStyle.Reset) - Clears the DNS cache.
+$($PSStyle.Foreground.Green)o9dns$($PSStyle.Reset) - Clears DNS Cache.
 
-$($PSStyle.Foreground.Green)cpy$($PSStyle.Reset) <text> - Copies the specified text to the clipboard.
+$($PSStyle.Foreground.Green)o9c$($PSStyle.Reset) <text> - Copies Text.
 
-$($PSStyle.Foreground.Green)pst$($PSStyle.Reset) - Retrieves text from the clipboard.
+$($PSStyle.Foreground.Green)o9p$($PSStyle.Reset) - Recover Clipboard.
 
-Use '$($PSStyle.Foreground.Magenta)Show-Help$($PSStyle.Reset)' to display this help message.
+Use '$($PSStyle.Foreground.Magenta)o9h$($PSStyle.Reset)' Display Help.
 "@
     Write-Host $helpText
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'Show-Help' to display help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Use 'o9h' Display Help$($PSStyle.Reset)"
