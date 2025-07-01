@@ -595,9 +595,9 @@ $($PSStyle.Foreground.Green)o9c$($PSStyle.Reset) <text> - Copies Text.
 
 $($PSStyle.Foreground.Green)o9p$($PSStyle.Reset) - Recover Clipboard.
 
-Use '$($PSStyle.Foreground.Magenta)o9h$($PSStyle.Reset)' Display Help.
+Use '$($PSStyle.Foreground.Magenta)Show-Help$($PSStyle.Reset)' Display Help.
 "@
     Write-Host $helpText
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'o9h' Display Help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Show-Help$($PSStyle.Reset)"
