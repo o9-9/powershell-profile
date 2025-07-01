@@ -1,20 +1,39 @@
-# $debug = $true
+### PowerShell Profile Refactor
+### Version 1.03 - Refactored
+
 $debug = $false
 
 # Define the path to the file that stores the last execution time
-$timeFilePath = [Environment]::GetFolderPath("o9 Documents") + "\PowerShell\LastExecutionTime.txt"
+$timeFilePath = [Environment]::GetFolderPath("MyDocuments") + "\PowerShell\LastExecutionTime.txt"
 
 # Define the update interval in days, set to -1 to always check
 $updateInterval = 7
 
 if ($debug) {
-    Write-Host "Debug On" -ForegroundColor Cyan
+    Write-Host "==============" -ForegroundColor Cyan
+    Write-Host "=  Debug On  =" -ForegroundColor Cyan
+    Write-Host "==============" -ForegroundColor Cyan
 }
+
+
+<#
+WARNING:
+DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
+ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
+https://github.com/o9-9/powershell-profile.git.
+
+
+IF YOU WANT TO MAKE CHANGES, USE THE Edit-Profile FUNCTION
+AND SAVE YOUR CHANGES IN THE FILE CREATED.
+#>
 
 # opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
+
+# Initial GitHub.com connectivity check with 1 second timeout
+$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
 
 # Import Modules and External Profiles
 # Ensure Terminal-Icons module is installed before importing
@@ -57,6 +76,10 @@ if (-not $debug -and `
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
     $currentTime | Out-File -FilePath $timeFilePath
 
+} elseif ($debug) {
+    Write-Warning "Skip Profile Update check"
+}
+
 function Update-PowerShell {
     try {
         Write-Host "Check PowerShell Update..." -ForegroundColor Cyan
@@ -91,6 +114,9 @@ if (-not $debug -and `
     Update-PowerShell
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
     $currentTime | Out-File -FilePath $timeFilePath
+} elseif ($debug) {
+    Write-Warning "Skip Profile Update check"
+}
 
 function Clear-Cache {
     # add clear cache logic here
@@ -333,7 +359,7 @@ function trash($path) {
 # Navigation Shortcuts
 # Go to Documents
 function docs {
-    $docs = if(([Environment]::GetFolderPath("o9 Documents"))) {([Environment]::GetFolderPath("o9 Documents"))} else {$HOME + "\Documents"}
+    $docs = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
     Set-Location -Path $docs
 }
 # Go to Desktop
