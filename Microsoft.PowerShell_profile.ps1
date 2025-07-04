@@ -1,6 +1,3 @@
-### PowerShell Profile Refactor
-### Version 1.03 - Refactored
-
 $debug = $false
 
 # Define the path to the file that stores the last execution time
@@ -502,6 +499,7 @@ $scriptblock = {
     $customCompletions = @{
         'git' = @('status', 'add', 'commit', 'push', 'pull', 'clone', 'checkout')
         'npm' = @('install', 'start', 'run', 'test', 'build')
+        'deno' = @('run', 'compile', 'bundle', 'test', 'lint', 'fmt', 'cache', 'info', 'doc', 'upgrade')
     }
 
     $command = $commandAst.CommandElements[0].Value
@@ -522,23 +520,7 @@ $scriptblock = {
 }
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
-
-# Get theme from profile.ps1 or use a default theme
-function Get-Theme {
-    if (Test-Path -Path $PROFILE.CurrentUserAllHosts -PathType leaf) {
-        $existingTheme = Select-String -Raw -Path $PROFILE.CurrentUserAllHosts -Pattern "oh-my-posh init pwsh --config"
-        if ($null -ne $existingTheme) {
-            Invoke-Expression $existingTheme
-            return
-        }
-        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
-    } else {
-        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
-    }
-}
-
-## Final Line to set prompt
-Get-Theme
+oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (& { (zoxide init --cmd cd powershell | Out-String) })
 } else {
@@ -553,102 +535,156 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 }
 
 # Help Function
-function sh {
+function he {
+    $border = "$($PSStyle.Foreground.Yellow)═════════════════════════════════════════════════════════════════$($PSStyle.Reset)"
+    $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
+    $cmd = { param($cmd, $alias, $desc, $sym)
+        "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) "}else{""})$sym  $desc"
+    }
+
     $helpText = @"
-$($PSStyle.Foreground.Cyan)o9$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+$border
+$($sectionHeader.Invoke("⚡", "PowerShell Profile Shortcuts"))
+$border
 
-$($PSStyle.Foreground.Cyan)o9$($PSStyle.Reset) - Run o9.
+$($sectionHeader.Invoke("🚀", "Navigation"))
+$($cmd.Invoke("docs",         "dc", "Go to Documents",           "📄"))
+$($cmd.Invoke("dtop",         "dt", "Go to Desktop",             "🖥️"))
+$($cmd.Invoke("dow",          "dl", "Go to Downloads",           "⬇️"))
+$($cmd.Invoke("loc",          "lc", "Go to Local AppData",       "📁"))
+$($cmd.Invoke("roa",          "ra", "Go to Roaming AppData",     "🌐"))
+$($cmd.Invoke("o9cd",         "od", "Create & Change Directory", "📂"))
 
-$($PSStyle.Foreground.Cyan)setup$($PSStyle.Reset) - Run setup.
+$border
+$($sectionHeader.Invoke("🛠️", "System / Utility"))
+$($cmd.Invoke("o9",           "o",  "Run o9",                    "⚡"))
+$($cmd.Invoke("setup",        "sp", "Run setup",                 "🔧"))
+$($cmd.Invoke("cc",           "",   "Clear Cache",               "🧹"))
+$($cmd.Invoke("sysinfo",      "si", "System Information",        "🖥️"))
+$($cmd.Invoke("dns",          "dn", "Clear DNS Cache",           "🌐"))
+$($cmd.Invoke("okill",        "kp", "Kill Process by Name",      "💀"))
+$($cmd.Invoke("ogrep",        "pp", "List Process by Name",      "🔎"))
+$($cmd.Invoke("k9",           "",   "Kill Process",              "🪓"))
 
-$($PSStyle.Foreground.Cyan)cc$($PSStyle.Reset)   - Run Clear Cache.
+$border
+$($sectionHeader.Invoke("📄", "Files & Directories"))
+$($cmd.Invoke("la",           "",   "List All Files",            "📁"))
+$($cmd.Invoke("ll",           "",   "List Hidden Files",         "👻"))
+$($cmd.Invoke("head",         "hd", "Show First Lines",          "🔝"))
+$($cmd.Invoke("tail",         "tt", "Show Last Lines",           "🔚"))
+$($cmd.Invoke("cr",           "",   "Create Empty File",         "🆕"))
+$($cmd.Invoke("nf",           "nn", "Create New File",           "✏️"))
+$($cmd.Invoke("fi",           "fn", "Find Files by Pattern",     "🔍"))
+$($cmd.Invoke("unzip",        "uz", "Extract Zip File",          "🗜️"))
+$($cmd.Invoke("hb",           "",   "Upload to Hastebin",        "🌐"))
+$($cmd.Invoke("df",           "",   "Disk Free Space",           "ℹ️"))
+$($cmd.Invoke("path",         "",   "Show Command Path",         "🛤️"))
+$($cmd.Invoke("exp",          "",   "Set Environment Variable",  "🌱"))
+$($cmd.Invoke("rep",          "rr", "Replace in File",           "✂️"))
 
-$($PSStyle.Foreground.Cyan)docs$($PSStyle.Reset) - Go to Documents.
+$border
+$($sectionHeader.Invoke("🔎", "Search & Data"))
+$($cmd.Invoke("grep",         "",   "Search with Regex",         "🧬"))
+$($cmd.Invoke("ip",           "",   "Show Public IP",            "🌎"))
+$($cmd.Invoke("time",         "",   "Show Uptime",               "⏰"))
 
-$($PSStyle.Foreground.Cyan)dtop$($PSStyle.Reset) - Go to Desktop.
+$border
+$($sectionHeader.Invoke("👤", "Profile Management"))
+$($cmd.Invoke("Update-Profile",    "up", "Update Profile",       "🔄"))
+$($cmd.Invoke("Update-PowerShell", "ps1", "Update PowerShell",   "🔄"))
+$($cmd.Invoke("Edit-Profile",      "ep", "Edit Profile",         "📝"))
+$($cmd.Invoke("reload-profile",    "rp", "Reload Profile",       "♻️"))
 
-$($PSStyle.Foreground.Cyan)dow$($PSStyle.Reset) - Go to Downloads.
+$border
+$($sectionHeader.Invoke("🔗", "Clipboard"))
+$($cmd.Invoke("cp",           "cb", "Copy to Clipboard",         "📋"))
+$($cmd.Invoke("ps",           "pb", "Paste from Clipboard",      "📋"))
 
-$($PSStyle.Foreground.Cyan)loc$($PSStyle.Reset) - Go to Local.
+$border
+$($sectionHeader.Invoke("🌱", "Git Shortcuts"))
+$($cmd.Invoke("gs",           "gt", "git status",                "🟢"))
+$($cmd.Invoke("ga",           "",   "git add .",                 "➕"))
+$($cmd.Invoke("gc",           "cm", "git commit -m",             "💬"))
+$($cmd.Invoke("gp",           "",   "git push",                  "🚀"))
+$($cmd.Invoke("g",            "gh", "Go to GitHub folder",       "🌐"))
+$($cmd.Invoke("gcom",         "",   "Add & Commit",              "📝"))
+$($cmd.Invoke("lazyg",        "lg", "Add, Commit & Push",        "⚡"))
 
-$($PSStyle.Foreground.Cyan)roa$($PSStyle.Reset) - Go to Roaming.
+$border
+$($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) h             $($PSStyle.Foreground.DarkGray)# Display this help menu$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) dc            $($PSStyle.Foreground.DarkGray)# Go to Documents folder$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) o             $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) od myproject  $($PSStyle.Foreground.DarkGray)# Create and go to folder$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) gt            $($PSStyle.Foreground.DarkGray)# Show git status$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) cm "message"  $($PSStyle.Foreground.DarkGray)# Git commit with message$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) lg "fix bug"  $($PSStyle.Foreground.DarkGray)# Git add, commit, push$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) cb "text"     $($PSStyle.Foreground.DarkGray)# Copy to clipboard$($PSStyle.Reset)
 
-$($PSStyle.Foreground.Cyan)Update-Profile$($PSStyle.Reset) - Check Updates Profile.
-
-$($PSStyle.Foreground.Cyan)Update-PowerShell$($PSStyle.Reset) - Check Updates PowerShell.
-
-$($PSStyle.Foreground.Cyan)ep$($PSStyle.Reset) - Open Powershell Profile.
-
-$($PSStyle.Foreground.Cyan)Edit-Profile$($PSStyle.Reset) - Edit Powershell Profile.
-
-$($PSStyle.Foreground.Cyan)reload-profile$($PSStyle.Reset) - Reloads Powershell Profile.
-
-$($PSStyle.Foreground.Cyan)cr$($PSStyle.Reset)  - Creates File.
-
-$($PSStyle.Foreground.Cyan)fi$($PSStyle.Reset) - Find File.
-
-$($PSStyle.Foreground.Cyan)ip$($PSStyle.Reset) - Public IP.
-
-$($PSStyle.Foreground.Cyan)time$($PSStyle.Reset) - Show time.
-
-$($PSStyle.Foreground.Cyan)unzip$($PSStyle.Reset)  - Extract Zip File.
-
-$($PSStyle.Foreground.Cyan)hb$($PSStyle.Reset)  - Upload File URL.
-
-$($PSStyle.Foreground.Cyan)grep$($PSStyle.Reset) - Searche Regex.
-
-$($PSStyle.Foreground.Cyan)df$($PSStyle.Reset) - Show Info.
-
-$($PSStyle.Foreground.Cyan)rep$($PSStyle.Reset)  - Replaces Text File.
-
-$($PSStyle.Foreground.Cyan)path$($PSStyle.Reset) - Shows Path.
-
-$($PSStyle.Foreground.Cyan)exp$($PSStyle.Reset) - Sets Environment.
-
-$($PSStyle.Foreground.Cyan)okill$($PSStyle.Reset) - Kills Processes.
-
-$($PSStyle.Foreground.Cyan)ogrep$($PSStyle.Reset) - Lists Processes.
-
-$($PSStyle.Foreground.Cyan)head$($PSStyle.Reset) - Show First Files.
-
-$($PSStyle.Foreground.Cyan)tail$($PSStyle.Reset) - Show last Files.
-
-$($PSStyle.Foreground.Cyan)nf$($PSStyle.Reset) - Create File > Name.
-
-$($PSStyle.Foreground.Cyan)o9cd$($PSStyle.Reset) - Change Directory.
-
-$($PSStyle.Foreground.Cyan)k9$($PSStyle.Reset) - Kill Process.
-
-$($PSStyle.Foreground.Cyan)la$($PSStyle.Reset) - Show Files.
-
-$($PSStyle.Foreground.Cyan)ll$($PSStyle.Reset) - Show Hidden Files.
-
-$($PSStyle.Foreground.Cyan)gs$($PSStyle.Reset) - 'git status.
-
-$($PSStyle.Foreground.Cyan)ga$($PSStyle.Reset) - 'git add.
-
-$($PSStyle.Foreground.Cyan)gc$($PSStyle.Reset) - 'git commit.
-
-$($PSStyle.Foreground.Cyan)gp$($PSStyle.Reset) - 'git push'.
-
-$($PSStyle.Foreground.Cyan)g$($PSStyle.Reset) - GO to GitHub.
-
-$($PSStyle.Foreground.Cyan)gcom$($PSStyle.Reset) - Add > Change > Commit.
-
-$($PSStyle.Foreground.Cyan)lazyg$($PSStyle.Reset) - Add > Change > Commit > Pushe.
-
-$($PSStyle.Foreground.Cyan)sysinfo$($PSStyle.Reset) - System Info.
-
-$($PSStyle.Foreground.Cyan)dns$($PSStyle.Reset) - DNS Cache.
-
-$($PSStyle.Foreground.Cyan)cp$($PSStyle.Reset) - Copy.
-
-$($PSStyle.Foreground.Cyan)ps$($PSStyle.Reset) - Paste.
-
-Use '$($PSStyle.Foreground.Magenta)sh$($PSStyle.Reset)' Show Help.
+Use $($PSStyle.Foreground.Magenta)'h'$($PSStyle.Reset) or $($PSStyle.Foreground.Magenta)'he'$($PSStyle.Reset) to display this help message anytime.
+$border
 "@
     Write-Host $helpText
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)'sh'$($PSStyle.Reset)"
+# Handle potential alias conflicts
+# Check for and remove aliases that might conflict with our new ones
+$aliasesToCheck = @('cp', 'ps', 'gc', 'h', 'md')
+foreach ($alias in $aliasesToCheck) {
+    if (Get-Alias -Name $alias -ErrorAction SilentlyContinue) {
+        # Make a note of it but don't remove built-in aliases
+        Write-Verbose "Note: Built-in alias '$alias' exists. Our custom alias will override it."
+    }
+}
+
+# Define aliases for existing functions
+# Navigation Shortcuts
+Set-Alias -Name o -Value o9
+Set-Alias -Name sp -Value setup
+Set-Alias -Name dc -Value docs
+Set-Alias -Name dt -Value dtop
+Set-Alias -Name dl -Value dow
+Set-Alias -Name lc -Value loc
+Set-Alias -Name ra -Value roa
+Set-Alias -Name od -Value o9cd  # Changed from 'md' to avoid conflict with mkdir alias
+
+# System and Utility Shortcuts
+Set-Alias -Name up -Value Update-Profile
+Set-Alias -Name ps1 -Value Update-PowerShell
+Set-Alias -Name rp -Value reload-profile
+Set-Alias -Name si -Value sysinfo
+Set-Alias -Name dn -Value dns
+
+# File Operations
+Set-Alias -Name tt -Value tail
+Set-Alias -Name hd -Value head
+Set-Alias -Name fn -Value fi
+Set-Alias -Name uz -Value unzip
+Set-Alias -Name rr -Value rep
+Set-Alias -Name nf -Value nf  # Already short enough
+
+# Git Shortcuts - Note: 'gc' conflicts with Get-Content
+Set-Alias -Name gt -Value gs  # git status
+Set-Alias -Name ga -Value ga  # git add (already short)
+# Using 'cm' instead of 'gc' to avoid conflict with Get-Content
+Set-Alias -Name cm -Value gc  # git commit (avoiding conflict)
+Set-Alias -Name gp -Value gp  # git push (already short)
+Set-Alias -Name gh -Value g   # github
+Set-Alias -Name lg -Value lazyg
+
+# Process Management
+Set-Alias -Name kp -Value okill
+Set-Alias -Name pp -Value ogrep
+
+# Clipboard - Note: 'cp' conflicts with Copy-Item, 'ps' conflicts with Get-Process
+Set-Alias -Name cb -Value cp  # Alternative for clipboard copy
+Set-Alias -Name pb -Value ps  # Alternative for clipboard paste
+
+# Keep the original he alias for help
+Set-Alias -Name h -Value he
+
+if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
+    Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
+}
+
+Write-Host "$($PSStyle.Foreground.Yellow)Use 'h' or 'he' to Display Help$($PSStyle.Reset)"
