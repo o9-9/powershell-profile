@@ -553,7 +553,7 @@ $($cmd.Invoke("09 ", "cc"   , "Clear Cache",       "🧹"))
 $($cmd.Invoke("10 ", "sys"  , "System Info",       "🖥️"))
 $($cmd.Invoke("11 ", "dns"  , "Clear DNS Cache",   "🌐"))
 $($cmd.Invoke("12 ", "kill" , "Kill Process Name", "💀"))
-$($cmd.Invoke("13 ", "pp"   , "List Process Name", "🔎"))
+$($cmd.Invoke("13 ", "pp  " , "List Process Name", "🔎"))
 $($cmd.Invoke("14 ", "k9"   , "Kill Process",      "🪓"))
 
 $border
