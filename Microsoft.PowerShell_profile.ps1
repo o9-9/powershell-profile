@@ -16,12 +16,12 @@ if (-not (Test-Path $timeFilePath)) {
 $updateInterval = 7
 
 if ($debug) {
-    Write-Host "	                                    " -ForegroundColor White
+    Write-Host "══════════════════════════════════════" -ForegroundColor White
     Write-Host "▗▄▄▄ ▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖ ▗▄▄▖   ▗▄▖ ▗▖  ▗▖" -ForegroundColor Red
     Write-Host "▐▌  █▐▌   ▐▌ ▐▌▐▌ ▐▌▐▌     ▐▌ ▐▌▐▛▚▖▐▌" -ForegroundColor DarkGray
     Write-Host "▐▌  █▐▛▀▀▘▐▛▀▚▖▐▌ ▐▌▐▌▝▜▌  ▐▌ ▐▌▐▌ ▝▜▌" -ForegroundColor Red
     Write-Host "▐▙▄▄▀▐▙▄▄▖▐▙▄▞▘▝▚▄▞▘▝▚▄▞▘  ▝▚▄▞▘▐▌  ▐▌" -ForegroundColor DarkGray
-    Write-Host "	                                    " -ForegroundColor White
+    Write-Host "══════════════════════════════════════" -ForegroundColor White
 }
 
 <#
