@@ -598,7 +598,7 @@ $($cmd.Invoke("39 ", "gc"   , "git commit -m",     "💬"))
 $($cmd.Invoke("40 ", "gp"   , "git push",          "🚀"))
 $($cmd.Invoke("41 ", "g"    , "GitHub Folder",     "🌐"))
 $($cmd.Invoke("42 ", "gco"  , "Add & Commit",      "📝"))
-$($cmd.Invoke("43 ", "lg"   , "Add-Commit-Push",    "⚡"))
+$($cmd.Invoke("43 ", 'lg'   , "Add-Commit-Push",    "⚡"))
 
 $border
 $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
