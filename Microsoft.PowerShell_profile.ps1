@@ -19,19 +19,19 @@ if (-not (Test-Path $timeFilePath)) {
 $updateInterval = 7
 
 if ($debug) {
-    Write-Host "                                                                         " -ForegroundColor Gray
-    Write-Host "8888888b            888                                d88888b           " -ForegroundColor White
-    Write-Host "888    888          888                              d88P   Y88b         " -ForegroundColor Gray
+    Write-Host "                                                                         " -ForegroundColor DarkGray
+    Write-Host "8888888b            888                                d88888b           " -ForegroundColor Cyan
+    Write-Host "888    888          888                              d88P   Y88b         " -ForegroundColor Magenta
     Write-Host "888    888          888                              888     888         " -ForegroundColor White
-    Write-Host "888    888   d88b   88888b   888  888   d88b         888     888 88888b  " -ForegroundColor Gray
-    Write-Host "888    888 d8P  Y8b 888  88b 888  888 d88P 88b       888     888 888  88b" -ForegroundColor White
-    Write-Host "888    888 88888888 888  888 888  888 888  888       888     888 888  888" -ForegroundColor Gray
-    Write-Host "888   d88P Y8b      888 d88P Y88b 888 Y88b 888       Y88b   d88P 888  888" -ForegroundColor White
-    Write-Host "8888888P     Y8888  88888P     Y88888   Y88888         Y88888P   888  888" -ForegroundColor Gray
+    Write-Host "888    888   d88b   88888b   888  888   d88b         888     888 88888b  " -ForegroundColor Cyan
+    Write-Host "888    888 d8P  Y8b 888  88b 888  888 d88P 88b       888     888 888  88b" -ForegroundColor Magenta
+    Write-Host "888    888 88888888 888  888 888  888 888  888       888     888 888  888" -ForegroundColor White
+    Write-Host "888   d88P Y8b      888 d88P Y88b 888 Y88b 888       Y88b   d88P 888  888" -ForegroundColor Cyan
+    Write-Host "8888888P     Y8888  88888P     Y88888   Y88888         Y88888P   888  888" -ForegroundColor Magenta
     Write-Host "                                         888                             " -ForegroundColor White
-    Write-Host "                                   Y8b d88P                              " -ForegroundColor Gray
-    Write-Host "                                     Y88P                                " -ForegroundColor White
-    Write-Host "                                                                         " -ForegroundColor Gray
+    Write-Host "                                   Y8b d88P                              " -ForegroundColor Cyan
+    Write-Host "                                     Y88P                                " -ForegroundColor Magenta
+    Write-Host "                                                                         " -ForegroundColor DarkGray
 }
 
 
@@ -292,8 +292,8 @@ function hb {
         $response = Invoke-RestMethod -Uri $uri -Method Post -Body $Content -ErrorAction Stop
         $hasteKey = $response.key
         $url = "http://bin.christitus.com/$hasteKey"
-	Set-Clipboard $url
-        Write-Output $url
+	    Set-Clipboard $url
+        Write-Output "$url copied to clipboard."
     } catch {
         Write-Error "Failed to upload Document. Error: $_"
     }
@@ -551,9 +551,6 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
         Write-Error "Failed to install zoxide. Error: $_"
     }
 }
-
-Set-Alias -Name z -Value __zoxide_z -Option AllScope -Scope Global -Force
-Set-Alias -Name zi -Value __zoxide_zi -Option AllScope -Scope Global -Force
 
 # Help Function
 function sh {
