@@ -7,7 +7,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Function to test internet connectivity
 function Test-InternetConnection {
     try {
-        $testConnection = Test-Connection -ComputerName www.google.com -Count 1 -ErrorAction Stop
+        Test-Connection -ComputerName www.google.com -Count 1 -ErrorAction Stop | Out-Null
         return $true
     }
     catch {
@@ -19,9 +19,9 @@ function Test-InternetConnection {
 # Function to install Nerd Fonts
 function Install-NerdFonts {
     param (
-        [string]$FontName = "CascadiaCode",
-        [string]$FontDisplayName = "CaskaydiaCove NF",
-        [string]$Version = "3.2.1"
+        [string]$FontName = "JetBrainsMono",
+        [string]$FontDisplayName = "JetBrainsMono MNF",
+        [string]$Version = "3.4.0"
     )
 
     try {
@@ -108,7 +108,7 @@ catch {
 }
 
 # Font Install
-Install-NerdFonts -FontName "CascadiaCode" -FontDisplayName "CaskaydiaCove NF"
+Install-NerdFonts -FontName "JetBrainsMono" -FontDisplayName "JetBrainsMono MNF"
 
 # Final check and message to the user
 if ((Test-Path -Path $PROFILE) -and (winget list --name "OhMyPosh" -e) -and ($fontFamilies -contains "CaskaydiaCove NF")) {
