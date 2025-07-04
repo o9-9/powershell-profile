@@ -4,15 +4,34 @@
 $debug = $false
 
 # Define the path to the file that stores the last execution time
-$timeFilePath = [Environment]::GetFolderPath("MyDocuments") + "\PowerShell\LastExecutionTime.txt"
+$timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
+$directory = Split-Path $timeFilePath
+
+if (-not (Test-Path $directory)) {
+    New-Item -ItemType Directory -Path $directory -Force | Out-Null
+}
+
+if (-not (Test-Path $timeFilePath)) {
+    New-Item -ItemType File -Path $timeFilePath -Force | Out-Null
+}
 
 # Define the update interval in days, set to -1 to always check
 $updateInterval = 7
 
 if ($debug) {
-    Write-Host "==============" -ForegroundColor Gray
-    Write-Host "=  Debug On  =" -ForegroundColor Gray
-    Write-Host "==============" -ForegroundColor Gray
+    Write-Host "                                                                         " -ForegroundColor Gray
+    Write-Host "8888888b            888                                d88888b           " -ForegroundColor White
+    Write-Host "888    888          888                              d88P   Y88b         " -ForegroundColor Gray
+    Write-Host "888    888          888                              888     888         " -ForegroundColor White
+    Write-Host "888    888   d88b   88888b   888  888   d88b         888     888 88888b  " -ForegroundColor Gray
+    Write-Host "888    888 d8P  Y8b 888  88b 888  888 d88P 88b       888     888 888  88b" -ForegroundColor White
+    Write-Host "888    888 88888888 888  888 888  888 888  888       888     888 888  888" -ForegroundColor Gray
+    Write-Host "888   d88P Y8b      888 d88P Y88b 888 Y88b 888       Y88b   d88P 888  888" -ForegroundColor White
+    Write-Host "8888888P     Y8888  88888P     Y88888   Y88888         Y88888P   888  888" -ForegroundColor Gray
+    Write-Host "                                         888                             " -ForegroundColor White
+    Write-Host "                                   Y8b d88P                              " -ForegroundColor Gray
+    Write-Host "                                     Y88P                                " -ForegroundColor White
+    Write-Host "                                                                         " -ForegroundColor Gray
 }
 
 
@@ -630,7 +649,7 @@ $($PSStyle.Foreground.Cyan)cp$($PSStyle.Reset) - Copy.
 
 $($PSStyle.Foreground.Cyan)ps$($PSStyle.Reset) - Paste.
 
-Use '$($PSStyle.Foreground.Magenta)sh$($PSStyle.Reset)' Help.
+Use '$($PSStyle.Foreground.Magenta)sh$($PSStyle.Reset)' Show Help.
 "@
     Write-Host $helpText
 }
