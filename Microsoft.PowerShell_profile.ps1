@@ -526,7 +526,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 }
 
 # Help Function
-function h {
+function ha {
     $border = "$($PSStyle.Foreground.Yellow)═════════════════════════════════════════════════════════════════$($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
@@ -539,57 +539,57 @@ $($sectionHeader.Invoke("⚡", "PowerShell Profile Shortcuts"))
 $border
 
 $($sectionHeader.Invoke("🚀", "Navigation"))
-$($cmd.Invoke("Documents",  "dc", "Go to Documents",             "📄"))
-$($cmd.Invoke("Desktop",    "dt", "Go to Desktop",               "🖥️"))
-$($cmd.Invoke("Downloads",  "do", "Go to Downloads",             "⬇️"))
-$($cmd.Invoke("Local",      "lc", "Go to Local AppData",         "📁"))
-$($cmd.Invoke("Roaming",    "ro", "Go to Roaming AppData",       "🌐"))
-$($cmd.Invoke("Change",      "o", "Change Directory",            "📂"))
+$($cmd.Invoke("Documents",            "dc", "Go to Documents",   "📄"))
+$($cmd.Invoke("Desktop",              "dt", "Go to Desktop",     "🖥️"))
+$($cmd.Invoke("Downloads",            "do", "Go to Downloads",   "⬇️"))
+$($cmd.Invoke("Local",                "lc", "Go to Local",       "📁"))
+$($cmd.Invoke("Roaming",              "ro", "Go to Roaming",     "🌐"))
+$($cmd.Invoke("Change",                "o", "Change Directory",  "📂"))
 
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"))
-$($cmd.Invoke("Run o9",          "o9",  "Run o9",                 "⚡"))
-$($cmd.Invoke("setup",           "set", "Run set",               "🔧"))
-$($cmd.Invoke("Clear-Cache",     "cc",  "Clear Cache",           "🧹"))
-$($cmd.Invoke("SystemInfo",      "sys", "System Information",    "🖥️"))
-$($cmd.Invoke("Clear DNS",       "dns", "Clear DNS Cache",       "🌐"))
-$($cmd.Invoke("Kill Process",    "kill","Kill Process by Name",  "💀"))
-$($cmd.Invoke("Process Name",    "pp", "List Process by Name",   "🔎"))
-$($cmd.Invoke("Kill Process",    "k9", "Kill Process",           "🪓"))
+$($cmd.Invoke("Run o9",               "o9", "Run o9",             "⚡"))
+$($cmd.Invoke("setup",               "set", "Run set",           "🔧"))
+$($cmd.Invoke("Clear-Cache",          "cc", "Clear Cache",       "🧹"))
+$($cmd.Invoke("SystemInfo",          "sys", "System Info",       "🖥️"))
+$($cmd.Invoke("Clear DNS",           "dns", "Clear DNS Cache",   "🌐"))
+$($cmd.Invoke("Kill Process",       "kill", "Kill Process Name", "💀"))
+$($cmd.Invoke("Process Name",         "pp", "List Process Name", "🔎"))
+$($cmd.Invoke("Kill Process",         "k9", "Kill Process",      "🪓"))
 
 $border
 $($sectionHeader.Invoke("📄", "Files & Directories"))
-$($cmd.Invoke("list All",       "la", "List All Files",          "📁"))
-$($cmd.Invoke("Show Hidw",      "ll", "List Hidden Files",       "👻"))
-$($cmd.Invoke("Show First",     "fl",  "Show First Lines",       "🔝"))
-$($cmd.Invoke("Show Last",      "lf",  "Show Last Lines",        "🔚"))
-$($cmd.Invoke("Create Empty",   "cr",  "Create Empty File",      "🆕"))
-$($cmd.Invoke("Create File",    "nn",  "Create New File",        "✏️"))
-$($cmd.Invoke("find",           "ff",  "Find Files by Pattern",  "🔍"))
-$($cmd.Invoke("unzip",          "un",  "Extract Zip File",       "🗜️"))
-$($cmd.Invoke("Upload",         "hb",  "Upload URL",             "🌐"))
-$($cmd.Invoke("Disk Free",      "df",  "Disk Free Space",        "ℹ️"))
-$($cmd.Invoke("Show Path",      "pa",  "Show Command Path",      "🛤️"))
-$($cmd.Invoke("Environment",    "env", "Set Environmente",       "🌱"))
-$($cmd.Invoke("Replace",        "rr",  "Replace in File",        "✂️"))
+$($cmd.Invoke("list All",             "la", "List All Files",    "📁"))
+$($cmd.Invoke("Show Hidw",            "ll", "List Hidden Files", "👻"))
+$($cmd.Invoke("Show First",           "fl", "Show First Lines",  "🔝"))
+$($cmd.Invoke("Show Last",            "lf", "Show Last Lines",   "🔚"))
+$($cmd.Invoke("Create Empty",         "cr", "Create Empty File", "🆕"))
+$($cmd.Invoke("Create File",          "nn", "Create New File",   "✏️"))
+$($cmd.Invoke("find",                 "ff", "Find Files",        "🔍"))
+$($cmd.Invoke("unzip",                "un", "Extract Zip File",  "🗜️"))
+$($cmd.Invoke("Upload",               "hb", "Upload URL",        "🌐"))
+$($cmd.Invoke("Disk Free",            "df", "Disk Free Space",   "ℹ️"))
+$($cmd.Invoke("Show Path",            "pa", "Show Command Path", "🛤️"))
+$($cmd.Invoke("Environment",         "env", "Set Environmente",  "🌱"))
+$($cmd.Invoke("Replace",              "rr", "Replace in File",   "✂️"))
 
 $border
 $($sectionHeader.Invoke("🔎", "Search & Data"))
-$($cmd.Invoke("Search",       "grep", "Search with Regex",       "🧬"))
-$($cmd.Invoke("show ip",      "ip",   "Show Public IP",          "🌎"))
-$($cmd.Invoke("show time",    "time", "Show Uptime",             "⏰"))
+$($cmd.Invoke("Search",             "grep", "Search Regex",      "🧬"))
+$($cmd.Invoke("show ip",              "ip", "Show Public IP",    "🌎"))
+$($cmd.Invoke("show time",          "time", "Show Uptime",       "⏰"))
 
 $border
 $($sectionHeader.Invoke("👤", "Profile Management"))
-$($cmd.Invoke("Update-Profile",    "up",  "Update Profile",      "🔄"))
-$($cmd.Invoke("Update-PowerShell", "upp", "Update PowerShell",   "🔄"))
-$($cmd.Invoke("Edit-Profile",      "ep",  "Edit Profile",        "📝"))
-$($cmd.Invoke("Reload-profile",    "rpp", "Reload Profile",      "♻️"))
+$($cmd.Invoke("Update-Profile",       "up", "Update Profile",    "🔄"))
+$($cmd.Invoke("Update-PowerShell",   "upp", "Update PowerShell", "🔄"))
+$($cmd.Invoke("Edit-Profile",         "ep", "Edit Profile",      "📝"))
+$($cmd.Invoke("Reload-profile",      "rpp", "Reload Profile",    "♻️"))
 
 $border
 $($sectionHeader.Invoke("🔗", "Clipboard"))
-$($cmd.Invoke("Copy",         "cp", "Copy to Clipboard",         "📋"))
-$($cmd.Invoke("Paste",        "ps", "Paste from Clipboard",      "📋"))
+$($cmd.Invoke("Copy",                 "cp", "Copy File",         "📋"))
+$($cmd.Invoke("Paste",                "ps", "Paste File",        "📋"))
 
 $border
 $($sectionHeader.Invoke("🌱", "Git Shortcuts"))
@@ -597,22 +597,22 @@ $($cmd.Invoke("git status",           "gs", "git status",        "🟢"))
 $($cmd.Invoke("git add",              "ga", "git add .",         "➕"))
 $($cmd.Invoke("git commit -m",        "gc", "git commit -m",     "💬"))
 $($cmd.Invoke("git push",             "gp", "git push",          "🚀"))
-$($cmd.Invoke("GitHub",               "g", "GitHub Folder",      "🌐"))
-$($cmd.Invoke("Add & Commit",         "gco", "Add & Commit",     "📝"))
+$($cmd.Invoke("GitHub",                "g", "GitHub Folder",     "🌐"))
+$($cmd.Invoke("Add & Commit",        "gco", "Add & Commit",      "📝"))
 $($cmd.Invoke("Add, Commit & Push",   "lg", "Add-Commit-Push",    "⚡"))
 
 $border
 $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)h$($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)# Go to Documents folder$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)ha$($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)o$($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)# Show git status$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)# Git commit with message$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)# Git add, commit, push$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)# Copy to clipboard$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)# Show Git Status$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)# Git Commit$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)
 
-Use '$($PSStyle.Foreground.Magenta)h$($PSStyle.Reset)' to Display Help.
+Use '$($PSStyle.Foreground.Magenta)ha$($PSStyle.Reset)' to Display Help.
 $border
 "@
     Write-Host $helpText
@@ -627,4 +627,4 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'h' to Display Help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Use 'H' to Display Help$($PSStyle.Reset)"
