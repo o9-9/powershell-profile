@@ -16,28 +16,19 @@ if (-not (Test-Path $timeFilePath)) {
 $updateInterval = 7
 
 if ($debug) {
-    Write-Host "                                                                         " -ForegroundColor DarkGray
-    Write-Host "8888888b            888                                d88888b           " -ForegroundColor Cyan
-    Write-Host "888    888          888                              d88P   Y88b         " -ForegroundColor Magenta
-    Write-Host "888    888          888                              888     888         " -ForegroundColor White
-    Write-Host "888    888   d88b   88888b   888  888   d88b         888     888 88888b  " -ForegroundColor Cyan
-    Write-Host "888    888 d8P  Y8b 888  88b 888  888 d88P 88b       888     888 888  88b" -ForegroundColor Magenta
-    Write-Host "888    888 88888888 888  888 888  888 888  888       888     888 888  888" -ForegroundColor White
-    Write-Host "888   d88P Y8b      888 d88P Y88b 888 Y88b 888       Y88b   d88P 888  888" -ForegroundColor Cyan
-    Write-Host "8888888P     Y8888  88888P     Y88888   Y88888         Y88888P   888  888" -ForegroundColor Magenta
-    Write-Host "                                         888                             " -ForegroundColor White
-    Write-Host "                                   Y8b d88P                              " -ForegroundColor Cyan
-    Write-Host "                                     Y88P                                " -ForegroundColor Magenta
-    Write-Host "                                                                         " -ForegroundColor DarkGray
+    Write-Host "	                                    " -ForegroundColor White
+    Write-Host "▗▄▄▄ ▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖ ▗▄▄▖   ▗▄▖ ▗▖  ▗▖" -ForegroundColor Red
+    Write-Host "▐▌  █▐▌   ▐▌ ▐▌▐▌ ▐▌▐▌     ▐▌ ▐▌▐▛▚▖▐▌" -ForegroundColor DarkGray
+    Write-Host "▐▌  █▐▛▀▀▘▐▛▀▚▖▐▌ ▐▌▐▌▝▜▌  ▐▌ ▐▌▐▌ ▝▜▌" -ForegroundColor Red
+    Write-Host "▐▙▄▄▀▐▙▄▄▖▐▙▄▞▘▝▚▄▞▘▝▚▄▞▘  ▝▚▄▞▘▐▌  ▐▌" -ForegroundColor DarkGray
+    Write-Host "	                                    " -ForegroundColor White
 }
-
 
 <#
 WARNING:
 DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
 ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
 https://github.com/o9-9/powershell-profile.git.
-
 
 IF YOU WANT TO MAKE CHANGES, USE THE Edit-Profile FUNCTION
 AND SAVE YOUR CHANGES IN THE FILE CREATED.
@@ -158,6 +149,7 @@ function Clear-Cache {
     Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "✔ Clear Internet Cache Completed." -ForegroundColor Green
 }
+Set-Alias -Name cc -Value Clear-Cache
 
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -188,7 +180,7 @@ function Edit-Profile {
 Set-Alias -Name ep -Value Edit-Profile
 
 function cr($file) { "" | Out-File $file -Encoding ASCII }
-function fi($name) {
+function ff($name) {
     Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output "$($_.FullName)"
     }
@@ -263,7 +255,7 @@ function Reload-profile {
     & $profile
 }
 
-function uz ($file) {
+function un ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
@@ -310,11 +302,11 @@ function rr($file, $find, $replace) {
     (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
-function path($name) {
+function pa($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function exp($name, $value) {
+function env($name, $value) {
     set-item -force -path "env:$name" -value $value;
 }
 
@@ -326,12 +318,12 @@ function pp($name) {
     Get-Process $name
 }
 
-function hd {
+function fl {
   param($Path, $n = 10)
   Get-Content $Path -Head $n
 }
 
-function tt {
+function lf {
   param($Path, $n = 10, [switch]$f = $false)
   Get-Content $Path -Tail $n -Wait:$f
 }
@@ -340,7 +332,7 @@ function tt {
 function nn { param($name) New-Item -ItemType "file" -Path . -Name $name }
 
 # Directory Management
-function od { param($dir) mkdir $dir -Force; Set-Location $dir }
+function o { param($dir) mkdir $dir -Force; Set-Location $dir }
 
 function trash($path) {
     $fullPath = (Resolve-Path -Path $path).Path
@@ -384,9 +376,9 @@ function dt {
     Set-Location -Path $dt
 }
 # Go to Downloads folder
-function dl {
-    $dl = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
-    Set-Location -Path $dl
+function do {
+    $do = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
+    Set-Location -Path $do
 }
 
 # Go to Local AppData folder
@@ -396,9 +388,9 @@ function lc {
 }
 
 # Go to Roaming AppData folder
-function ra {
-    $ra = if(([Environment]::GetFolderPath("ApplicationData"))) {([Environment]::GetFolderPath("ApplicationData"))} else {$HOME + "\AppData\Roaming"}
-    Set-Location -Path $ra
+function ro {
+    $ro = if(([Environment]::GetFolderPath("ApplicationData"))) {([Environment]::GetFolderPath("ApplicationData"))} else {$HOME + "\AppData\Roaming"}
+    Set-Location -Path $ro
 }
 # Simplified Process Management
 function k9 { Stop-Process -Name $args[0] }
@@ -547,102 +539,89 @@ $($sectionHeader.Invoke("⚡", "PowerShell Profile Shortcuts"))
 $border
 
 $($sectionHeader.Invoke("🚀", "Navigation"))
-$($cmd.Invoke("dc",           "", "Go to Documents",             "📄"))
-$($cmd.Invoke("dt",           "", "Go to Desktop",               "🖥️"))
-$($cmd.Invoke("dl",           "", "Go to Downloads",             "⬇️"))
-$($cmd.Invoke("lc",           "", "Go to Local AppData",         "📁"))
-$($cmd.Invoke("ra",           "", "Go to Roaming AppData",       "🌐"))
-$($cmd.Invoke("od",           "", "Create & Change Directory",   "📂"))
+$($cmd.Invoke("Documents",  "dc", "Go to Documents",             "📄"))
+$($cmd.Invoke("Desktop",    "dt", "Go to Desktop",               "🖥️"))
+$($cmd.Invoke("Downloads",  "do", "Go to Downloads",             "⬇️"))
+$($cmd.Invoke("Local",      "lc", "Go to Local AppData",         "📁"))
+$($cmd.Invoke("Roaming",    "ro", "Go to Roaming AppData",       "🌐"))
+$($cmd.Invoke("Change",      "o", "Change Directory",            "📂"))
 
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"))
-$($cmd.Invoke("o9",           "",   "Run o9",                     "⚡"))
-$($cmd.Invoke("set",          "",   "Run set",                   "🔧"))
-$($cmd.Invoke("cc",           "",   "Clear Cache",               "🧹"))
-$($cmd.Invoke("sys",          "",   "System Information",        "🖥️"))
-$($cmd.Invoke("dns",          "",   "Clear DNS Cache",           "🌐"))
-$($cmd.Invoke("kill",         "",   "Kill Process by Name",      "💀"))
-$($cmd.Invoke("pp",           "",   "List Process by Name",      "🔎"))
-$($cmd.Invoke("k9",           "",   "Kill Process",              "🪓"))
+$($cmd.Invoke("Run o9",          "o9",  "Run o9",                 "⚡"))
+$($cmd.Invoke("setup",           "set", "Run set",               "🔧"))
+$($cmd.Invoke("Clear-Cache",     "cc",  "Clear Cache",           "🧹"))
+$($cmd.Invoke("SystemInfo",      "sys", "System Information",    "🖥️"))
+$($cmd.Invoke("Clear DNS",       "dns", "Clear DNS Cache",       "🌐"))
+$($cmd.Invoke("Kill Process",    "kill","Kill Process by Name",  "💀"))
+$($cmd.Invoke("Process Name",    "pp", "List Process by Name",   "🔎"))
+$($cmd.Invoke("Kill Process",    "k9", "Kill Process",           "🪓"))
 
 $border
 $($sectionHeader.Invoke("📄", "Files & Directories"))
-$($cmd.Invoke("la",           "",   "List All Files",            "📁"))
-$($cmd.Invoke("ll",           "",   "List Hidden Files",         "👻"))
-$($cmd.Invoke("hd",           "",   "Show First Lines",          "🔝"))
-$($cmd.Invoke("tt",           "",   "Show Last Lines",           "🔚"))
-$($cmd.Invoke("cr",           "",   "Create Empty File",         "🆕"))
-$($cmd.Invoke("nn",           "",   "Create New File",           "✏️"))
-$($cmd.Invoke("fi",           "",   "Find Files by Pattern",     "🔍"))
-$($cmd.Invoke("uz",           "",   "Extract Zip File",          "🗜️"))
-$($cmd.Invoke("hb",           "",   "Upload to Hastebin",        "🌐"))
-$($cmd.Invoke("df",           "",   "Disk Free Space",           "ℹ️"))
-$($cmd.Invoke("path",         "",   "Show Command Path",         "🛤️"))
-$($cmd.Invoke("exp",          "",   "Set Environment Variable",  "🌱"))
-$($cmd.Invoke("rr",           "",   "Replace in File",           "✂️"))
+$($cmd.Invoke("list All",       "la", "List All Files",          "📁"))
+$($cmd.Invoke("Show Hidw",      "ll", "List Hidden Files",       "👻"))
+$($cmd.Invoke("Show First",     "fl",  "Show First Lines",       "🔝"))
+$($cmd.Invoke("Show Last",      "lf",  "Show Last Lines",        "🔚"))
+$($cmd.Invoke("Create Empty",   "cr",  "Create Empty File",      "🆕"))
+$($cmd.Invoke("Create File",    "nn",  "Create New File",        "✏️"))
+$($cmd.Invoke("find",           "ff",  "Find Files by Pattern",  "🔍"))
+$($cmd.Invoke("unzip",          "un",  "Extract Zip File",       "🗜️"))
+$($cmd.Invoke("Upload",         "hb",  "Upload URL",             "🌐"))
+$($cmd.Invoke("Disk Free",      "df",  "Disk Free Space",        "ℹ️"))
+$($cmd.Invoke("Show Path",      "pa",  "Show Command Path",      "🛤️"))
+$($cmd.Invoke("Environment",    "env", "Set Environmente",       "🌱"))
+$($cmd.Invoke("Replace",        "rr",  "Replace in File",        "✂️"))
 
 $border
 $($sectionHeader.Invoke("🔎", "Search & Data"))
-$($cmd.Invoke("grep",         "",   "Search with Regex",         "🧬"))
-$($cmd.Invoke("ip",           "",   "Show Public IP",            "🌎"))
-$($cmd.Invoke("time",         "",   "Show Uptime",               "⏰"))
+$($cmd.Invoke("Search",       "grep", "Search with Regex",       "🧬"))
+$($cmd.Invoke("show ip",      "ip",   "Show Public IP",          "🌎"))
+$($cmd.Invoke("show time",    "time", "Show Uptime",             "⏰"))
 
 $border
 $($sectionHeader.Invoke("👤", "Profile Management"))
-$($cmd.Invoke("Update-Profile",    "up", "Update Profile",       "🔄"))
-$($cmd.Invoke("Update-PowerShell", "ps1", "Update PowerShell",   "🔄"))
-$($cmd.Invoke("Edit-Profile",      "ep", "Edit Profile",         "📝"))
+$($cmd.Invoke("Update-Profile",    "up",  "Update Profile",      "🔄"))
+$($cmd.Invoke("Update-PowerShell", "upp", "Update PowerShell",   "🔄"))
+$($cmd.Invoke("Edit-Profile",      "ep",  "Edit Profile",        "📝"))
 $($cmd.Invoke("Reload-profile",    "rpp", "Reload Profile",      "♻️"))
 
 $border
 $($sectionHeader.Invoke("🔗", "Clipboard"))
-$($cmd.Invoke("cp",           "cb", "Copy to Clipboard",         "📋"))
-$($cmd.Invoke("ps",           "pb", "Paste from Clipboard",      "📋"))
+$($cmd.Invoke("Copy",         "cp", "Copy to Clipboard",         "📋"))
+$($cmd.Invoke("Paste",        "ps", "Paste from Clipboard",      "📋"))
 
 $border
 $($sectionHeader.Invoke("🌱", "Git Shortcuts"))
-$($cmd.Invoke("gs",           "", "git status",                  "🟢"))
-$($cmd.Invoke("ga",           "", "git add .",                   "➕"))
-$($cmd.Invoke("gc",           "", "git commit -m",               "💬"))
-$($cmd.Invoke("gp",           "", "git push",                    "🚀"))
-$($cmd.Invoke("g",            "", "Go to GitHub folder",         "🌐"))
-$($cmd.Invoke("gco",          "", "Add & Commit",                "📝"))
-$($cmd.Invoke("lg",           "", "Add, Commit & Push",           "⚡"))
+$($cmd.Invoke("git status",           "gs", "git status",        "🟢"))
+$($cmd.Invoke("git add",              "ga", "git add .",         "➕"))
+$($cmd.Invoke("git commit -m",        "gc", "git commit -m",     "💬"))
+$($cmd.Invoke("git push",             "gp", "git push",          "🚀"))
+$($cmd.Invoke("GitHub",               "g", "GitHub Folder",      "🌐"))
+$($cmd.Invoke("Add & Commit",         "gco", "Add & Commit",     "📝"))
+$($cmd.Invoke("Add, Commit & Push",   "lg", "Add-Commit-Push",    "⚡"))
 
 $border
 $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) h             $($PSStyle.Foreground.DarkGray)# Display this help menu$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) dc            $($PSStyle.Foreground.DarkGray)# Go to Documents folder$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) o9             $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) od myproject  $($PSStyle.Foreground.DarkGray)# Create and go to folder$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) gs            $($PSStyle.Foreground.DarkGray)# Show git status$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) gc "message"  $($PSStyle.Foreground.DarkGray)# Git commit with message$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) lg "fix bug"  $($PSStyle.Foreground.DarkGray)# Git add, commit, push$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) cb "text"     $($PSStyle.Foreground.DarkGray)# Copy to clipboard$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)h$($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)# Go to Documents folder$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)o$($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)# Show git status$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)# Git commit with message$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)# Git add, commit, push$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)# Copy to clipboard$($PSStyle.Reset)
 
-"⚡⚡⚡"$($PSStyle.Foreground.Magenta)Use '$($PSStyle.Reset)h$($PSStyle.Foreground.Magenta)'$($PSStyle.Reset) to Display Help.
+Use '$($PSStyle.Foreground.Magenta)h$($PSStyle.Reset)' to Display Help.
 $border
 "@
     Write-Host $helpText
 }
 
-# Handle potential alias conflicts
-# Check for and remove aliases that might conflict with our new ones
-$aliasesToCheck = @('cp', 'ps', 'gc', 'h', 'md')
-foreach ($alias in $aliasesToCheck) {
-    if (Get-Alias -Name $alias -ErrorAction SilentlyContinue) {
-        # Make a note of it but don't remove built-in aliases
-        Write-Verbose "Note: Built-in alias '$alias' exists. Our custom alias will override it."
-    }
-}
 # System and Utility Shortcuts
 Set-Alias -Name up -Value Update-Profile
-Set-Alias -Name ps1 -Value Update-PowerShell
-Set-Alias -Name rpp -Value Reload-Profile
-Set-Alias -Name cc -Value Clear-Cache
-# Clipboard - Note: 'cp' conflicts with Copy-Item, 'ps' conflicts with Get-Process
-Set-Alias -Name cb -Value cp  # Alternative for clipboard copy
-Set-Alias -Name pb -Value ps  # Alternative for clipboard paste
+Set-Alias -Name upp -Value Update-PowerShell
+
 
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
