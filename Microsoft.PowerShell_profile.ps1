@@ -527,7 +527,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 
 # Help Function
 function ha {
-    $border = "$($PSStyle.Foreground.Yellow)═════════════════════════════════════════════════════════════════$($PSStyle.Reset)"
+    $border = "$($PSStyle.Foreground.DarkGray)════════════════════════════════$($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
         "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) "}else{''})$sym  $desc"
@@ -602,14 +602,15 @@ $($cmd.Invoke("43 ", "lg"   , "Add-Commit-Push",    "⚡"))
 
 $border
 $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)ha$($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)o$($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)# Show Git Status$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)# Git Commit$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)>$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)
+
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)  ha  $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) dc  $($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) o9  $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) o  $($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) gs $($PSStyle.Foreground.DarkGray)# Show Git Status$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) gco $($PSStyle.Foreground.DarkGray)# Git Commit$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) lg  $($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)>$($PSStyle.Reset) cp  $($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)
 
 Use '$($PSStyle.Foreground.Magenta)ha$($PSStyle.Reset)' to Display Help.
 $border
