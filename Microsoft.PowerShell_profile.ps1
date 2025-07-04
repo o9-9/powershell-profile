@@ -1,4 +1,4 @@
-$debug = $false
+$debug = $true
 
 # Define the path to the file that stores the last execution time
 $timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
@@ -158,7 +158,6 @@ function Clear-Cache {
     Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "✔ Clear Internet Cache Completed." -ForegroundColor Green
 }
-Set-Alias -Name cc -Value Clear-Cache
 
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -203,9 +202,9 @@ function o9 {
 	irm https://raw.githubusercontent.com/o9-9/o9/main/o9.ps1 | iex
 }
 
-# Open setup
-function setup {
-	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
+# Open set
+function set {
+	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/set.ps1 | iex
 }
 
 # System Utilities
@@ -260,11 +259,11 @@ function time {
     }
 }
 
-function reload-profile {
+function Reload-profile {
     & $profile
 }
 
-function unzip ($file) {
+function uz ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
@@ -307,7 +306,7 @@ function df {
     get-volume
 }
 
-function rep($file, $find, $replace) {
+function rr($file, $find, $replace) {
     (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
@@ -319,29 +318,29 @@ function exp($name, $value) {
     set-item -force -path "env:$name" -value $value;
 }
 
-function okill($name) {
+function kill($name) {
     Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function ogrep($name) {
+function pp($name) {
     Get-Process $name
 }
 
-function head {
+function hd {
   param($Path, $n = 10)
   Get-Content $Path -Head $n
 }
 
-function tail {
+function tt {
   param($Path, $n = 10, [switch]$f = $false)
   Get-Content $Path -Tail $n -Wait:$f
 }
 
 # Quick File Creation
-function nf { param($name) New-Item -ItemType "file" -Path . -Name $name }
+function nn { param($name) New-Item -ItemType "file" -Path . -Name $name }
 
 # Directory Management
-function o9cd { param($dir) mkdir $dir -Force; Set-Location $dir }
+function od { param($dir) mkdir $dir -Force; Set-Location $dir }
 
 function trash($path) {
     $fullPath = (Resolve-Path -Path $path).Path
@@ -375,31 +374,31 @@ function trash($path) {
 
 # Navigation Shortcuts
 # Go to Documents
-function docs {
-    $docs = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
-    Set-Location -Path $docs
+function dc {
+    $dc = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
+    Set-Location -Path $dc
 }
 # Go to Desktop
-function dtop {
-    $dtop = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Documents"}
-    Set-Location -Path $dtop
+function dt {
+    $dt = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Documents"}
+    Set-Location -Path $dt
 }
 # Go to Downloads folder
-function dow {
-    $dow = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
-    Set-Location -Path $dow
+function dl {
+    $dl = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
+    Set-Location -Path $dl
 }
 
 # Go to Local AppData folder
-function loc {
-    $loc = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local"}
-    Set-Location -Path $loc
+function lc {
+    $lc = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local"}
+    Set-Location -Path $lc
 }
 
 # Go to Roaming AppData folder
-function roa {
-    $roa = if(([Environment]::GetFolderPath("ApplicationData"))) {([Environment]::GetFolderPath("ApplicationData"))} else {$HOME + "\AppData\Roaming"}
-    Set-Location -Path $roa
+function ra {
+    $ra = if(([Environment]::GetFolderPath("ApplicationData"))) {([Environment]::GetFolderPath("ApplicationData"))} else {$HOME + "\AppData\Roaming"}
+    Set-Location -Path $ra
 }
 # Simplified Process Management
 function k9 { Stop-Process -Name $args[0] }
@@ -421,18 +420,18 @@ function g { __zoxide_z github }
 
 function gcl { git clone "$args" }
 
-function gcom {
+function gco {
     git add .
     git commit -m "$args"
 }
-function lazyg {
+function lg {
     git add .
     git commit -m "$args"
     git push
 }
 
 # Quick Access to System Information
-function sysinfo { Get-ComputerInfo }
+function sys { Get-ComputerInfo }
 
 # Networking Utilities
 function dns {
@@ -535,12 +534,11 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 }
 
 # Help Function
-function he {
+function h {
     $border = "$($PSStyle.Foreground.Yellow)═════════════════════════════════════════════════════════════════$($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
-        $aliasPart = if ($alias) { "$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) " } else { "" }
-        "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $aliasPart$sym  $desc"
+        "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) "}else{''})$sym  $desc"
     }
 
     $helpText = @"
@@ -549,39 +547,39 @@ $($sectionHeader.Invoke("⚡", "PowerShell Profile Shortcuts"))
 $border
 
 $($sectionHeader.Invoke("🚀", "Navigation"))
-$($cmd.Invoke("docs",         "dc", "Go to Documents",           "📄"))
-$($cmd.Invoke("dtop",         "dt", "Go to Desktop",             "🖥️"))
-$($cmd.Invoke("dow",          "dl", "Go to Downloads",           "⬇️"))
-$($cmd.Invoke("loc",          "lc", "Go to Local AppData",       "📁"))
-$($cmd.Invoke("roa",          "ra", "Go to Roaming AppData",     "🌐"))
-$($cmd.Invoke("o9cd",         "od", "Create & Change Directory", "📂"))
+$($cmd.Invoke("dc",           "", "Go to Documents",             "📄"))
+$($cmd.Invoke("dt",           "", "Go to Desktop",               "🖥️"))
+$($cmd.Invoke("dl",           "", "Go to Downloads",             "⬇️"))
+$($cmd.Invoke("lc",           "", "Go to Local AppData",         "📁"))
+$($cmd.Invoke("ra",           "", "Go to Roaming AppData",       "🌐"))
+$($cmd.Invoke("od",           "", "Create & Change Directory",   "📂"))
 
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"))
-$($cmd.Invoke("o9",           "o",  "Run o9",                    "⚡"))
-$($cmd.Invoke("setup",        "sp", "Run setup",                 "🔧"))
+$($cmd.Invoke("o9",           "",   "Run o9",                     "⚡"))
+$($cmd.Invoke("set",          "",   "Run set",                   "🔧"))
 $($cmd.Invoke("cc",           "",   "Clear Cache",               "🧹"))
-$($cmd.Invoke("sysinfo",      "si", "System Information",        "🖥️"))
-$($cmd.Invoke("dns",          "dn", "Clear DNS Cache",           "🌐"))
-$($cmd.Invoke("okill",        "kp", "Kill Process by Name",      "💀"))
-$($cmd.Invoke("ogrep",        "pp", "List Process by Name",      "🔎"))
+$($cmd.Invoke("sys",          "",   "System Information",        "🖥️"))
+$($cmd.Invoke("dns",          "",   "Clear DNS Cache",           "🌐"))
+$($cmd.Invoke("kill",         "",   "Kill Process by Name",      "💀"))
+$($cmd.Invoke("pp",           "",   "List Process by Name",      "🔎"))
 $($cmd.Invoke("k9",           "",   "Kill Process",              "🪓"))
 
 $border
 $($sectionHeader.Invoke("📄", "Files & Directories"))
 $($cmd.Invoke("la",           "",   "List All Files",            "📁"))
 $($cmd.Invoke("ll",           "",   "List Hidden Files",         "👻"))
-$($cmd.Invoke("head",         "hd", "Show First Lines",          "🔝"))
-$($cmd.Invoke("tail",         "tt", "Show Last Lines",           "🔚"))
+$($cmd.Invoke("hd",           "",   "Show First Lines",          "🔝"))
+$($cmd.Invoke("tt",           "",   "Show Last Lines",           "🔚"))
 $($cmd.Invoke("cr",           "",   "Create Empty File",         "🆕"))
-$($cmd.Invoke("nf",           "nn", "Create New File",           "✏️"))
-$($cmd.Invoke("fi",           "fn", "Find Files by Pattern",     "🔍"))
-$($cmd.Invoke("unzip",        "uz", "Extract Zip File",          "🗜️"))
+$($cmd.Invoke("nn",           "",   "Create New File",           "✏️"))
+$($cmd.Invoke("fi",           "",   "Find Files by Pattern",     "🔍"))
+$($cmd.Invoke("uz",           "",   "Extract Zip File",          "🗜️"))
 $($cmd.Invoke("hb",           "",   "Upload to Hastebin",        "🌐"))
 $($cmd.Invoke("df",           "",   "Disk Free Space",           "ℹ️"))
 $($cmd.Invoke("path",         "",   "Show Command Path",         "🛤️"))
 $($cmd.Invoke("exp",          "",   "Set Environment Variable",  "🌱"))
-$($cmd.Invoke("rep",          "rr", "Replace in File",           "✂️"))
+$($cmd.Invoke("rr",           "",   "Replace in File",           "✂️"))
 
 $border
 $($sectionHeader.Invoke("🔎", "Search & Data"))
@@ -594,7 +592,7 @@ $($sectionHeader.Invoke("👤", "Profile Management"))
 $($cmd.Invoke("Update-Profile",    "up", "Update Profile",       "🔄"))
 $($cmd.Invoke("Update-PowerShell", "ps1", "Update PowerShell",   "🔄"))
 $($cmd.Invoke("Edit-Profile",      "ep", "Edit Profile",         "📝"))
-$($cmd.Invoke("reload-profile",    "rp", "Reload Profile",       "♻️"))
+$($cmd.Invoke("Reload-profile",    "rpp", "Reload Profile",      "♻️"))
 
 $border
 $($sectionHeader.Invoke("🔗", "Clipboard"))
@@ -603,26 +601,26 @@ $($cmd.Invoke("ps",           "pb", "Paste from Clipboard",      "📋"))
 
 $border
 $($sectionHeader.Invoke("🌱", "Git Shortcuts"))
-$($cmd.Invoke("gs",           "gt", "git status",                "🟢"))
-$($cmd.Invoke("ga",           "",   "git add .",                 "➕"))
-$($cmd.Invoke("gc",           "cm", "git commit -m",             "💬"))
-$($cmd.Invoke("gp",           "",   "git push",                  "🚀"))
-$($cmd.Invoke("g",            "gh", "Go to GitHub folder",       "🌐"))
-$($cmd.Invoke("gcom",         "",   "Add & Commit",              "📝"))
-$($cmd.Invoke("lazyg",        "lg", "Add, Commit & Push",        "⚡"))
+$($cmd.Invoke("gs",           "", "git status",                  "🟢"))
+$($cmd.Invoke("ga",           "", "git add .",                   "➕"))
+$($cmd.Invoke("gc",           "", "git commit -m",               "💬"))
+$($cmd.Invoke("gp",           "", "git push",                    "🚀"))
+$($cmd.Invoke("g",            "", "Go to GitHub folder",         "🌐"))
+$($cmd.Invoke("gco",          "", "Add & Commit",                "📝"))
+$($cmd.Invoke("lg",           "", "Add, Commit & Push",           "⚡"))
 
 $border
 $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) h             $($PSStyle.Foreground.DarkGray)# Display this help menu$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) dc            $($PSStyle.Foreground.DarkGray)# Go to Documents folder$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) o             $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) o9             $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) od myproject  $($PSStyle.Foreground.DarkGray)# Create and go to folder$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) gt            $($PSStyle.Foreground.DarkGray)# Show git status$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) cm "message"  $($PSStyle.Foreground.DarkGray)# Git commit with message$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) gs            $($PSStyle.Foreground.DarkGray)# Show git status$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) gc "message"  $($PSStyle.Foreground.DarkGray)# Git commit with message$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) lg "fix bug"  $($PSStyle.Foreground.DarkGray)# Git add, commit, push$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)PS>$($PSStyle.Reset) cb "text"     $($PSStyle.Foreground.DarkGray)# Copy to clipboard$($PSStyle.Reset)
 
-Use $($PSStyle.Foreground.Magenta)'h'$($PSStyle.Reset) or $($PSStyle.Foreground.Magenta)'he'$($PSStyle.Reset) to display this help message anytime.
+"⚡⚡⚡"$($PSStyle.Foreground.Magenta)Use '$($PSStyle.Reset)h$($PSStyle.Foreground.Magenta)'$($PSStyle.Reset) to Display Help.
 $border
 "@
     Write-Host $helpText
@@ -637,55 +635,17 @@ foreach ($alias in $aliasesToCheck) {
         Write-Verbose "Note: Built-in alias '$alias' exists. Our custom alias will override it."
     }
 }
-
-# Define aliases for existing functions
-# Navigation Shortcuts
-Set-Alias -Name o -Value o9
-Set-Alias -Name sp -Value setup
-Set-Alias -Name dc -Value docs
-Set-Alias -Name dt -Value dtop
-Set-Alias -Name dl -Value dow
-Set-Alias -Name lc -Value loc
-Set-Alias -Name ra -Value roa
-Set-Alias -Name od -Value o9cd  # Changed from 'md' to avoid conflict with mkdir alias
-
 # System and Utility Shortcuts
 Set-Alias -Name up -Value Update-Profile
 Set-Alias -Name ps1 -Value Update-PowerShell
-Set-Alias -Name rp -Value reload-profile
-Set-Alias -Name si -Value sysinfo
-Set-Alias -Name dn -Value dns
-
-# File Operations
-Set-Alias -Name tt -Value tail
-Set-Alias -Name hd -Value head
-Set-Alias -Name fn -Value fi
-Set-Alias -Name uz -Value unzip
-Set-Alias -Name rr -Value rep
-Set-Alias -Name nf -Value nf  # Already short enough
-
-# Git Shortcuts - Note: 'gc' conflicts with Get-Content
-Set-Alias -Name gt -Value gs  # git status
-Set-Alias -Name ga -Value ga  # git add (already short)
-# Using 'cm' instead of 'gc' to avoid conflict with Get-Content
-Set-Alias -Name cm -Value gc  # git commit (avoiding conflict)
-Set-Alias -Name gp -Value gp  # git push (already short)
-Set-Alias -Name gh -Value g   # github
-Set-Alias -Name lg -Value lazyg
-
-# Process Management
-Set-Alias -Name kp -Value okill
-Set-Alias -Name pp -Value ogrep
-
+Set-Alias -Name rpp -Value Reload-Profile
+Set-Alias -Name cc -Value Clear-Cache
 # Clipboard - Note: 'cp' conflicts with Copy-Item, 'ps' conflicts with Get-Process
 Set-Alias -Name cb -Value cp  # Alternative for clipboard copy
 Set-Alias -Name pb -Value ps  # Alternative for clipboard paste
-
-# Keep the original he alias for help
-Set-Alias -Name h -Value he
 
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'h' or 'he' to Display Help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Use 'h' to Display Help$($PSStyle.Reset)"
