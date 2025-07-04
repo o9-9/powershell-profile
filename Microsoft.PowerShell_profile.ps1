@@ -1,4 +1,4 @@
-$debug = $true
+$debug = $fales
 
 # Define the path to the file that stores the last execution time
 $timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
