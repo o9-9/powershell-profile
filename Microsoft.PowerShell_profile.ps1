@@ -10,9 +10,9 @@ $timeFilePath = [Environment]::GetFolderPath("MyDocuments") + "\PowerShell\LastE
 $updateInterval = 7
 
 if ($debug) {
-    Write-Host "==============" -ForegroundColor Cyan
-    Write-Host "=  Debug On  =" -ForegroundColor Cyan
-    Write-Host "==============" -ForegroundColor Cyan
+    Write-Host "==============" -ForegroundColor Gray
+    Write-Host "=  Debug On  =" -ForegroundColor Gray
+    Write-Host "==============" -ForegroundColor Gray
 }
 
 
@@ -55,9 +55,9 @@ function Update-Profile {
         $newhash = Get-FileHash "$env:temp/Microsoft.PowerShell_profile.ps1"
         if ($newhash.Hash -ne $oldhash.Hash) {
             Copy-Item -Path "$env:temp/Microsoft.PowerShell_profile.ps1" -Destination $PROFILE -Force
-            Write-Host "✔ Profile Updated > Restart Terminal" -ForegroundColor Magenta
+            Write-Host "✔ o9  > Restart" -ForegroundColor Gray
         } else {
-            Write-Host "Profile Up Date." -ForegroundColor Green
+            Write-Host "o9" -ForegroundColor Gray
         }
     } catch {
         Write-Error "Unable Check `$profile updates: $_"
@@ -77,7 +77,7 @@ if (-not $debug -and `
     $currentTime | Out-File -FilePath $timeFilePath
 
 } elseif ($debug) {
-    Write-Warning "Skip Profile Update check"
+    #Write-Warning "Skip Profile Update check"
 }
 
 function Update-PowerShell {
@@ -95,7 +95,7 @@ function Update-PowerShell {
         if ($updateNeeded) {
             Write-Host "Updating PowerShell..." -ForegroundColor Yellow
             Start-Process powershell.exe -ArgumentList "-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements" -Wait -NoNewWindow
-            Write-Host "✔ PowerShell Updated > Restart Terminal" -ForegroundColor Magenta
+            Write-Host "✔ PowerShell > Restart" -ForegroundColor Gray
         } else {
             Write-Host "PowerShell Up Date." -ForegroundColor Green
         }
@@ -115,7 +115,7 @@ if (-not $debug -and `
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
     $currentTime | Out-File -FilePath $timeFilePath
 } elseif ($debug) {
-    Write-Warning "Skip Profile Update check"
+    #Write-Warning "Skip Profile Update check"
 }
 
 function Clear-Cache {
@@ -142,6 +142,7 @@ function Clear-Cache {
     Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "✔ Clear Internet Cache Completed." -ForegroundColor Green
 }
+Set-Alias -Name cc -Value Clear-Cache
 
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -544,6 +545,8 @@ $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
 $($PSStyle.Foreground.Cyan)o9$($PSStyle.Reset) - Run o9.
 
 $($PSStyle.Foreground.Cyan)setup$($PSStyle.Reset) - Run setup.
+
+$($PSStyle.Foreground.Cyan)cc$($PSStyle.Reset)   - Run Clear Cache.
 
 $($PSStyle.Foreground.Cyan)docs$($PSStyle.Reset) - Go to Documents.
 
