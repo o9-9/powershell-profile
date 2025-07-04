@@ -539,7 +539,7 @@ function he {
     $border = "$($PSStyle.Foreground.Yellow)═════════════════════════════════════════════════════════════════$($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
-        "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) "}else{""})$sym  $desc"
+        "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"`$($PSStyle.Foreground.Green)[$alias]`$($PSStyle.Reset) "}else{""})$sym  $desc"
     }
 
     $helpText = @"
