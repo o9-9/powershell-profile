@@ -526,176 +526,135 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 }
 
 # Help Function
-function hh {
-    param(
-        [string]$Section
-    )
-    Clear-Host
+function Show-ProfileShortcutsHelp {
+    <#
+    .SYNOPSIS
+        Displays a styled help menu for PowerShell profile shortcuts and utilities.
 
-    $width = [Math]::Max([Math]::Min([console]::WindowWidth, 100), 60)
-    $borderChar = "═"
-    $border = "$($PSStyle.Foreground.BrightBlack)$($borderChar * $width)$($PSStyle.Reset)"
+    .DESCRIPTION
+        This function prints a colorized and organized help menu that lists common navigation,
+        system, file, data, clipboard, and git shortcuts available in your PowerShell profile.
+        It uses best practices for readability, maintainability, and PowerShell scripting.
 
-    function Center-Text($text, $width) {
-        if ($text.Length -ge $width) { return $text }
-        $pad = [int](($width - $text.Length) / 2)
-        return (' ' * $pad) + $text
+    .EXAMPLE
+        Show-ProfileShortcutsHelp
+
+    .NOTES
+        - Uses $PSStyle for coloring, available in PowerShell 7+.
+        - Ensure your terminal supports Unicode and color output.
+    #>
+
+    # Region: Styling
+    $border = "$($PSStyle.Foreground.DarkGray)════════════════════════════════════════════════════$($PSStyle.Reset)"
+
+    function New-SectionHeader {
+        param (
+            [string]$Emoji,
+            [string]$Title
+        )
+        return "$($PSStyle.Foreground.Magenta)$Emoji  $Title$($PSStyle.Reset)"
     }
 
-    # Banner
-    $bannerLines = @(
-        "▗▖ ▗▖▗▄▄▄▖▗▖     ▗▄▄▖"
-        "▐▌ ▐▌▐▌   ▐▌     ▐▌ ▐▌"
-        "▐▛▀▜▌▐▛▀▀▘▐▌     ▐▛▀▘"
-        "▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖  ▐▌"
-    )
-    $subtitle = "PowerShell Profile Shortcuts"
-    $banner = "`n" + ($bannerLines | ForEach-Object { "$($PSStyle.Foreground.BrightMagenta)$(Center-Text $_ $width)$($PSStyle.Reset)" }) -join "`n"
-    $banner += "`n$($PSStyle.Foreground.Magenta)$(Center-Text $subtitle $width)$($PSStyle.Reset)`n"
-
-    $sectionHeader = { param($emoji, $title)
-        "`n$($PSStyle.Foreground.BrightMagenta)$(Center-Text "$emoji  $title" $width)$($PSStyle.Reset)`n"
+    function New-CommandLine {
+        param (
+            [string]$Number,
+            [string]$Alias,
+            [string]$Description,
+            [string]$Symbol
+        )
+        $aliasDisplay = if ($Alias) { "$($PSStyle.Foreground.Green)[$Alias]$($PSStyle.Reset) " } else { '' }
+        return "$($PSStyle.Foreground.Cyan)$Number$($PSStyle.Reset) $aliasDisplay$Symbol  $Description"
     }
 
-    # Aligned command line
-    $cmd = { param($cmd, $alias, $desc, $sym)
-        $cmdPart   = "$($PSStyle.Foreground.BrightCyan)$cmd$($PSStyle.Reset)"
-        $aliasPart = if ($alias) { "$($PSStyle.Foreground.BrightGreen)[$alias]$($PSStyle.Reset)" } else { "" }
-        $symPart   = "$($PSStyle.Foreground.BrightYellow)$sym$($PSStyle.Reset)"
-        $descPart  = "$($PSStyle.Foreground.White)$desc$($PSStyle.Reset)"
-        "{0,-3} {1,-8} {2,-2}  {3}" -f $cmdPart, $aliasPart, $symPart, $descPart
-    }
+    # Region: Help Text Construction
+    $helpSections = @(
+        $border
+        (New-SectionHeader -Emoji "⚡" -Title "PowerShell Profile Shortcuts")
+        $border
 
-    # Section definitions (as previously)
-    $sections = @(
-        @{
-            Key = "navigation"
-            Header = $sectionHeader.Invoke("🚀", "Navigation")
-            Commands = @(
-                $cmd.Invoke("01", "dc"   , "Go to Documents",   "📄")
-                $cmd.Invoke("02", "dt"   , "Go to Desktop",     "🖥️")
-                $cmd.Invoke("03", "do"   , "Go to Downloads",   "⬇️")
-                $cmd.Invoke("04", "lc"   , "Go to Local",       "📁")
-                $cmd.Invoke("05", "ro"   , "Go to Roaming",     "🌐")
-                $cmd.Invoke("06", "o"    , "Change Directory",  "📂")
-            )
-        },
-        @{
-            Key = "system"
-            Header = $sectionHeader.Invoke("🛠️", "System / Utility")
-            Commands = @(
-                $cmd.Invoke("07", "o9"   , "Run o9",             "⚡")
-                $cmd.Invoke("08", "set"  , "Run set",           "🔧")
-                $cmd.Invoke("09", "cc"   , "Clear Cache",       "🧹")
-                $cmd.Invoke("10", "sys"  , "System Info",       "🖥️")
-                $cmd.Invoke("11", "dns"  , "Clear DNS Cache",   "🌐")
-                $cmd.Invoke("12", "kill" , "Kill Process Name", "💀")
-                $cmd.Invoke("13", "pp"   , "List Process Name", "🔎")
-                $cmd.Invoke("14", "k9"   , "Kill Process",      "🪓")
-            )
-        },
-        @{
-            Key = "files"
-            Header = $sectionHeader.Invoke("📄", "Files & Directories")
-            Commands = @(
-                $cmd.Invoke("15", "la"   , "List All Files",    "📁")
-                $cmd.Invoke("16", "ll"   , "List Hidden Files", "👻")
-                $cmd.Invoke("17", "fl"   , "Show First Lines",  "🔝")
-                $cmd.Invoke("18", "lf"   , "Show Last Lines",   "🔚")
-                $cmd.Invoke("19", "cr"   , "Create Empty File", "🆕")
-                $cmd.Invoke("20", "nn"   , "Create New File",   "✏️")
-                $cmd.Invoke("21", "ff"   , "Find Files",        "🔍")
-                $cmd.Invoke("22", "un"   , "Extract Zip File",  "🗜️")
-                $cmd.Invoke("23", "hb"   , "Upload URL",        "🌐")
-                $cmd.Invoke("24", "df"   , "Disk Free Space",   "ℹ️")
-                $cmd.Invoke("25", "pa"   , "Show Command Path", "🛤️")
-                $cmd.Invoke("26", "env"  , "Set Environment",   "🌱")
-                $cmd.Invoke("27", "rr"   , "Replace in File",   "✂️")
-            )
-        },
-        @{
-            Key = "search"
-            Header = $sectionHeader.Invoke("🔎", "Search & Data")
-            Commands = @(
-                $cmd.Invoke("28", "grep" , "Search Regex",      "🧬")
-                $cmd.Invoke("29", "ip"   , "Show Public IP",    "🌎")
-                $cmd.Invoke("30", "time" , "Show Uptime",       "⏰")
-            )
-        },
-        @{
-            Key = "profile"
-            Header = $sectionHeader.Invoke("👤", "Profile Management")
-            Commands = @(
-                $cmd.Invoke("31", "up"   , "Update Profile",    "🔄")
-                $cmd.Invoke("32", "upp"  , "Update PowerShell", "🔄")
-                $cmd.Invoke("33", "ep"   , "Edit Profile",      "📝")
-                $cmd.Invoke("34", "rpp"  , "Reload Profile",    "♻️")
-            )
-        },
-        @{
-            Key = "clipboard"
-            Header = $sectionHeader.Invoke("🔗", "Clipboard")
-            Commands = @(
-                $cmd.Invoke("35", "cp"   , "Copy File",         "📋")
-                $cmd.Invoke("36", "ps"   , "Paste File",        "📋")
-            )
-        },
-        @{
-            Key = "git"
-            Header = $sectionHeader.Invoke("🌱", "Git Shortcuts")
-            Commands = @(
-                $cmd.Invoke("37", "gs"   , "git status",        "🟢")
-                $cmd.Invoke("38", "ga"   , "git add .",         "➕")
-                $cmd.Invoke("39", "gc"   , "git commit -m",     "💬")
-                $cmd.Invoke("40", "gp"   , "git push",          "🚀")
-                $cmd.Invoke("41", "g"    , "GitHub Folder",     "🌐")
-                $cmd.Invoke("42", "gco"  , "Add & Commit",      "📝")
-                $cmd.Invoke("43", "lg"   , "Add-Commit-Push",   "⚡")
-            )
-        },
-        @{
-            Key = "usage"
-            Header = $sectionHeader.Invoke("🧑‍🏫", "Usage Examples")
-            Commands = @(
-                "$($PSStyle.Foreground.BrightYellow)$(Center-Text 'hh # Display Help Menu' $width)$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) dc  $($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) o9  $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) o   $($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) gs  $($PSStyle.Foreground.DarkGray)# Show Git Status$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) gco $($PSStyle.Foreground.DarkGray)# Git Commit$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) lg  $($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) cp  $($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)"
-                "$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Cyan)Tip:$($PSStyle.Reset) $(Center-Text 'Use hh to Display Help.' $width)"
-            )
-        }
+        (New-SectionHeader -Emoji "🚀" -Title "Navigation")
+        (New-CommandLine "01" "dc" "Go to Documents" "📄")
+        (New-CommandLine "02" "dt" "Go to Desktop" "🖥️")
+        (New-CommandLine "03" "do" "Go to Downloads" "⬇️")
+        (New-CommandLine "04" "lc" "Go to Local" "📁")
+        (New-CommandLine "05" "ro" "Go to Roaming" "🌐")
+        (New-CommandLine "06" "o" "Change Directory" "📂")
+
+        $border
+        (New-SectionHeader -Emoji "🛠️" -Title "System / Utility")
+        (New-CommandLine "07" "o9" "Run o9" "⚡")
+        (New-CommandLine "08" "set" "Run set" "🔧")
+        (New-CommandLine "09" "cc" "Clear Cache" "🧹")
+        (New-CommandLine "10" "sys" "System Info" "🖥️")
+        (New-CommandLine "11" "dns" "Clear DNS Cache" "🌐")
+        (New-CommandLine "12" "kill" "Kill Process Name" "💀")
+        (New-CommandLine "13" "pp" "List Process Name" "🔎")
+        (New-CommandLine "14" "k9" "Kill Process" "🪓")
+
+        $border
+        (New-SectionHeader -Emoji "📄" -Title "Files & Directories")
+        (New-CommandLine "15" "la" "List All Files" "📁")
+        (New-CommandLine "16" "ll" "List Hidden Files" "👻")
+        (New-CommandLine "17" "fl" "Show First Lines" "🔝")
+        (New-CommandLine "18" "lf" "Show Last Lines" "🔚")
+        (New-CommandLine "19" "cr" "Create Empty File" "🆕")
+        (New-CommandLine "20" "nn" "Create New File" "✏️")
+        (New-CommandLine "21" "ff" "Find Files" "🔍")
+        (New-CommandLine "22" "un" "Extract Zip File" "🗜️")
+        (New-CommandLine "23" "hb" "Upload URL" "🌐")
+        (New-CommandLine "24" "df" "Disk Free Space" "ℹ️")
+        (New-CommandLine "25" "pa" "Show Command Path" "🛤️")
+        (New-CommandLine "26" "env" "Set Environment" "🌱")
+        (New-CommandLine "27" "rr" "Replace in File" "✂️")
+
+        $border
+        (New-SectionHeader -Emoji "🔎" -Title "Search & Data")
+        (New-CommandLine "28" "grep" "Search Regex" "🧬")
+        (New-CommandLine "29" "ip" "Show Public IP" "🌎")
+        (New-CommandLine "30" "time" "Show Uptime" "⏰")
+
+        $border
+        (New-SectionHeader -Emoji "👤" -Title "Profile Management")
+        (New-CommandLine "31" "up" "Update Profile" "🔄")
+        (New-CommandLine "32" "upp" "Update PowerShell" "🔄")
+        (New-CommandLine "33" "ep" "Edit Profile" "📝")
+        (New-CommandLine "34" "rpp" "Reload Profile" "♻️")
+
+        $border
+        (New-SectionHeader -Emoji "🔗" -Title "Clipboard")
+        (New-CommandLine "35" "cp" "Copy File" "📋")
+        (New-CommandLine "36" "ps" "Paste File" "📋")
+
+        $border
+        (New-SectionHeader -Emoji "🌱" -Title "Git Shortcuts")
+        (New-CommandLine "37" "gs" "git status" "🟢")
+        (New-CommandLine "38" "ga" "git add ." "➕")
+        (New-CommandLine "39" "gc" "git commit -m" "💬")
+        (New-CommandLine "40" "gp" "git push" "🚀")
+        (New-CommandLine "41" "g" "GitHub Folder" "🌐")
+        (New-CommandLine "42" "gco" "Add & Commit" "📝")
+        (New-CommandLine "43" "lg" "Add-Commit-Push" "⚡")
+
+        $border
+        (New-SectionHeader -Emoji "🧑‍🏫" -Title "Usage Examples")
+        ""
+        "$($PSStyle.Foreground.Green)hh$($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)dc$($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)o9$($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)o $($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)gs$($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Show Git Status$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)gco$($PSStyle.Reset) $($PSStyle.Foreground.DarkGray)# Git Commit$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)lg$($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)"
+        "$($PSStyle.Foreground.Green)cp$($PSStyle.Reset)  $($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)"
+        ""
+        "Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to Display Help."
+        $border
     )
 
-    $selectedSections = $sections
-    if ($Section) {
-        $Section = $Section.ToLower()
-        $filtered = $sections | Where-Object { $_.Key -eq $Section }
-        if ($filtered) {
-            $selectedSections = $filtered
-        } else {
-            Write-Host "`n$($PSStyle.Foreground.Red)Section '$Section' not found. Available sections:$($PSStyle.Reset)"
-            $sections | ForEach-Object { Write-Host " - $($_.Key)" }
-            return
-        }
-    }
-
-    Write-Host $banner
-    foreach ($sec in $selectedSections) {
-        Write-Host $border
-        Write-Host $sec.Header
-        foreach ($cmdline in $sec.Commands) {
-            Write-Host $cmdline
-        }
-    }
-    Write-Host $border
+    Write-Host ($helpSections -join "`n")
 }
-
 # System and Utility Shortcuts
+Set-Alias hh Show-ProfileShortcutsHelp
 Set-Alias -Name up -Value Update-Profile
 Set-Alias -Name upp -Value Update-PowerShell
 
