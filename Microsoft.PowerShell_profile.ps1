@@ -532,115 +532,135 @@ function hh {
     )
     Clear-Host
 
-    $width = [Math]::Min([console]::WindowWidth,80)
+    # Terminal width for dynamic border, min 60 max 100 for best look
+    $width = [Math]::Max([Math]::Min([console]::WindowWidth, 100), 60)
     $borderChar = "═"
-    $border = "$($PSStyle.Foreground.DarkGray)$($borderChar * $width)$($PSStyle.Reset)"
+    $border = "$($PSStyle.Foreground.BrightBlack)$($borderChar * $width)$($PSStyle.Reset)"
 
-    $banner = @"
-$($PSStyle.Foreground.BrightMagenta)
-▗▖ ▗▖▗▄▄▄▖▗▖   ▗▄▄▖
-▐▌ ▐▌▐▌   ▐▌   ▐▌ ▐▌
-▐▛▀▜▌▐▛▀▀▘▐▌   ▐▛▀▘
-▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖▐▌      PowerShell Profile Shortcuts
-$($PSStyle.Reset)
-"@
-
-    $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
-    $cmd = { param($cmd, $alias, $desc, $sym)
-        "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) "}else{''})$sym  $desc"
+    # Center text helper
+    function Center-Text($text, $width) {
+        if ($text.Length -ge $width) { return $text }
+        $pad = [int](($width - $text.Length) / 2)
+        return (' ' * $pad) + $text
     }
 
+    # Banner (centered)
+    $bannerLines = @(
+        "▗▖ ▗▖▗▄▄▄▖▗▖     ▗▄▄▖"
+        "▐▌ ▐▌▐▌   ▐▌     ▐▌ ▐▌"
+        "▐▛▀▜▌▐▛▀▀▘▐▌     ▐▛▀▘"
+        "▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖  ▐▌"
+        "PowerShell Profile Shortcuts"
+    )
+    $banner = "`n" + ($bannerLines | ForEach-Object { "$($PSStyle.Foreground.BrightMagenta)$(Center-Text $_ $width)$($PSStyle.Reset)" }) -join "`n"
+
+    # Section header (centered)
+    $sectionHeader = { param($emoji, $title)
+        "$($PSStyle.Foreground.Magenta)$(Center-Text "$emoji  $title" $width)$($PSStyle.Reset)"
+    }
+
+    # Command formatting
+    $cmd = { param($cmd, $alias, $desc, $sym)
+        $cmdPart   = "$($PSStyle.Foreground.BrightCyan)$cmd$($PSStyle.Reset)"
+        $aliasPart = if ($alias) { "$($PSStyle.Foreground.BrightGreen)[$alias]$($PSStyle.Reset) " } else { "" }
+        $symPart   = "$($PSStyle.Foreground.BrightYellow)$sym$($PSStyle.Reset)"
+        $descPart  = "$($PSStyle.Foreground.White)$desc$($PSStyle.Reset)"
+        # Align: Command left, alias and symbol center, desc right
+        "{0,-6} {1,-10} {2,-2}  {3}" -f $cmdPart, $aliasPart, $symPart, $descPart
+    }
+
+    # Section definitions
     $sections = @(
         @{
             Key = "navigation"
             Header = $sectionHeader.Invoke("🚀", "Navigation")
             Commands = @(
-                $cmd.Invoke("01 ", "dc"   , "Go to Documents",   "📄")
-                $cmd.Invoke("02 ", "dt"   , "Go to Desktop",     "🖥️")
-                $cmd.Invoke("03 ", "do"   , "Go to Downloads",   "⬇️")
-                $cmd.Invoke("04 ", "lc"   , "Go to Local",       "📁")
-                $cmd.Invoke("05 ", "ro"   , "Go to Roaming",     "🌐")
-                $cmd.Invoke("06 ", "o"    , "Change Directory",  "📂")
+                $cmd.Invoke("01", "dc"   , "Go to Documents",   "📄")
+                $cmd.Invoke("02", "dt"   , "Go to Desktop",     "🖥️")
+                $cmd.Invoke("03", "do"   , "Go to Downloads",   "⬇️")
+                $cmd.Invoke("04", "lc"   , "Go to Local",       "📁")
+                $cmd.Invoke("05", "ro"   , "Go to Roaming",     "🌐")
+                $cmd.Invoke("06", "o"    , "Change Directory",  "📂")
             )
         },
         @{
             Key = "system"
             Header = $sectionHeader.Invoke("🛠️", "System / Utility")
             Commands = @(
-                $cmd.Invoke("07 ", "o9"   , "Run o9",             "⚡")
-                $cmd.Invoke("08 ", "set"  , "Run set",           "🔧")
-                $cmd.Invoke("09 ", "cc"   , "Clear Cache",       "🧹")
-                $cmd.Invoke("10 ", "sys"  , "System Info",       "🖥️")
-                $cmd.Invoke("11 ", "dns"  , "Clear DNS Cache",   "🌐")
-                $cmd.Invoke("12 ", "kill" , "Kill Process Name", "💀")
-                $cmd.Invoke("13 ", "pp  " , "List Process Name", "🔎")
-                $cmd.Invoke("14 ", "k9"   , "Kill Process",      "🪓")
+                $cmd.Invoke("07", "o9"   , "Run o9",             "⚡")
+                $cmd.Invoke("08", "set"  , "Run set",           "🔧")
+                $cmd.Invoke("09", "cc"   , "Clear Cache",       "🧹")
+                $cmd.Invoke("10", "sys"  , "System Info",       "🖥️")
+                $cmd.Invoke("11", "dns"  , "Clear DNS Cache",   "🌐")
+                $cmd.Invoke("12", "kill" , "Kill Process Name", "💀")
+                $cmd.Invoke("13", "pp"   , "List Process Name", "🔎")
+                $cmd.Invoke("14", "k9"   , "Kill Process",      "🪓")
             )
         },
         @{
             Key = "files"
             Header = $sectionHeader.Invoke("📄", "Files & Directories")
             Commands = @(
-                $cmd.Invoke("15 ", "la"   , "List All Files",    "📁")
-                $cmd.Invoke("16 ", "ll"   , "List Hidden Files", "👻")
-                $cmd.Invoke("17 ", "fl"   , "Show First Lines",  "🔝")
-                $cmd.Invoke("18 ", "lf"   , "Show Last Lines",   "🔚")
-                $cmd.Invoke("19 ", "cr"   , "Create Empty File", "🆕")
-                $cmd.Invoke("20 ", "nn"   , "Create New File",   "✏️")
-                $cmd.Invoke("21 ", "ff"   , "Find Files",        "🔍")
-                $cmd.Invoke("22 ", "un"   , "Extract Zip File",  "🗜️")
-                $cmd.Invoke("23 ", "hb"   , "Upload URL",        "🌐")
-                $cmd.Invoke("24 ", "df"   , "Disk Free Space",   "ℹ️")
-                $cmd.Invoke("25 ", "pa"   , "Show Command Path", "🛤️")
-                $cmd.Invoke("26 ", "env"  , "Set Environment",   "🌱")
-                $cmd.Invoke("27 ", "rr"   , "Replace in File",   "✂️")
+                $cmd.Invoke("15", "la"   , "List All Files",    "📁")
+                $cmd.Invoke("16", "ll"   , "List Hidden Files", "👻")
+                $cmd.Invoke("17", "fl"   , "Show First Lines",  "🔝")
+                $cmd.Invoke("18", "lf"   , "Show Last Lines",   "🔚")
+                $cmd.Invoke("19", "cr"   , "Create Empty File", "🆕")
+                $cmd.Invoke("20", "nn"   , "Create New File",   "✏️")
+                $cmd.Invoke("21", "ff"   , "Find Files",        "🔍")
+                $cmd.Invoke("22", "un"   , "Extract Zip File",  "🗜️")
+                $cmd.Invoke("23", "hb"   , "Upload URL",        "🌐")
+                $cmd.Invoke("24", "df"   , "Disk Free Space",   "ℹ️")
+                $cmd.Invoke("25", "pa"   , "Show Command Path", "🛤️")
+                $cmd.Invoke("26", "env"  , "Set Environment",   "🌱")
+                $cmd.Invoke("27", "rr"   , "Replace in File",   "✂️")
             )
         },
         @{
             Key = "search"
             Header = $sectionHeader.Invoke("🔎", "Search & Data")
             Commands = @(
-                $cmd.Invoke("28 ", "grep" , "Search Regex",      "🧬")
-                $cmd.Invoke("29 ", "ip"   , "Show Public IP",    "🌎")
-                $cmd.Invoke("30 ", "time" , "Show Uptime",       "⏰")
+                $cmd.Invoke("28", "grep" , "Search Regex",      "🧬")
+                $cmd.Invoke("29", "ip"   , "Show Public IP",    "🌎")
+                $cmd.Invoke("30", "time" , "Show Uptime",       "⏰")
             )
         },
         @{
             Key = "profile"
             Header = $sectionHeader.Invoke("👤", "Profile Management")
             Commands = @(
-                $cmd.Invoke("31 ", "up"   , "Update Profile",    "🔄")
-                $cmd.Invoke("32 ", "upp"  , "Update PowerShell", "🔄")
-                $cmd.Invoke("33 ", "ep"   , "Edit Profile",      "📝")
-                $cmd.Invoke("34 ", "rpp"  , "Reload Profile",    "♻️")
+                $cmd.Invoke("31", "up"   , "Update Profile",    "🔄")
+                $cmd.Invoke("32", "upp"  , "Update PowerShell", "🔄")
+                $cmd.Invoke("33", "ep"   , "Edit Profile",      "📝")
+                $cmd.Invoke("34", "rpp"  , "Reload Profile",    "♻️")
             )
         },
         @{
             Key = "clipboard"
             Header = $sectionHeader.Invoke("🔗", "Clipboard")
             Commands = @(
-                $cmd.Invoke("35 ", "cp"   , "Copy File",         "📋")
-                $cmd.Invoke("36 ", "ps"   , "Paste File",        "📋")
+                $cmd.Invoke("35", "cp"   , "Copy File",         "📋")
+                $cmd.Invoke("36", "ps"   , "Paste File",        "📋")
             )
         },
         @{
             Key = "git"
             Header = $sectionHeader.Invoke("🌱", "Git Shortcuts")
             Commands = @(
-                $cmd.Invoke("37 ", "gs"   , "git status",        "🟢")
-                $cmd.Invoke("38 ", "ga"   , "git add .",         "➕")
-                $cmd.Invoke("39 ", "gc"   , "git commit -m",     "💬")
-                $cmd.Invoke("40 ", "gp"   , "git push",          "🚀")
-                $cmd.Invoke("41 ", "g"    , "GitHub Folder",     "🌐")
-                $cmd.Invoke("42 ", "gco"  , "Add & Commit",      "📝")
-                $cmd.Invoke("43 ", "lg"   , "Add-Commit-Push",   "⚡")
+                $cmd.Invoke("37", "gs"   , "git status",        "🟢")
+                $cmd.Invoke("38", "ga"   , "git add .",         "➕")
+                $cmd.Invoke("39", "gc"   , "git commit -m",     "💬")
+                $cmd.Invoke("40", "gp"   , "git push",          "🚀")
+                $cmd.Invoke("41", "g"    , "GitHub Folder",     "🌐")
+                $cmd.Invoke("42", "gco"  , "Add & Commit",      "📝")
+                $cmd.Invoke("43", "lg"   , "Add-Commit-Push",   "⚡")
             )
         },
         @{
             Key = "usage"
             Header = $sectionHeader.Invoke("🧑‍🏫", "Usage Examples")
             Commands = @(
-                "$($PSStyle.Foreground.BrightYellow)  hh   $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)"
+                "$($PSStyle.Foreground.BrightYellow)$(Center-Text 'hh' $width) $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) dc  $($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) o9  $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) o   $($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)"
@@ -649,11 +669,12 @@ $($PSStyle.Reset)
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) lg  $($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) cp  $($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)"
                 "$($PSStyle.Reset)"
-                "Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to Display Help."
+                "$($PSStyle.Foreground.Magenta)Tip:$($PSStyle.Reset) Use $(Center-Text 'hh' $width) to Display Help."
             )
         }
     )
 
+    # Section Filter
     $selectedSections = $sections
     if ($Section) {
         $Section = $Section.ToLower()
@@ -661,19 +682,22 @@ $($PSStyle.Reset)
         if ($filtered) {
             $selectedSections = $filtered
         } else {
-            Write-Host "$($PSStyle.Foreground.Red)Section '$Section' not found. Available sections:$($PSStyle.Reset)"
+            Write-Host "`n$($PSStyle.Foreground.Red)Section '$Section' not found. Available sections:$($PSStyle.Reset)"
             $sections | ForEach-Object { Write-Host " - $($_.Key)" }
             return
         }
     }
 
+    # Output
     Write-Host $banner
     foreach ($sec in $selectedSections) {
         Write-Host $border
         Write-Host $sec.Header
+        Write-Host ""
         foreach ($cmdline in $sec.Commands) {
             Write-Host $cmdline
         }
+        Write-Host ""
     }
     Write-Host $border
 }
