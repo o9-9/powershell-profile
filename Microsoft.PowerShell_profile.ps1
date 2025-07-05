@@ -542,11 +542,11 @@ $($cmd.Invoke("dc  ","", "Go to Documents",       "📄"))
 $($cmd.Invoke("dt  ","", "Go to Desktop",         "🖥️"))
 $($cmd.Invoke("do  ","", "Go to Downloads",       "⬇️"))
 $($cmd.Invoke("lc  ","", "Go to Local",           "📁"))
-$($cmd.Invoke("ro  ","", "Go to Roaming",         "🌐"))
+$($cmd.Invoke("ro  ","", "Go to Roaming",         "📁"))
 $($cmd.Invoke("o   ","", "Change Directory",      "📂"))
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"      ))
-$($cmd.Invoke("o9  ","", "Run o9",                 "⚡"))
+$($cmd.Invoke("o9  ","", "Run o9",                "⚡⚡"))
 $($cmd.Invoke("set ","", "Run set",               "🔧"))
 $($cmd.Invoke("cc  ","", "Clear Cache",           "🧹"))
 $($cmd.Invoke("sys ","", "System Info",           "🖥️"))
@@ -592,19 +592,19 @@ $($cmd.Invoke("gc  ","", "git commit -m",         "💬"))
 $($cmd.Invoke("gp  ","", "git push",              "🚀"))
 $($cmd.Invoke("g   ","", "GitHub Folder",         "🌐"))
 $($cmd.Invoke("gco ","", "Add & Commit",          "📝"))
-$($cmd.Invoke("lg  ","", "Add-Commit-Push",        "⚡"))
+$($cmd.Invoke("lg  ","", "Add-Commit-Push",       "🚀"))
 $border
 $($sectionHeader.Invoke("⚡", "Examples"               ))
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray) # Display Help Menu.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray) # Go to Documents.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray) # Run o9.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)o$($PSStyle.Foreground.DarkGray)  # Change Directory.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray) # Show Git Status.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)# Git Commit.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray) # Git Add, Commit, Push.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray) # Copy File.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray)   Display Help Menu.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)   Go to Documents.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)   Run o9.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)o$($PSStyle.Foreground.DarkGray)    Change Directory.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)   Show Git Status.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)  Git Commit.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)   Git Add, Commit, Push.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)   Copy File.$($PSStyle.Reset)
 
-Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to Display Help.
+Use '$($PSStyle.Foreground.Magenta)HH$($PSStyle.Reset)' to Display Help.
 $border
 "@
     Write-Host $helpText
