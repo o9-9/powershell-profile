@@ -532,44 +532,41 @@ function hh {
     )
     Clear-Host
 
-    # Terminal width for dynamic border, min 60 max 100 for best look
     $width = [Math]::Max([Math]::Min([console]::WindowWidth, 100), 60)
     $borderChar = "═"
     $border = "$($PSStyle.Foreground.BrightBlack)$($borderChar * $width)$($PSStyle.Reset)"
 
-    # Center text helper
     function Center-Text($text, $width) {
         if ($text.Length -ge $width) { return $text }
         $pad = [int](($width - $text.Length) / 2)
         return (' ' * $pad) + $text
     }
 
-    # Banner (centered)
+    # Banner
     $bannerLines = @(
         "▗▖ ▗▖▗▄▄▄▖▗▖     ▗▄▄▖"
         "▐▌ ▐▌▐▌   ▐▌     ▐▌ ▐▌"
         "▐▛▀▜▌▐▛▀▀▘▐▌     ▐▛▀▘"
         "▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖  ▐▌"
-        "PowerShell Profile Shortcuts"
     )
+    $subtitle = "PowerShell Profile Shortcuts"
     $banner = "`n" + ($bannerLines | ForEach-Object { "$($PSStyle.Foreground.BrightMagenta)$(Center-Text $_ $width)$($PSStyle.Reset)" }) -join "`n"
+    $banner += "`n$($PSStyle.Foreground.Magenta)$(Center-Text $subtitle $width)$($PSStyle.Reset)`n"
 
-    # Section header (centered)
     $sectionHeader = { param($emoji, $title)
-        "$($PSStyle.Foreground.Magenta)$(Center-Text "$emoji  $title" $width)$($PSStyle.Reset)"
+        "`n$($PSStyle.Foreground.BrightMagenta)$(Center-Text "$emoji  $title" $width)$($PSStyle.Reset)`n"
     }
 
-    # Command formatting
+    # Aligned command line
     $cmd = { param($cmd, $alias, $desc, $sym)
         $cmdPart   = "$($PSStyle.Foreground.BrightCyan)$cmd$($PSStyle.Reset)"
-        $aliasPart = if ($alias) { "$($PSStyle.Foreground.BrightGreen)[$alias]$($PSStyle.Reset) " } else { "" }
+        $aliasPart = if ($alias) { "$($PSStyle.Foreground.BrightGreen)[$alias]$($PSStyle.Reset)" } else { "" }
         $symPart   = "$($PSStyle.Foreground.BrightYellow)$sym$($PSStyle.Reset)"
         $descPart  = "$($PSStyle.Foreground.White)$desc$($PSStyle.Reset)"
-        # Align: Command left, alias and symbol center, desc right
-        "{0,-6} {1,-10} {2,-2}  {3}" -f $cmdPart, $aliasPart, $symPart, $descPart
+        "{0,-3} {1,-8} {2,-2}  {3}" -f $cmdPart, $aliasPart, $symPart, $descPart
     }
 
-    # Section definitions
+    # Section definitions (as previously)
     $sections = @(
         @{
             Key = "navigation"
@@ -660,7 +657,7 @@ function hh {
             Key = "usage"
             Header = $sectionHeader.Invoke("🧑‍🏫", "Usage Examples")
             Commands = @(
-                "$($PSStyle.Foreground.BrightYellow)$(Center-Text 'hh' $width) $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)"
+                "$($PSStyle.Foreground.BrightYellow)$(Center-Text 'hh # Display Help Menu' $width)$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) dc  $($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) o9  $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) o   $($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)"
@@ -669,12 +666,11 @@ function hh {
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) lg  $($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)"
                 "$($PSStyle.Foreground.Green)>$($PSStyle.Reset) cp  $($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)"
                 "$($PSStyle.Reset)"
-                "$($PSStyle.Foreground.Magenta)Tip:$($PSStyle.Reset) Use $(Center-Text 'hh' $width) to Display Help."
+                "$($PSStyle.Foreground.Cyan)Tip:$($PSStyle.Reset) $(Center-Text 'Use hh to Display Help.' $width)"
             )
         }
     )
 
-    # Section Filter
     $selectedSections = $sections
     if ($Section) {
         $Section = $Section.ToLower()
@@ -688,16 +684,13 @@ function hh {
         }
     }
 
-    # Output
     Write-Host $banner
     foreach ($sec in $selectedSections) {
         Write-Host $border
         Write-Host $sec.Header
-        Write-Host ""
         foreach ($cmdline in $sec.Commands) {
             Write-Host $cmdline
         }
-        Write-Host ""
     }
     Write-Host $border
 }
