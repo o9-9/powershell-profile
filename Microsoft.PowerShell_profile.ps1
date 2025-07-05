@@ -526,7 +526,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 }
 
 # Help Function
-function ha {
+function hh {
     $border = "$($PSStyle.Foreground.DarkGray)════════════════════════════════$($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
@@ -598,12 +598,12 @@ $($cmd.Invoke("39 ", "gc"   , "git commit -m",     "💬"))
 $($cmd.Invoke("40 ", "gp"   , "git push",          "🚀"))
 $($cmd.Invoke("41 ", "g"    , "GitHub Folder",     "🌐"))
 $($cmd.Invoke("42 ", "gco"  , "Add & Commit",      "📝"))
-$($cmd.Invoke("43 ", 'lg'   , "Add-Commit-Push",    "⚡"))
+$($cmd.Invoke("43 ", "lg"   , "Add-Commit-Push",    "⚡"))
 
 $border
 $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
 
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)  ha  $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)  hh  $($PSStyle.Foreground.DarkGray)# Display Help Menu$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)>$($PSStyle.Reset) dc  $($PSStyle.Foreground.DarkGray)# Go to Documents$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)>$($PSStyle.Reset) o9  $($PSStyle.Foreground.DarkGray)# Run o9$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)>$($PSStyle.Reset) o  $($PSStyle.Foreground.DarkGray)# Change Directory$($PSStyle.Reset)
@@ -612,7 +612,7 @@ $($sectionHeader.Invoke("🧑‍🏫", "Usage Examples"))
  $($PSStyle.Foreground.Green)>$($PSStyle.Reset) lg  $($PSStyle.Foreground.DarkGray)# Git Add, Commit, Push$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)>$($PSStyle.Reset) cp  $($PSStyle.Foreground.DarkGray)# Copy File$($PSStyle.Reset)
 
-Use '$($PSStyle.Foreground.Magenta)ha$($PSStyle.Reset)' to Display Help.
+Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to Display Help.
 $border
 "@
     Write-Host $helpText
@@ -627,4 +627,4 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'H' to Display Help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.Yellow)Use 'hh' to Display Help$($PSStyle.Reset)"
