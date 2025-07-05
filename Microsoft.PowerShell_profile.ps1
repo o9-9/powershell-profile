@@ -584,7 +584,7 @@ $($sectionHeader.Invoke("👤", "Profile Management"    ))
 $($cmd.Invoke("up  ","", "Update Profile",        "🔄"))
 $($cmd.Invoke("uo  ","", "Update PowerShell",     "🔄"))
 $($cmd.Invoke("ep  ","", "Edit Profile",          "📝"))
-$($cmd.Invoke("rp  ","", "Reload Profile",        "♻️"))
+$($cmd.Invoke("re  ","", "Reload Profile",        "♻️"))
 $border
 $($sectionHeader.Invoke("🔗", "Clipboard"             ))
 $($cmd.Invoke("cp  ","", "Copy File",             "📋"))
@@ -618,7 +618,7 @@ $border
 # System and Utility Shortcuts
 Set-Alias -Name up -Value Update-Profile
 Set-Alias -Name uo -Value Update-PowerShell
-Set-Alias -Name rp -Value reload-profile
+Set-Alias -Name re -Value reload-profile
 Set-Alias -Name ep -Value Edit-Profile
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
