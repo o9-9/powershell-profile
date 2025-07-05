@@ -550,7 +550,7 @@ $($cmd.Invoke("ro","","Go to Roaming",         "📁"))
 $($cmd.Invoke("oc","","Change Directory",      "📂"))
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"   ))
-$($cmd.Invoke("o9","","Run o9",                "⚡⚡"))
+$($cmd.Invoke("o9","","Run o9",                n"⚡"))
 $($cmd.Invoke("vs","","VS Code Setup",         "🔧"))
 $($cmd.Invoke("pr","","Profile Setup",         "🔧"))
 $($cmd.Invoke("cc","","Clear Cache",           "🧹"))
