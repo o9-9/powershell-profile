@@ -541,7 +541,7 @@ $($PSStyle.Foreground.BrightMagenta)
 ▗▖ ▗▖▗▄▄▄▖▗▖   ▗▄▄▖
 ▐▌ ▐▌▐▌   ▐▌   ▐▌ ▐▌
 ▐▛▀▜▌▐▛▀▀▘▐▌   ▐▛▀▘
-▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖▐▌
+▐▌ ▐▌▐▙▄▄▖▐▙▄▄▖▐▌      PowerShell Profile Shortcuts
 $($PSStyle.Reset)
 "@
 
