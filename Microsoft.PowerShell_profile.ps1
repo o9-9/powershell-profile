@@ -177,7 +177,6 @@ Set-Alias -Name vim -Value $EDITOR
 function Edit-Profile {
     vim $PROFILE.CurrentUserAllHosts
 }
-Set-Alias -Name ep -Value Edit-Profile
 
 function cr($file) { "" | Out-File $file -Encoding ASCII }
 function ff($name) {
@@ -194,9 +193,14 @@ function o9 {
 	irm https://raw.githubusercontent.com/o9-9/o9/main/o9.ps1 | iex
 }
 
-# Open set
-function set {
-	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/set.ps1 | iex
+# Install VS Code setup
+function vs {
+	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
+}
+
+# PowerShell Profile Setup
+function pr {
+	irm https://raw.githubusercontent.com/o9-9/powershell-profile/main/setup.ps1 | iex
 }
 
 # System Utilities
@@ -212,7 +216,7 @@ function admin {
 # Set UNIX-like aliases for the admin command, so sudo <command> will run the command with elevated rights.
 Set-Alias -Name su -Value admin
 
-function time {
+function ti {
     try {
         # find date/time format
         $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
@@ -235,27 +239,27 @@ function time {
         Write-Host "System Started On: $formattedBootTime" -ForegroundColor DarkGray
 
         # calculate time
-        $time = (Get-Date) - $bootTime
+        $ti = (Get-Date) - $bootTime
 
         # time in days, hours, minutes, and seconds
-        $days = $time.Days
-        $hours = $time.Hours
-        $minutes = $time.Minutes
-        $seconds = $time.Seconds
+        $days = $ti.Days
+        $hours = $ti.Hours
+        $minutes = $ti.Minutes
+        $seconds = $ti.Seconds
 
         # time output
-        Write-Host ("time: {0} days, {1} hours, {2} minutes, {3} seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
+        Write-Host ("Time: {0} Days, {1} Hours, {2} Minutes, {3} Seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
 
     } catch {
         Write-Error "An Error Retrieving System Time."
     }
 }
 
-function Reload-profile {
+function reload-profile {
     & $profile
 }
 
-function un ($file) {
+function zi ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
@@ -286,7 +290,7 @@ function hb {
         Write-Error "Failed to upload Document. Error: $_"
     }
 }
-function grep($regex, $dir) {
+function se($regex, $dir) {
     if ( $dir ) {
         Get-ChildItem $dir | select-string $regex
         return
@@ -294,27 +298,27 @@ function grep($regex, $dir) {
     $input | select-string $regex
 }
 
-function df {
+function di {
     get-volume
 }
 
-function rr($file, $find, $replace) {
+function ch($file, $find, $replace) {
     (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
-function pa($name) {
+function sh($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function env($name, $value) {
+function ev($name, $value) {
     set-item -force -path "env:$name" -value $value;
 }
 
-function kill($name) {
+function kp($name) {
     Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function pp($name) {
+function lp($name) {
     Get-Process $name
 }
 
@@ -332,7 +336,7 @@ function lf {
 function nn { param($name) New-Item -ItemType "file" -Path . -Name $name }
 
 # Directory Management
-function o { param($dir) mkdir $dir -Force; Set-Location $dir }
+function oc { param($dir) mkdir $dir -Force; Set-Location $dir }
 
 function trash($path) {
     $fullPath = (Resolve-Path -Path $path).Path
@@ -408,11 +412,11 @@ function gc { param($m) git commit -m "$m" }
 
 function gp { git push }
 
-function g { __zoxide_z github }
+function gg { __zoxide_z github }
 
 function gcl { git clone "$args" }
 
-function gco {
+function gm {
     git add .
     git commit -m "$args"
 }
@@ -423,10 +427,10 @@ function lg {
 }
 
 # Quick Access to System Information
-function sys { Get-ComputerInfo }
+function sy { Get-ComputerInfo }
 
 # Networking Utilities
-function dns {
+function dn {
 	Clear-DnsClientCache
 	Write-Host "✔ Clean Cache DNS"
 }
@@ -543,16 +547,17 @@ $($cmd.Invoke("dt  ","", "Go to Desktop",         "🖥️"))
 $($cmd.Invoke("do  ","", "Go to Downloads",       "⬇️"))
 $($cmd.Invoke("lc  ","", "Go to Local",           "📁"))
 $($cmd.Invoke("ro  ","", "Go to Roaming",         "📁"))
-$($cmd.Invoke("o   ","", "Change Directory",      "📂"))
+$($cmd.Invoke("oc  ","", "Change Directory",      "📂"))
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"      ))
 $($cmd.Invoke("o9  ","", "Run o9",                "⚡⚡"))
-$($cmd.Invoke("set ","", "Run set",               "🔧"))
+$($cmd.Invoke("vs  ","", "VS Code Setup",         "🔧"))
+$($cmd.Invoke("pr  ","", "Profile Setup",         "🔧"))
 $($cmd.Invoke("cc  ","", "Clear Cache",           "🧹"))
-$($cmd.Invoke("sys ","", "System Info",           "🖥️"))
-$($cmd.Invoke("dns ","", "Clear DNS Cache",       "🌐"))
-$($cmd.Invoke("kill","", "Kill Process Name",     "💀"))
-$($cmd.Invoke("pp  ","", "List Process Name",     "🔎"))
+$($cmd.Invoke("sy  ","", "System Info",           "🖥️"))
+$($cmd.Invoke("dn  ","", "Clear DNS Cache",       "🌐"))
+$($cmd.Invoke("kp  ","", "Kill Process Name",     "💀"))
+$($cmd.Invoke("lp  ","", "List Process Name",     "🔎"))
 $($cmd.Invoke("k9  ","", "Kill Process",          "🪓"))
 $border
 $($sectionHeader.Invoke("📄", "Files & Directories"   ))
@@ -563,23 +568,23 @@ $($cmd.Invoke("lf  ","", "Show Last Lines",       "🔚"))
 $($cmd.Invoke("cr  ","", "Create Empty File",     "🆕"))
 $($cmd.Invoke("nn  ","", "Create New File",       "✏️"))
 $($cmd.Invoke("ff  ","", "Find Files",            "🔍"))
-$($cmd.Invoke("un  ","", "Extract Zip File",      "🗜️"))
+$($cmd.Invoke("zi  ","", "Extract Zip File",      "🗜️"))
 $($cmd.Invoke("hb  ","", "Upload URL",            "🌐"))
-$($cmd.Invoke("df  ","", "Disk Free Space",       "ℹ️"))
-$($cmd.Invoke("pa  ","", "Show Command Path",     "🛤️"))
-$($cmd.Invoke("env ","", "Set Environmente",      "🌱"))
-$($cmd.Invoke("rr  ","", "Replace in File",       "✂️"))
+$($cmd.Invoke("di  ","", "Disk Free Space",       "ℹ️"))
+$($cmd.Invoke("sh  ","", "Show Command Path",     "🛤️"))
+$($cmd.Invoke("ev  ","", "Set Environmente",      "🌱"))
+$($cmd.Invoke("ch  ","", "Replace in File",       "✂️"))
 $border
 $($sectionHeader.Invoke("🔎", "Search & Data"         ))
-$($cmd.Invoke("grep","", "Search Regex",          "🧬"))
+$($cmd.Invoke("se  ","", "Search Regex",          "🧬"))
 $($cmd.Invoke("ip  ","", "Show Public IP",        "🌎"))
-$($cmd.Invoke("time","", "Show Uptime",           "⏰"))
+$($cmd.Invoke("ti  ","", "Show Uptime",           "⏰"))
 $border
 $($sectionHeader.Invoke("👤", "Profile Management"    ))
 $($cmd.Invoke("up  ","", "Update Profile",        "🔄"))
-$($cmd.Invoke("upp ","", "Update PowerShell",     "🔄"))
+$($cmd.Invoke("uo  ","", "Update PowerShell",     "🔄"))
 $($cmd.Invoke("ep  ","", "Edit Profile",          "📝"))
-$($cmd.Invoke("rpp ","", "Reload Profile",        "♻️"))
+$($cmd.Invoke("rp  ","", "Reload Profile",        "♻️"))
 $border
 $($sectionHeader.Invoke("🔗", "Clipboard"             ))
 $($cmd.Invoke("cp  ","", "Copy File",             "📋"))
@@ -590,17 +595,17 @@ $($cmd.Invoke("gs  ","", "git status",            "🟢"))
 $($cmd.Invoke("ga  ","", "git add .",             "➕"))
 $($cmd.Invoke("gc  ","", "git commit -m",         "💬"))
 $($cmd.Invoke("gp  ","", "git push",              "🚀"))
-$($cmd.Invoke("g   ","", "GitHub Folder",         "🌐"))
-$($cmd.Invoke("gco ","", "Add & Commit",          "📝"))
+$($cmd.Invoke("gg  ","", "GitHub Folder",         "🌐"))
+$($cmd.Invoke("gm  ","", "Add & Commit",          "📝"))
 $($cmd.Invoke("lg  ","", "Add-Commit-Push",       "🚀"))
 $border
 $($sectionHeader.Invoke("⚡", "Examples"               ))
  $($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray)   Display Help Menu.$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)   Go to Documents.$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)   Run o9.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)o$($PSStyle.Foreground.DarkGray)    Change Directory.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)oc$($PSStyle.Foreground.DarkGray)   Change Directory.$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)   Show Git Status.$($PSStyle.Reset)
- $($PSStyle.Foreground.Green)$($PSStyle.Reset)gco$($PSStyle.Foreground.DarkGray)  Git Commit.$($PSStyle.Reset)
+ $($PSStyle.Foreground.Green)$($PSStyle.Reset)gm$($PSStyle.Foreground.DarkGray)   Git Commit.$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)   Git Add, Commit, Push.$($PSStyle.Reset)
  $($PSStyle.Foreground.Green)$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)   Copy File.$($PSStyle.Reset)
 
@@ -612,9 +617,9 @@ $border
 
 # System and Utility Shortcuts
 Set-Alias -Name up -Value Update-Profile
-Set-Alias -Name upp -Value Update-PowerShell
-
-
+Set-Alias -Name uo -Value Update-PowerShell
+Set-Alias -Name rp -Value reload-profile
+Set-Alias -Name ep -Value Edit-Profile
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
