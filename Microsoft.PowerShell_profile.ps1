@@ -266,7 +266,7 @@ function reload-profile {
     & $profile
 }
 
-function zi ($file) {
+function un ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
@@ -575,7 +575,7 @@ $($cmd.Invoke("lf","","Show Last Lines",       "🔚"))
 $($cmd.Invoke("cr","","Create Empty File",     "🆕"))
 $($cmd.Invoke("nn","","Create New File",       "✏️"))
 $($cmd.Invoke("ff","","Find Files",            "🔍"))
-$($cmd.Invoke("zi","","Extract Zip File",      "🗜️"))
+$($cmd.Invoke("un","","Extract Zip File",      "🗜️"))
 $($cmd.Invoke("hb","","Upload URL",            "🌐"))
 $($cmd.Invoke("di","","Disk Free Space",       "ℹ️"))
 $($cmd.Invoke("sh","","Show Command Path",     "🛤️"))
