@@ -1,10 +1,3 @@
-Write-Host "        ____  "
-Write-Host "       / __ \ "
-Write-Host "  ___ ( (__) )"
-Write-Host " / _ \ \__  / "
-Write-Host "| (_) |  / /  "
-Write-Host " \___/  /_/   "
-
 $debug = $false
 
 # Define the path to the file that stores the last execution time
@@ -631,4 +624,3 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
 
-Write-Host "$($PSStyle.Foreground.Yellow)Use 'hh' to Display Help$($PSStyle.Reset)"
