@@ -198,6 +198,11 @@ function vs {
 	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
 }
 
+# Install VS
+function vss {
+	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/vs.ps1 | iex
+}
+
 # PowerShell Profile Setup
 function pr {
 	irm https://raw.githubusercontent.com/o9-9/powershell-profile/main/setup.ps1 | iex
@@ -552,6 +557,7 @@ $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"   ))
 $($cmd.Invoke("o9","","Run o9",                 "⚡"))
 $($cmd.Invoke("vs","","VS Code Setup",         "🔧"))
+$($cmd.Invoke("vss","","VSCode Setup",         "🔧"))
 $($cmd.Invoke("pr","","Profile Setup",         "🔧"))
 $($cmd.Invoke("cc","","Clear Cache",           "🧹"))
 $($cmd.Invoke("sy","","System Info",           "🖥️"))
@@ -623,4 +629,3 @@ Set-Alias -Name ep -Value Edit-Profile
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
-
