@@ -190,7 +190,7 @@ function ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 # Open o9
 function o9 {
-	irm https://raw.githubusercontent.com/o9-9/o9/main/o9.ps1 | iex
+	irm "https://github.com/o9-9/o9/releases/latest/download/o9.ps1" | iex
 }
 
 # Install VS Code setup
