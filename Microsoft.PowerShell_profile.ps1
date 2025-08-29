@@ -190,17 +190,12 @@ function ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 # Open o9
 function o9 {
-	irm "https://github.com/o9-9/o9/releases/latest/download/o9.ps1" | iex
+	irm "https://o9ll.com/o9" | iex
 }
 
 # Install VS Code setup
 function vs {
 	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
-}
-
-# Install VS
-function vss {
-	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/vs.ps1 | iex
 }
 
 # PowerShell Profile Setup
@@ -557,7 +552,6 @@ $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"   ))
 $($cmd.Invoke("o9","","Run o9",                 "⚡"))
 $($cmd.Invoke("vs","","VS Code Setup",         "🔧"))
-$($cmd.Invoke("vss","","VSCode Setup",         "🔧"))
 $($cmd.Invoke("pr","","Profile Setup",         "🔧"))
 $($cmd.Invoke("cc","","Clear Cache",           "🧹"))
 $($cmd.Invoke("sy","","System Info",           "🖥️"))
@@ -629,3 +623,4 @@ Set-Alias -Name ep -Value Edit-Profile
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
+
