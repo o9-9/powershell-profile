@@ -39,9 +39,6 @@ if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) 
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
 
-# Print the logo
-Show-o9Logo
-
 # Initial GitHub.com connectivity check with 1 second timeout
 $global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
 
@@ -193,12 +190,17 @@ function ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 # Open o9
 function o9 {
-	irm "https://o9ll.com/o9" | iex
+	irm "https://github.com/o9-9/o9/releases/latest/download/o9.ps1" | iex
 }
 
 # Install VS Code setup
 function vs {
 	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
+}
+
+# Install VS
+function vss {
+	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/vs.ps1 | iex
 }
 
 # PowerShell Profile Setup
@@ -555,6 +557,7 @@ $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"   ))
 $($cmd.Invoke("o9","","Run o9",                 "⚡"))
 $($cmd.Invoke("vs","","VS Code Setup",         "🔧"))
+$($cmd.Invoke("vss","","VSCode Setup",         "🔧"))
 $($cmd.Invoke("pr","","Profile Setup",         "🔧"))
 $($cmd.Invoke("cc","","Clear Cache",           "🧹"))
 $($cmd.Invoke("sy","","System Info",           "🖥️"))
@@ -625,40 +628,4 @@ Set-Alias -Name re -Value reload-profile
 Set-Alias -Name ep -Value Edit-Profile
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
-}
-
-Function Show-o9Logo {
-    <#
-        .SYNOPSIS
-            Displays the o9 logo in ASCII art.
-        .DESCRIPTION
-            This function displays the o9 logo in ASCII art format.
-        .PARAMETER None
-            No parameters are required for this function.
-        .EXAMPLE
-            Show-o9Logo
-            Prints the o9 logo in ASCII art format to the console.
-    #>
-
-    $asciiArt = @"
-                         999999999
-                       99:::::::::99
-                     99:::::::::::::99
-                    9::::::99999::::::9
-   ooooooooooo      9:::::9     9:::::9
- oo:::::::::::oo    9:::::9     9:::::9
-o:::::::::::::::o    9:::::99999::::::9
-o:::::ooooo:::::o     99::::::::::::::9
-o::::o     o::::o       99999::::::::9
-o::::o     o::::o            9::::::9
-o::::o     o::::o           9::::::9
-o::::o     o::::o          9::::::9
-o:::::ooooo:::::o         9::::::9
-o:::::::::::::::o        9::::::9
- oo:::::::::::oo        9::::::9
-   ooooooooooo         99999999
-
-"@
-
-    Write-Host $asciiArt
 }
