@@ -39,6 +39,9 @@ if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) 
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
 
+# Print the logo
+Show-o9Logo
+
 # Initial GitHub.com connectivity check with 1 second timeout
 $global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
 
@@ -624,3 +627,38 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
 
+Function Show-o9Logo {
+    <#
+        .SYNOPSIS
+            Displays the o9 logo in ASCII art.
+        .DESCRIPTION
+            This function displays the o9 logo in ASCII art format.
+        .PARAMETER None
+            No parameters are required for this function.
+        .EXAMPLE
+            Show-o9Logo
+            Prints the o9 logo in ASCII art format to the console.
+    #>
+
+    $asciiArt = @"
+                         999999999
+                       99:::::::::99
+                     99:::::::::::::99
+                    9::::::99999::::::9
+   ooooooooooo      9:::::9     9:::::9
+ oo:::::::::::oo    9:::::9     9:::::9
+o:::::::::::::::o    9:::::99999::::::9
+o:::::ooooo:::::o     99::::::::::::::9
+o::::o     o::::o       99999::::::::9
+o::::o     o::::o            9::::::9
+o::::o     o::::o           9::::::9
+o::::o     o::::o          9::::::9
+o:::::ooooo:::::o         9::::::9
+o:::::::::::::::o        9::::::9
+ oo:::::::::::oo        9::::::9
+   ooooooooooo         99999999
+
+"@
+
+    Write-Host $asciiArt
+}
