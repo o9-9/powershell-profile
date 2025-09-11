@@ -4,16 +4,7 @@
 $debug = $false
 
 # Define the path to the file that stores the last execution time
-$timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
-$directory = Split-Path $timeFilePath
-
-if (-not (Test-Path $directory)) {
-    New-Item -ItemType Directory -Path $directory -Force | Out-Null
-}
-
-if (-not (Test-Path $timeFilePath)) {
-    New-Item -ItemType File -Path $timeFilePath -Force | Out-Null
-}
+$timeFilePath = [Environment]::GetFolderPath("MyDocuments") + "\PowerShell\LastExecutionTime.txt"
 
 # Define the update interval in days, set to -1 to always check
 $updateInterval = 7
@@ -24,7 +15,7 @@ $updateInterval = 7
 ############                                                                                                         ############
 ############                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.                  ############
 ############                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO                      ############
-############                          https://github.com/o9-9/powershell-profile.git.                                ############
+############                            https://github.com/o9-9/powershell-profile.git.                              ############
 ############                                                                                                         ############
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
 ############                                                                                                         ############
@@ -53,52 +44,47 @@ $updateInterval = 7
 ### PowerShell Profile Refactor
 ### Version 1.04 - Refactored
 
-if ($debug_Override) {
+if ($debug_Override){
     # If variable debug_Override is defined in profile.ps1 file
     # then use it instead
     $debug = $debug_Override
-}
-else {
+} else {
     $debug = $false
 }
 
 # Define the path to the file that stores the last execution time
-if ($repo_root_Override) {
+if ($repo_root_Override){
     # If variable $repo_root_Override is defined in profile.ps1 file
     # then use it instead
     $repo_root = $repo_root_Override
-}
-else {
+} else {
     $repo_root = "https://raw.githubusercontent.com/o9-9"
 }
 
 # Define the path to the file that stores the last execution time
-if ($timeFilePath_Override) {
+if ($timeFilePath_Override){
     # If variable $timeFilePath_Override is defined in profile.ps1 file
     # then use it instead
     $timeFilePath = $timeFilePath_Override
-}
-else {
+} else {
     $timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
 }
 
 # Define the update interval in days, set to -1 to always check
-if ($updateInterval_Override) {
+if ($updateInterval_Override){
     # If variable $updateInterval_Override is defined in profile.ps1 file
     # then use it instead
     $updateInterval = $updateInterval_Override
-}
-else {
+} else {
     $updateInterval = 7
 }
 
-function Debug-Message {
+function Debug-Message{
     # If function "Debug-Message_Override" is defined in profile.ps1 file
     # then call it instead.
     if (Get-Command -Name "Debug-Message_Override" -ErrorAction SilentlyContinue) {
         Debug-Message_Override
-    }
-    else {
+    } else {
         Write-Host "#######################################" -ForegroundColor Red
         Write-Host "#           Debug mode enabled        #" -ForegroundColor Red
         Write-Host "#          ONLY FOR DEVELOPMENT       #" -ForegroundColor Red
@@ -116,7 +102,8 @@ if ($debug) {
     Debug-Message
 }
 
-# opt-out of telemetry before doing anything, only if PowerShell is run as admin
+
+#opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
@@ -776,3 +763,4 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
 }
 
 Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
+
