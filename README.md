@@ -1,8 +1,6 @@
 <div align="center">
 	<br>
-	<br>
 	<div>
-		<sub></sub>
 		<br>
 		<h2>
 			<a href="https://github.com/o9-9/powershell-profile">PowerShell Profile</a>
