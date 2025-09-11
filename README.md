@@ -1,17 +1,16 @@
 <div align="center">
-	<br>
 	<div>
+		<h1>
+			<a href="https://github.com/o9-9/powershell-profile">PowerShell Profile</a>
+		<h1>
 		<br>
 		<h2>
-			<a href="https://github.com/o9-9/powershell-profile">PowerShell Profile</a>
-			<br>
 			<sup>>A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.</sup>
 		</h2>
+		<br>
 <div align="center">
 	<img width="976" height="192" alt="powershell-profile" src="https://github.com/user-attachments/assets/3e1630d8-20c9-48e1-94e9-70eb2c30f6cf" />
 	</div>
-	<br>
-	<br>
 	<br>
 	<br>
 
