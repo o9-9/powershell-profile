@@ -1,8 +1,6 @@
 <div align="center">
 	<br>
 	<br>
-	<br>
-	<br>
 	<div>
 		<sub></sub>
 		<br>
