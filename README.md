@@ -1,7 +1,7 @@
 <h1 align="center">🎨 PowerShell Profile</h1>
 <div align="center">
     <a href="https://github.com/o9-9/powershell-profile/">
-        <img width="120" alt="vscode-setup" src="https://github.com/user-attachments/assets/c5c3bb94-690b-437a-8b89-ce16c702a00a" />
+        <img width="976" height="192" alt="powershell-profile" src="https://github.com/user-attachments/assets/3e1630d8-20c9-48e1-94e9-70eb2c30f6cf" />
     </a>
 </div>
 
