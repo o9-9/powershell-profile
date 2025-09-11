@@ -1,14 +1,24 @@
-<h1 align="center">🎨 PowerShell Profile</h1>
 <div align="center">
-    <a href="https://github.com/o9-9/powershell-profile/">
-        <img width="976" height="192" alt="powershell-profile" src="https://github.com/user-attachments/assets/3e1630d8-20c9-48e1-94e9-70eb2c30f6cf" />
-    </a>
-</div>
+	<img width="976" height="192" alt="powershell-profile" src="https://github.com/user-attachments/assets/3e1630d8-20c9-48e1-94e9-70eb2c30f6cf" />
+	<br>
+	<br>
+	<br>
+	<br>
+	<div>
+		<sub>🎨</sub>
+		<br>
+		<h2>
+			<a href="https://github.com/o9-9/powershell-profile">PowerShell Profile</a>
+			<br>
+			<sup>>A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.</sup>
+		</h2>
+	</div>
+	<br>
+	<br>
+	<br>
+	<br>
 
-A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
-
-
-<h2 align="left">⚡ One Line Install</h2>
+## ⚡ One Line Install</h2>
 
 Command in an elevated PowerShell window to install the PowerShell profile:
 
