@@ -1,3 +1,6 @@
+### PowerShell Profile Refactor
+### Version 1.03 - Refactored
+
 $debug = $false
 
 # Define the path to the file that stores the last execution time
@@ -15,24 +18,103 @@ if (-not (Test-Path $timeFilePath)) {
 # Define the update interval in days, set to -1 to always check
 $updateInterval = 7
 
-if ($debug) {
-    Write-Host "══════════════════════════════════════" -ForegroundColor White
-    Write-Host "▗▄▄▄ ▗▄▄▄▖▗▄▄▖ ▗▖ ▗▖ ▗▄▄▖   ▗▄▖ ▗▖  ▗▖" -ForegroundColor Red
-    Write-Host "▐▌  █▐▌   ▐▌ ▐▌▐▌ ▐▌▐▌     ▐▌ ▐▌▐▛▚▖▐▌" -ForegroundColor DarkGray
-    Write-Host "▐▌  █▐▛▀▀▘▐▛▀▚▖▐▌ ▐▌▐▌▝▜▌  ▐▌ ▐▌▐▌ ▝▜▌" -ForegroundColor Red
-    Write-Host "▐▙▄▄▀▐▙▄▄▖▐▙▄▞▘▝▚▄▞▘▝▚▄▞▘  ▝▚▄▞▘▐▌  ▐▌" -ForegroundColor DarkGray
-    Write-Host "══════════════════════════════════════" -ForegroundColor White
+#################################################################################################################################
+############                                                                                                         ############
+############                                          !!!   WARNING:   !!!                                           ############
+############                                                                                                         ############
+############                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.                  ############
+############                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO                      ############
+############                          https://github.com/o9-9/powershell-profile.git.                                ############
+############                                                                                                         ############
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
+############                                                                                                         ############
+############                      TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES             ############
+############                      OR FUNCTIONS. USE THE Edit-Profile FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.   ############
+############                      TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE THE VARIABLE                     ############
+############                      OR FUNCTION, ADDING "_Override" TO THE NAME.                                       ############
+############                                                                                                         ############
+############                      THE FOLLOWING VARIABLES RESPECT _Override:                                         ############
+############                      $EDITOR_Override                                                                   ############
+############                      $debug_Override                                                                    ############
+############                      $repo_root_Override  [To point to a fork, for example]                             ############
+############                      $timeFilePath_Override                                                             ############
+############                      $updateInterval_Override                                                           ############
+############                                                                                                         ############
+############                      THE FOLLOWING FUNCTIONS RESPECT _Override:                                         ############
+############                      Debug-Message_Override                                                             ############
+############                      Update-Profile_Override                                                            ############
+############                      Update-PowerShell_Override                                                         ############
+############                      Clear-Cache_Override                                                               ############
+############                      Get-Theme_Override                                                                 ############
+############                      o99_Override [To call a fork, for example]                                         ############
+############                      Set-PredictionSource                                                               ############
+#################################################################################################################################
+
+### PowerShell Profile Refactor
+### Version 1.04 - Refactored
+
+if ($debug_Override) {
+    # If variable debug_Override is defined in profile.ps1 file
+    # then use it instead
+    $debug = $debug_Override
+}
+else {
+    $debug = $false
 }
 
-<#
-WARNING:
-DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
-ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
-https://github.com/o9-9/powershell-profile.git.
+# Define the path to the file that stores the last execution time
+if ($repo_root_Override) {
+    # If variable $repo_root_Override is defined in profile.ps1 file
+    # then use it instead
+    $repo_root = $repo_root_Override
+}
+else {
+    $repo_root = "https://raw.githubusercontent.com/o9-9"
+}
 
-IF YOU WANT TO MAKE CHANGES, USE THE Edit-Profile FUNCTION
-AND SAVE YOUR CHANGES IN THE FILE CREATED.
-#>
+# Define the path to the file that stores the last execution time
+if ($timeFilePath_Override) {
+    # If variable $timeFilePath_Override is defined in profile.ps1 file
+    # then use it instead
+    $timeFilePath = $timeFilePath_Override
+}
+else {
+    $timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
+}
+
+# Define the update interval in days, set to -1 to always check
+if ($updateInterval_Override) {
+    # If variable $updateInterval_Override is defined in profile.ps1 file
+    # then use it instead
+    $updateInterval = $updateInterval_Override
+}
+else {
+    $updateInterval = 7
+}
+
+function Debug-Message {
+    # If function "Debug-Message_Override" is defined in profile.ps1 file
+    # then call it instead.
+    if (Get-Command -Name "Debug-Message_Override" -ErrorAction SilentlyContinue) {
+        Debug-Message_Override
+    }
+    else {
+        Write-Host "#######################################" -ForegroundColor Red
+        Write-Host "#           Debug mode enabled        #" -ForegroundColor Red
+        Write-Host "#          ONLY FOR DEVELOPMENT       #" -ForegroundColor Red
+        Write-Host "#                                     #" -ForegroundColor Red
+        Write-Host "#       IF YOU ARE NOT DEVELOPING     #" -ForegroundColor Red
+        Write-Host "#       JUST RUN \`Update-Profile\`     #" -ForegroundColor Red
+        Write-Host "#        to discard all changes       #" -ForegroundColor Red
+        Write-Host "#   and update to the latest profile  #" -ForegroundColor Red
+        Write-Host "#               version               #" -ForegroundColor Red
+        Write-Host "#######################################" -ForegroundColor Red
+    }
+}
+
+if ($debug) {
+    Debug-Message
+}
 
 # opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
@@ -55,23 +137,34 @@ if (Test-Path($ChocolateyProfile)) {
 
 # Check for Profile Updates
 function Update-Profile {
-    try {
-        $url = "https://raw.githubusercontent.com/o9-9/powershell-profile/main/Microsoft.PowerShell_profile.ps1"
-        $oldhash = Get-FileHash $PROFILE
-        Invoke-RestMethod $url -OutFile "$env:temp/Microsoft.PowerShell_profile.ps1"
-        $newhash = Get-FileHash "$env:temp/Microsoft.PowerShell_profile.ps1"
-        if ($newhash.Hash -ne $oldhash.Hash) {
-            Copy-Item -Path "$env:temp/Microsoft.PowerShell_profile.ps1" -Destination $PROFILE -Force
-            Write-Host "✔ o9  > Restart" -ForegroundColor Gray
-        } else {
-            Write-Host "o9" -ForegroundColor Gray
+    # If function "Update-Profile_Override" is defined in profile.ps1 file
+    # then call it instead.
+    if (Get-Command -Name "Update-Profile_Override" -ErrorAction SilentlyContinue) {
+        Update-Profile_Override;
+    }
+    else {
+        try {
+            $url = "$repo_root/powershell-profile/main/Microsoft.PowerShell_profile.ps1"
+            $oldhash = Get-FileHash $PROFILE
+            Invoke-RestMethod $url -OutFile "$env:temp/Microsoft.PowerShell_profile.ps1"
+            $newhash = Get-FileHash "$env:temp/Microsoft.PowerShell_profile.ps1"
+            if ($newhash.Hash -ne $oldhash.Hash) {
+                Copy-Item -Path "$env:temp/Microsoft.PowerShell_profile.ps1" -Destination $PROFILE -Force
+                Write-Host "✔ o9 Profile has been updated. Restart shell to reflect changes" -ForegroundColor DarkMagenta
+            }
+            else {
+                Write-Host "✔ o9 Profile is up to date." -ForegroundColor DarkBlue
+            }
         }
-    } catch {
-        Write-Error "Unable Check `$profile updates: $_"
-    } finally {
-        Remove-Item "$env:temp/Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue
+        catch {
+            Write-Error "Unable to check for `$o9 profile updates: $_"
+        }
+        finally {
+            Remove-Item "$env:temp/Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue
+        }
     }
 }
+Set-Alias -Name up -Value Update-Profile
 
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
 if (-not $debug -and `
@@ -84,32 +177,39 @@ if (-not $debug -and `
     $currentTime | Out-File -FilePath $timeFilePath
 
 } elseif ($debug) {
-    #Write-Warning "Skip Profile Update check"
+    Write-Warning "Skipping o9 profile update check in debug mode"
 }
 
 function Update-PowerShell {
-    try {
-        Write-Host "Check PowerShell Update..." -ForegroundColor Cyan
-        $updateNeeded = $false
-        $currentVersion = $PSVersionTable.PSVersion.ToString()
-        $gitHubApiUrl = "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
-        $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
-        $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
-        if ($currentVersion -lt $latestVersion) {
-            $updateNeeded = $true
-        }
+    # If function "Update-PowerShell_Override" is defined in profile.ps1 file
+    # then call it instead.
+    if (Get-Command -Name "Update-PowerShell_Override" -ErrorAction SilentlyContinue) {
+        Update-PowerShell_Override;
+    } else {
+        try {
+            Write-Host "Checking for o9 PowerShell updates..." -ForegroundColor DarkCyan
+            $updateNeeded = $false
+            $currentVersion = $PSVersionTable.PSVersion.ToString()
+            $gitHubApiUrl = "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
+            $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+            $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+            if ($currentVersion -lt $latestVersion) {
+                $updateNeeded = $true
+            }
 
-        if ($updateNeeded) {
-            Write-Host "Updating PowerShell..." -ForegroundColor Yellow
-            Start-Process powershell.exe -ArgumentList "-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements" -Wait -NoNewWindow
-            Write-Host "✔ PowerShell > Restart" -ForegroundColor Gray
-        } else {
-            Write-Host "PowerShell Up Date." -ForegroundColor Green
+            if ($updateNeeded) {
+                Write-Host "Updating o9 PowerShell..." -ForegroundColor DarkYellow
+                Start-Process powershell.exe -ArgumentList "-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements" -Wait -NoNewWindow
+                Write-Host "✔ o9 PowerShell has been updated. Restart shell to reflect changes" -ForegroundColor DarkMagenta
+            } else {
+                Write-Host "✔ o9 PowerShell is up to date." -ForegroundColor DarkBlue
+            }
+        } catch {
+            Write-Error "Failed to update o9 PowerShell. Error: $_"
         }
-    } catch {
-        Write-Error "Failed to Update PowerShell. Error: $_"
     }
 }
+Set-Alias -Name uo -Value Update-PowerShell
 
 # skip in debug mode
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
@@ -122,32 +222,41 @@ if (-not $debug -and `
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
     $currentTime | Out-File -FilePath $timeFilePath
 } elseif ($debug) {
-    #Write-Warning "Skip Profile Update check"
+    Write-Warning "Skipping o9 PowerShell update in debug mode"
 }
 
 function Clear-Cache {
-    # add clear cache logic here
-    Write-Host "Clearing Cache..." -ForegroundColor Cyan
-
+    # If function "Clear-Cache_Override" is defined in profile.ps1 file
+    # then call it instead.
+    # -----------------------------------------------------------------
+    # If you do override this function, you should should probably duplicate
+    # the following calls in your override function, just don't call this
+    # function from your override function, otherwise you'll be in an infinate loop.
     # Clear Prefetch
-    Write-Host "Clearing Prefetch..." -ForegroundColor Yellow
-    Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
-    Write-Host "✔ Clear Prefetch Completed." -ForegroundColor Green
+    if (Get-Command -Name "Clear-Cache_Override" -ErrorAction SilentlyContinue) {
+        Clear-Cache_Override
+    } else {
+        # add clear cache logic here
+        Write-Host "Clearing cache..." -ForegroundColor Cyan
 
-    # Clear Windows Temp
-    Write-Host "Clearing Windows Temp..." -ForegroundColor Yellow
-    Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "✔ Clear Windows Temp Completed." -ForegroundColor Green
+        # Clear Windows Prefetch
+        Write-Host "Clearing Windows Prefetch..." -ForegroundColor Yellow
+        Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
 
-    # Clear User Temp
-    Write-Host "Clearing User Temp..." -ForegroundColor Yellow
-    Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "✔ Clear User Temp Completed." -ForegroundColor Green
+        # Clear Windows Temp
+        Write-Host "Clearing Windows Temp..." -ForegroundColor Yellow
+        Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
 
-    # Clear Internet Cache
-    Write-Host "Clearing Internet Cache..." -ForegroundColor Yellow
-    Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "✔ Clear Internet Cache Completed." -ForegroundColor Green
+        # Clear User Temp
+        Write-Host "Clearing User Temp..." -ForegroundColor Yellow
+        Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+        # Clear Internet Explorer Cache
+        Write-Host "Clearing Internet Explorer Cache..." -ForegroundColor Yellow
+        Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+        Write-Host "Cache clearing completed." -ForegroundColor Green
+    }
 }
 Set-Alias -Name cc -Value Clear-Cache
 
@@ -167,16 +276,25 @@ function Test-CommandExists {
 }
 
 # Editor Configuration
-$EDITOR = if (Test-CommandExists code) { 'code' }
+if ($EDITOR_Override){
+    $EDITOR = $EDITOR_Override
+} else {
+    $EDITOR = if (Test-CommandExists nvim) { 'nvim' }
+          elseif (Test-CommandExists pvim) { 'pvim' }
+          elseif (Test-CommandExists vim) { 'vim' }
+          elseif (Test-CommandExists vi) { 'vi' }
+          elseif (Test-CommandExists code) { 'code' }
+          elseif (Test-CommandExists codium) { 'codium' }
           elseif (Test-CommandExists notepad++) { 'notepad++' }
           elseif (Test-CommandExists sublime_text) { 'sublime_text' }
           else { 'notepad' }
-Set-Alias -Name vim -Value $EDITOR
-
+    Set-Alias -Name vim -Value $EDITOR
+}
 # Quick Access to Editing the Profile
 function Edit-Profile {
     vim $PROFILE.CurrentUserAllHosts
 }
+Set-Alias -Name ep -Value Edit-Profile
 
 function cr($file) { "" | Out-File $file -Encoding ASCII }
 function ff($name) {
@@ -185,12 +303,25 @@ function ff($name) {
     }
 }
 
-# Network Utilities
-function ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
-
-# Open o9
+# Get public IP address using Cloudflare (privacy-respecting, no logs for this endpoint)
+function ip {
+    $resp = (Invoke-WebRequest -UseBasicParsing https://1.1.1.1/cdn-cgi/trace).Content
+    ($resp -split "`n" | Where-Object { $_ -like "ip=*" }) -replace "ip=", ""
+}
+# Open o9 full-release
 function o9 {
-	irm "https://o9ll.com/o9" | iex
+    irm https://o9ll.com/o9 | iex
+}
+
+# Open o9 pre-release
+function o99 {
+	# If function "o99_Override" is defined in profile.ps1 file
+    # then call it instead.
+    if (Get-Command -Name "o99_Override" -ErrorAction SilentlyContinue) {
+        o99_Override
+    } else {
+        irm https://o9ll.com/o99 | iex
+    }
 }
 
 # Install VS Code setup
@@ -226,7 +357,7 @@ function ti {
         # find date/time format
         $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
         $timeFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.LongTimePattern
-
+		
         # check powershell version
         if ($PSVersionTable.PSVersion.Major -eq 5) {
             $lastBoot = (Get-WmiObject win32_operatingsystem).LastBootUpTime
@@ -235,28 +366,29 @@ function ti {
             # reformat lastBoot
             $lastBoot = $bootTime.ToString("$dateFormat $timeFormat")
         } else {
-            $lastBoot = net statistics workstation | Select-String "since" | ForEach-Object { $_.ToString().Replace('Statistics since ', '') }
+            # the Get-ti cmdlet was introduced in PowerShell 6.0
+            $lastBoot = (Get-ti -Since).ToString("$dateFormat $timeFormat")			
             $bootTime = [System.DateTime]::ParseExact($lastBoot, "$dateFormat $timeFormat", [System.Globalization.CultureInfo]::InvariantCulture)
         }
 
         # Format the start time
         $formattedBootTime = $bootTime.ToString("dddd, MMMM dd, yyyy HH:mm:ss", [System.Globalization.CultureInfo]::InvariantCulture) + " [$lastBoot]"
-        Write-Host "System Started On: $formattedBootTime" -ForegroundColor DarkGray
+        Write-Host "System started on: $formattedBootTime" -ForegroundColor DarkGray
 
-        # calculate time
+        # calculate ti
         $ti = (Get-Date) - $bootTime
 
-        # time in days, hours, minutes, and seconds
+        # ti in days, hours, minutes, and seconds
         $days = $ti.Days
         $hours = $ti.Hours
         $minutes = $ti.Minutes
         $seconds = $ti.Seconds
 
-        # time output
-        Write-Host ("Time: {0} Days, {1} Hours, {2} Minutes, {3} Seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
+        # ti output
+        Write-Host ("ti: {0} days, {1} hours, {2} minutes, {3} seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
 
     } catch {
-        Write-Error "An Error Retrieving System Time."
+        Write-Error "An error occurred while retrieving system ti."
     }
 }
 
@@ -271,7 +403,7 @@ function un ($file) {
 }
 function hb {
     if ($args.Length -eq 0) {
-        Write-Error "No File Path."
+        Write-Error "No File Path specified."
         return
     }
 
@@ -417,7 +549,7 @@ function gc { param($m) git commit -m "$m" }
 
 function gp { git push }
 
-function gg { __zoxide_z github }
+function g { __zoxide_z github }
 
 function gcl { git clone "$args" }
 
@@ -490,8 +622,18 @@ Set-PSReadLineOption -AddToHistoryHandler {
 }
 
 # Improved prediction settings
-Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-Set-PSReadLineOption -MaximumHistoryCount 10000
+function Set-PredictionSource {
+    # If function "Set-PredictionSource_Override" is defined in profile.ps1 file
+    # then call it instead.
+    if (Get-Command -Name "Set-PredictionSource_Override" -ErrorAction SilentlyContinue) {
+        Set-PredictionSource_Override;
+    } else {
+	# Improved prediction settings
+	Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+	Set-PSReadLineOption -MaximumHistoryCount 10000
+    }
+}
+Set-PredictionSource
 
 # Custom completion for common commands
 $scriptblock = {
@@ -501,7 +643,7 @@ $scriptblock = {
         'npm' = @('install', 'start', 'run', 'test', 'build')
         'deno' = @('run', 'compile', 'bundle', 'test', 'lint', 'fmt', 'cache', 'info', 'doc', 'upgrade')
     }
-
+    
     $command = $commandAst.CommandElements[0].Value
     if ($customCompletions.ContainsKey($command)) {
         $customCompletions[$command] | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
@@ -520,16 +662,22 @@ $scriptblock = {
 }
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
-oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json | Invoke-Expression
 $env:POSH_GIT_ENABLED = $true
+if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
+    Get-Theme_Override;
+}
+else {
+    oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json | Invoke-Expression
+}
+
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& { (zoxide init --cmd cd powershell | Out-String) })
+    Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
 } else {
     Write-Host "zoxide command not found. Attempting to install via winget..."
     try {
         winget install -e --id ajeetdsouza.zoxide
         Write-Host "zoxide installed successfully. Initializing..."
-        Invoke-Expression (& { (zoxide init powershell | Out-String) })
+        Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
     } catch {
         Write-Error "Failed to install zoxide. Error: $_"
     }
@@ -557,6 +705,7 @@ $($cmd.Invoke("oc","","Change Directory",      "📂"))
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"   ))
 $($cmd.Invoke("o9","","Run o9",                 "⚡"))
+$($cmd.Invoke("o99","","Run o99",               "⚡"))
 $($cmd.Invoke("v1","","VS Code Setup",         "🔧"))
 $($cmd.Invoke("v2","","VSCode Setup",          "🔧"))
 $($cmd.Invoke("pr","","Profile Setup",         "🔧"))
@@ -585,13 +734,7 @@ $border
 $($sectionHeader.Invoke("🔎", "Search & Data"      ))
 $($cmd.Invoke("se","","Search Regex",          "🧬"))
 $($cmd.Invoke("ip","","Show Public IP",        "🌎"))
-$($cmd.Invoke("ti","","Show Uptime",           "⏰"))
-$border
-$($sectionHeader.Invoke("👤", "Profile Management" ))
-$($cmd.Invoke("up","","Update Profile",        "🔄"))
-$($cmd.Invoke("uo","","Update PowerShell",     "🔄"))
-$($cmd.Invoke("ep","","Edit Profile",          "📝"))
-$($cmd.Invoke("re","","Reload Profile",        "♻️"))
+$($cmd.Invoke("ti","","Show time",             "⏰"))
 $border
 $($sectionHeader.Invoke("🔗", "Clipboard"          ))
 $($cmd.Invoke("cp","","Copy File",             "📋"))
@@ -602,9 +745,15 @@ $($cmd.Invoke("gs","","git status",            "🟢"))
 $($cmd.Invoke("ga","","git add .",             "➕"))
 $($cmd.Invoke("gc","","git commit -m",         "💬"))
 $($cmd.Invoke("gp","","git push",              "🚀"))
-$($cmd.Invoke("gg","","GitHub Folder",         "🌐"))
+$($cmd.Invoke("g","","GitHub Folder",          "🌐"))
 $($cmd.Invoke("gm","","Add & Commit",          "📝"))
 $($cmd.Invoke("lg","","Add-Commit-Push",       "🚀"))
+$border
+$($sectionHeader.Invoke("👤", "Profile Management" ))
+$($cmd.Invoke("up","","Update Profile",        "🔄"))
+$($cmd.Invoke("uo","","Update PowerShell",     "🔄"))
+$($cmd.Invoke("ep","","Edit Profile",          "📝"))
+$($cmd.Invoke("reload-profile","","Reload Profile", "♻️"))
 $border
 $($sectionHeader.Invoke("⚡", "Examples"            ))
 $($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray)   Display Help Menu.$($PSStyle.Reset)
@@ -622,11 +771,8 @@ $border
     Write-Host $helpText
 }
 
-# System and Utility Shortcuts
-Set-Alias -Name up -Value Update-Profile
-Set-Alias -Name uo -Value Update-PowerShell
-Set-Alias -Name re -Value reload-profile
-Set-Alias -Name ep -Value Edit-Profile
 if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
 }
+
+Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
