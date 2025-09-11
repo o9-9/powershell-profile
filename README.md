@@ -1,25 +1,32 @@
+<h1 align="center">🌿 PowerShell Profile</h1>
+
 <div align="center">
-			<a href="https://github.com/o9-9/powershell-profile">PowerShell Profile</a>
-<div align="center">
-	<img width="976" height="192" alt="powershell-profile" src="https://github.com/user-attachments/assets/3e1630d8-20c9-48e1-94e9-70eb2c30f6cf" />
+  <img width="976" height="192" alt="powershell-profile" src="https://github.com/user-attachments/assets/3e1630d8-20c9-48e1-94e9-70eb2c30f6cf" />
 </div>
 
-# A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
+---
+
+## ✨ Features
+
+> [!NOTE]
+> A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
 
 
 ## ⚡ One Line Install
 
-Command in an elevated PowerShell window to install the PowerShell profile:
+> [!NOTE]
+> Command in an elevated PowerShell window to install the PowerShell profile:
 
-```
+```ps1
 irm "https://github.com/o9-9/powershell-profile/raw/main/setup.ps1" | iex
 ```
 
 ## With `oh-my-posh` (loaded automatically through the PowerShell profile script hosted on this repo):
-- Run the command `oh-my-posh font install`
-- A list of Nerd Fonts will appear like so:
+1. Run the command `oh-my-posh font install`
+2. A list of Nerd Fonts will appear like so:
 <pre>
-PS> oh-my-posh font install
+> [!NOTE]
+> PS> oh-my-posh font install
 
    Select font
 
@@ -34,30 +41,34 @@ PS> oh-my-posh font install
 
     •••••••••
     ↑/k up • ↓/j down • q quit • ? more</pre>
-- With the up/down arrow keys, select the font you would like to install and press <kbd>ENTER</kbd>
-- DONE!
+3. With the up/down arrow keys, select the font you would like to install and press <kbd>ENTER</kbd>
+4. DONE!
 
-## Customize profile
+### Customize profile
 
-**Do not make any changes to the `Microsoft.PowerShell_profile.ps1` file**, since it's hashed and automatically overwritten by any commits to this repository.
+> [!NOTE]
+> **Do not make any changes to the `Microsoft.PowerShell_profile.ps1` file**, since it's hashed and automatically overwritten by any commits to this repository.
 
-After the profile is installed and active, run the `Edit-Profile` function to create a separate profile file [`profile.ps1`] for your current user. Add any custom code, and/or override VARIABLES/FUNCTIONS in `Microsoft.PowerShell_profile.ps1` by adding any of the following Variable or Function names:
+> [!NOTE]
+> After the profile is installed and active, run the `Edit-Profile` function to create a separate profile file [`profile.ps1`] for your current user. Add any custom code, and/or override VARIABLES/FUNCTIONS in `Microsoft.PowerShell_profile.ps1` by adding any of the following Variable or Function names:
 
-THE FOLLOWING VARIABLES RESPECT _Override:
+> [!NOTE]
+> THE FOLLOWING VARIABLES RESPECT _Override:
 <pre>
-$EDITOR_Override
-$debug_Override
-$repo_root_Override  [To point to a fork, for example]
-$timeFilePath_Override
-$updateInterval_Override
+> $EDITOR_Override
+> $debug_Override
+> $repo_root_Override  [To point to a fork, for example]
+> $timeFilePath_Override
+> $updateInterval_Override
 </pre>
 
-THE FOLLOWING FUNCTIONS RESPECT _Override: _(do not call the original function from your override function, or you'll create an infinite loop)_
+> [!NOTE]
+> THE FOLLOWING FUNCTIONS RESPECT _Override: _(do not call the original function from your override function, or you'll create an infinite loop)_
 <pre>
-Debug-Message_Override
-Update-Profile_Override
-Update-PowerShell_Override
-Clear-Cache_Override
-Get-Theme_Override
-o99_Override [To call a fork, for example]
+> Debug-Message_Override
+> Update-Profile_Override
+> Update-PowerShell_Override
+> Clear-Cache_Override
+> Get-Theme_Override
+> o99_Override [To call a fork, for example]
 </pre>
