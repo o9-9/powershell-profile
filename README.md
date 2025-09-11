@@ -3,7 +3,6 @@
 		<h1>
 			<a href="https://github.com/o9-9/powershell-profile">PowerShell Profile</a>
 		<h1>
-		<br>
 		<h2>
 			<sup>>A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.</sup>
 		</h2>
