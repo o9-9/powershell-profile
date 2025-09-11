@@ -7,7 +7,6 @@
 
 A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
 
-##
 
 <h2 align="left">⚡ One Line Install</h2>
 
@@ -16,9 +15,8 @@ Command in an elevated PowerShell window to install the PowerShell profile:
 ```
 irm "https://github.com/o9-9/powershell-profile/raw/main/setup.ps1" | iex
 ```
-##
 
-### With `oh-my-posh` (loaded automatically through the PowerShell profile script hosted on this repo):
+## With `oh-my-posh` (loaded automatically through the PowerShell profile script hosted on this repo):
 - Run the command `oh-my-posh font install`
 - A list of Nerd Fonts will appear like so:
 <pre>
