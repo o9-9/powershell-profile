@@ -247,6 +247,63 @@ function Clear-Cache {
 }
 Set-Alias -Name cc -Value Clear-Cache
 
+# Function to restart Windows Explorer
+function Restarts-Explorer {
+    # Restarts Windows Explorer
+    # Provides functionality to either restart the Windows Explorer process
+    # ---------------------------------------------------------------------
+    param (
+        [string]$action = "refresh"
+    )
+
+    if ($action -eq "refresh") {
+        # Add the necessary type for Windows API calls
+        if (-not ("Win32.NativeMethods" -as [type])) {
+            Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
+[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
+public static extern IntPtr SendMessageTimeout(
+    IntPtr hWnd,
+    uint Msg,
+    IntPtr wParam,
+    string lParam,
+    uint fuFlags,
+    uint uTimeout,
+    out IntPtr lpdwResult);
+"@
+        }
+
+        $HWND_BROADCAST = [IntPtr]0xffff
+        $WM_SETTINGCHANGE = 0x1A
+        $SMTO_ABORTIFHUNG = 0x2
+        $timeout = 100
+        $result = [IntPtr]::Zero
+
+        # Send the broadcast message to all windows
+        [Win32.NativeMethods]::SendMessageTimeout(
+            $HWND_BROADCAST, 
+            $WM_SETTINGCHANGE, 
+            [IntPtr]::Zero, 
+            "ImmersiveColorSet", 
+            $SMTO_ABORTIFHUNG, 
+            $timeout, 
+            [ref]$result
+        )
+        
+        Write-Output "Explorer UI settings have been refreshed"
+    } 
+    elseif ($action -eq "restart") {
+        # Restart the Windows Explorer
+        Write-Output "Restarting Explorer..."
+        Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+        Start-Process "explorer.exe"
+        Write-Output "Explorer has been restarted"
+    }
+    else {
+        Write-Error "Invalid action. Use 'refresh' or 'restart'"
+    }
+}
+Set-Alias -Name rr -Value Restarts-Explorer
+
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 function prompt {
@@ -312,13 +369,13 @@ function o99 {
 }
 
 # Install VS Code setup
-function v1 {
+function vs {
 	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
 }
 
-# Install VS Code setup
-function v2 {
-	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/install.ps1 | iex
+# Install cursor setup
+function cs {
+	irm https://raw.githubusercontent.com/o9-9/cursor-setup/main/setup.ps1 | iex
 }
 
 # PowerShell Profile Setup
@@ -680,23 +737,24 @@ function hh {
 
     $helpText = @"
 $border
-$($sectionHeader.Invoke("⚡", "o9 Profile Help"     ))
+$($sectionHeader.Invoke("⚡", "o9 Profile Help"    ))
 $border
 $($sectionHeader.Invoke("🚀", "Navigation"         ))
 $($cmd.Invoke("dc","","Go to Documents",       "📄"))
 $($cmd.Invoke("dt","","Go to Desktop",         "🖥️"))
-$($cmd.Invoke("do","","Go to Downloads",        "⬇️"))
+$($cmd.Invoke("do","","Go to Downloads",       "⬇️"))
 $($cmd.Invoke("lc","","Go to Local",           "📁"))
 $($cmd.Invoke("ro","","Go to Roaming",         "📁"))
 $($cmd.Invoke("oc","","Change Directory",      "📂"))
 $border
 $($sectionHeader.Invoke("🛠️", "System / Utility"   ))
-$($cmd.Invoke("o9","","Run o9",                 "⚡"))
-$($cmd.Invoke("o99","","Run o99",               "⚡"))
-$($cmd.Invoke("v1","","VS Code Setup",         "🔧"))
-$($cmd.Invoke("v2","","VSCode Setup",          "🔧"))
-$($cmd.Invoke("pr","","Profile Setup",         "🔧"))
+$($cmd.Invoke("o9","","Run o9",                "⚡"))
+$($cmd.Invoke("o99","","Run o99",              "⚡"))
+$($cmd.Invoke("vs","","VSCode Setup",          "⚡"))
+$($cmd.Invoke("cs","","Cursor Setup",          "⚡"))
+$($cmd.Invoke("pr","","Profile Setup",         "⚡"))
 $($cmd.Invoke("cc","","Clear Cache",           "🧹"))
+$($cmd.Invoke("rr","","Restarts Explorer",     "🔧"))
 $($cmd.Invoke("sy","","System Info",           "🖥️"))
 $($cmd.Invoke("dn","","Clear DNS Cache",       "🌐"))
 $($cmd.Invoke("kp","","Kill Process Name",     "💀"))
@@ -763,4 +821,3 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
 }
 
 Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
-
