@@ -729,7 +729,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 
 # Help Function
 function hh {
-    $border = "$($PSStyle.Foreground.DarkGray)════════════════════════════════$($PSStyle.Reset)"
+    $border = "$($PSStyle.Foreground.DarkGray) $($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
         "$($PSStyle.Foreground.Cyan)$cmd$($PSStyle.Reset) $(if($alias){"$($PSStyle.Foreground.Green)[$alias]$($PSStyle.Reset) "}else{''})$sym  $desc"
@@ -798,9 +798,9 @@ $($sectionHeader.Invoke("👤", "Profile Management" ))
 $($cmd.Invoke("up","","Update Profile",        "🔄"))
 $($cmd.Invoke("uo","","Update PowerShell",     "🔄"))
 $($cmd.Invoke("ep","","Edit Profile",          "📝"))
-$($cmd.Invoke("reload-profile","","Reload Profile", "♻️"))
+$($cmd.Invoke("reload-profile","","Reload ",   "♻️"))
 $border
-$($sectionHeader.Invoke("⚡", "Examples"            ))
+$($sectionHeader.Invoke("⚡", "Examples"           ))
 $($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray)   Display Help Menu.$($PSStyle.Reset)
 $($PSStyle.Foreground.Green)$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)   Go to Documents.$($PSStyle.Reset)
 $($PSStyle.Foreground.Green)$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)   Run o9.$($PSStyle.Reset)
