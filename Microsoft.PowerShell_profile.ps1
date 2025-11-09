@@ -334,6 +334,7 @@ if ($EDITOR_Override){
           else { 'notepad' }
     Set-Alias -Name vim -Value $EDITOR
 }
+
 # Quick Access to Editing the Profile
 function Edit-Profile {
     vim $PROFILE.CurrentUserAllHosts
@@ -352,6 +353,7 @@ function ip {
     $resp = (Invoke-WebRequest -UseBasicParsing https://1.1.1.1/cdn-cgi/trace).Content
     ($resp -split "`n" | Where-Object { $_ -like "ip=*" }) -replace "ip=", ""
 }
+
 # Open o9 full-release
 function o9 {
     irm https://o9ll.com/o9 | iex
