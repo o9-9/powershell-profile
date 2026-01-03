@@ -1,13 +1,7 @@
 ### PowerShell Profile Refactor
-### Version 1.03 - Refactored
+### Version 1.04 - Refactored
 
 $debug = $false
-
-# Define the path to the file that stores the last execution time
-$timeFilePath = [Environment]::GetFolderPath("MyDocuments") + "\PowerShell\LastExecutionTime.txt"
-
-# Define the update interval in days, set to -1 to always check
-$updateInterval = 7
 
 #################################################################################################################################
 ############                                                                                                         ############
@@ -41,9 +35,6 @@ $updateInterval = 7
 ############                      Set-PredictionSource                                                               ############
 #################################################################################################################################
 
-### PowerShell Profile Refactor
-### Version 1.04 - Refactored
-
 if ($debug_Override){
     # If variable debug_Override is defined in profile.ps1 file
     # then use it instead
@@ -61,13 +52,26 @@ if ($repo_root_Override){
     $repo_root = "https://raw.githubusercontent.com/o9-9"
 }
 
+# Helper function for cross-edition compatibility
+function Get-ProfileDir {
+    if ($PSVersionTable.PSEdition -eq "Core") {
+        return [Environment]::GetFolderPath("MyDocuments") + "\PowerShell"
+    } elseif ($PSVersionTable.PSEdition -eq "Desktop") {
+        return [Environment]::GetFolderPath("MyDocuments") + "\WindowsPowerShell"
+    } else {
+        Write-Error "Unsupported PowerShell edition: $($PSVersionTable.PSEdition)"
+        return $null
+    }
+}
+
 # Define the path to the file that stores the last execution time
 if ($timeFilePath_Override){
     # If variable $timeFilePath_Override is defined in profile.ps1 file
     # then use it instead
     $timeFilePath = $timeFilePath_Override
 } else {
-    $timeFilePath = "$env:USERPROFILE\Documents\PowerShell\LastExecutionTime.txt"
+    $profileDir = Get-ProfileDir
+    $timeFilePath = "$profileDir\LastExecutionTime.txt"
 }
 
 # Define the update interval in days, set to -1 to always check
@@ -103,13 +107,29 @@ if ($debug) {
 }
 
 
-#opt-out of telemetry before doing anything, only if PowerShell is run as admin
+# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
 
-# Initial GitHub.com connectivity check with 1 second timeout
-$global:canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
+# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
+if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
+    [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
+}
+
+# Initial GitHub.com connectivity check
+function Test-GitHubConnection {
+    if ($PSVersionTable.PSEdition -eq "Core") {
+        # If PowerShell Core, use a 1 second timeout
+        return Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
+    } else {
+        # For PowerShell Desktop, use .NET Ping class with timeout
+        $ping = New-Object System.Net.NetworkInformation.Ping
+        $result = $ping.Send("github.com", 1000)  # 1 second timeout
+        return ($result.Status -eq "Success")
+    }
+}
+$global:canConnectToGitHub = Test-GitHubConnection
 
 # Import Modules and External Profiles
 # Ensure Terminal-Icons module is installed before importing
@@ -122,12 +142,22 @@ if (Test-Path($ChocolateyProfile)) {
     Import-Module "$ChocolateyProfile"
 }
 
+# Safely read and parse the last execution date once to avoid exceptions when the file is missing or empty
+$lastExecRaw = if (Test-Path $timeFilePath) { (Get-Content -Path $timeFilePath -Raw).Trim() } else { $null }
+[datetime]$lastExec = $null
+if (-not [string]::IsNullOrWhiteSpace($lastExecRaw)) {
+    [datetime]$parsed = [datetime]::MinValue
+    if ([datetime]::TryParseExact($lastExecRaw, 'yyyy-MM-dd', $null, [System.Globalization.DateTimeStyles]::None, [ref]$parsed)) {
+        $lastExec = $parsed
+    }
+}
+
 # Check for Profile Updates
 function Update-Profile {
     # If function "Update-Profile_Override" is defined in profile.ps1 file
     # then call it instead.
     if (Get-Command -Name "Update-Profile_Override" -ErrorAction SilentlyContinue) {
-        Update-Profile_Override;
+        Update-Profile_Override
     }
     else {
         try {
@@ -156,8 +186,9 @@ Set-Alias -Name up -Value Update-Profile
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
 if (-not $debug -and `
     ($updateInterval -eq -1 -or `
-      -not (Test-Path $timeFilePath) -or `
-      ((Get-Date) - [datetime]::ParseExact((Get-Content -Path $timeFilePath), 'yyyy-MM-dd', $null)).TotalDays -gt $updateInterval)) {
+            -not (Test-Path $timeFilePath) -or `
+            $null -eq $lastExec -or `
+        ((Get-Date).Date - $lastExec.Date).TotalDays -gt $updateInterval)) {
 
     Update-Profile
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
@@ -171,7 +202,7 @@ function Update-PowerShell {
     # If function "Update-PowerShell_Override" is defined in profile.ps1 file
     # then call it instead.
     if (Get-Command -Name "Update-PowerShell_Override" -ErrorAction SilentlyContinue) {
-        Update-PowerShell_Override;
+        Update-PowerShell_Override
     } else {
         try {
             Write-Host "Checking for o9 PowerShell updates..." -ForegroundColor DarkCyan
@@ -202,8 +233,9 @@ Set-Alias -Name uo -Value Update-PowerShell
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
 if (-not $debug -and `
     ($updateInterval -eq -1 -or `
-     -not (Test-Path $timeFilePath) -or `
-     ((Get-Date).Date - [datetime]::ParseExact((Get-Content -Path $timeFilePath), 'yyyy-MM-dd', $null).Date).TotalDays -gt $updateInterval)) {
+            -not (Test-Path $timeFilePath) -or `
+            $null -eq $lastExec -or `
+        ((Get-Date).Date - $lastExec.Date).TotalDays -gt $updateInterval)) {
 
     Update-PowerShell
     $currentTime = Get-Date -Format 'yyyy-MM-dd'
@@ -227,22 +259,29 @@ function Clear-Cache {
         Write-Host "Clearing cache..." -ForegroundColor Cyan
 
         # Clear Windows Prefetch
-        Write-Host "Clearing Windows Prefetch..." -ForegroundColor Yellow
+        Write-Host "Clearing Windows Prefetch..." -ForegroundColor Cyan
         Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
 
         # Clear Windows Temp
-        Write-Host "Clearing Windows Temp..." -ForegroundColor Yellow
+        Write-Host "Clearing Windows Temp..." -ForegroundColor Cyan
         Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
 
         # Clear User Temp
-        Write-Host "Clearing User Temp..." -ForegroundColor Yellow
+        Write-Host "Clearing User Temp..." -ForegroundColor Cyan
         Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
 
         # Clear Internet Explorer Cache
-        Write-Host "Clearing Internet Explorer Cache..." -ForegroundColor Yellow
+        Write-Host "Clearing Internet Explorer Cache..." -ForegroundColor Cyan
         Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
 
         Write-Host "Cache clearing completed." -ForegroundColor Green
+
+        # Run Disk Cleanup on Drive C
+        Write-Host "Running Disk Cleanup on Drive C..." -ForegroundColor Cyan
+        cleanmgr.exe /d C: /VERYLOWDISK
+        Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+        
+        Write-Host "Cleanup completed." -ForegroundColor Green
     }
 }
 Set-Alias -Name cc -Value Clear-Cache
@@ -324,14 +363,14 @@ if ($EDITOR_Override){
     $EDITOR = $EDITOR_Override
 } else {
     $EDITOR = if (Test-CommandExists nvim) { 'nvim' }
-          elseif (Test-CommandExists pvim) { 'pvim' }
-          elseif (Test-CommandExists vim) { 'vim' }
-          elseif (Test-CommandExists vi) { 'vi' }
-          elseif (Test-CommandExists code) { 'code' }
-          elseif (Test-CommandExists codium) { 'codium' }
-          elseif (Test-CommandExists notepad++) { 'notepad++' }
-          elseif (Test-CommandExists sublime_text) { 'sublime_text' }
-          else { 'notepad' }
+    elseif (Test-CommandExists pvim) { 'pvim' }
+    elseif (Test-CommandExists vim) { 'vim' }
+    elseif (Test-CommandExists vi) { 'vi' }
+    elseif (Test-CommandExists code) { 'code' }
+    elseif (Test-CommandExists codium) { 'codium' }
+    elseif (Test-CommandExists notepad++) { 'notepad++' }
+    elseif (Test-CommandExists sublime_text) { 'sublime_text' }
+    else { 'notepad' }
     Set-Alias -Name vim -Value $EDITOR
 }
 
@@ -341,6 +380,13 @@ function Edit-Profile {
 }
 Set-Alias -Name ep -Value Edit-Profile
 
+function Invoke-Profile {
+    if ($PSVersionTable.PSEdition -eq "Desktop") {
+        Write-Host "Note: Some Oh My Posh/PSReadLine errors are expected in PowerShell 5. The profile still works fine." -ForegroundColor Yellow
+    }
+    & $PROFILE
+}
+
 function cr($file) { "" | Out-File $file -Encoding ASCII }
 function ff($name) {
     Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
@@ -349,14 +395,11 @@ function ff($name) {
 }
 
 # Get public IP address using Cloudflare (privacy-respecting, no logs for this endpoint)
-function ip {
-    $resp = (Invoke-WebRequest -UseBasicParsing https://1.1.1.1/cdn-cgi/trace).Content
-    ($resp -split "`n" | Where-Object { $_ -like "ip=*" }) -replace "ip=", ""
-}
+function ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 # Open o9 full-release
 function o9 {
-    irm https://o9ll.com/o9 | iex
+    Invoke-Expression (Invoke-RestMethod https://o9ll.com/o9)
 }
 
 # Open o9 pre-release
@@ -366,7 +409,7 @@ function o99 {
     if (Get-Command -Name "o99_Override" -ErrorAction SilentlyContinue) {
         o99_Override
     } else {
-        irm https://o9ll.com/o99 | iex
+        Invoke-Expression (Invoke-RestMethod https://o9ll.com/o99)
     }
 }
 
@@ -403,7 +446,7 @@ function ti {
         # find date/time format
         $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
         $timeFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.LongTimePattern
-		
+
         # check powershell version
         if ($PSVersionTable.PSVersion.Major -eq 5) {
             $lastBoot = (Get-WmiObject win32_operatingsystem).LastBootUpTime
@@ -438,10 +481,6 @@ function ti {
     }
 }
 
-function reload-profile {
-    & $profile
-}
-
 function un ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
@@ -467,7 +506,7 @@ function hb {
         $response = Invoke-RestMethod -Uri $uri -Method Post -Body $Content -ErrorAction Stop
         $hasteKey = $response.key
         $url = "http://bin.christitus.com/$hasteKey"
-	    Set-Clipboard $url
+        Set-Clipboard $url
         Write-Output "$url copied to clipboard."
     } catch {
         Write-Error "Failed to upload Document. Error: $_"
@@ -506,13 +545,13 @@ function lp($name) {
 }
 
 function fl {
-  param($Path, $n = 10)
-  Get-Content $Path -Head $n
+    param($Path, $n = 10)
+    Get-Content $Path -Head $n
 }
 
 function lf {
-  param($Path, $n = 10, [switch]$f = $false)
-  Get-Content $Path -Tail $n -Wait:$f
+    param($Path, $n = 10, [switch]$f = $false)
+    Get-Content $Path -Tail $n -Wait:$f
 }
 
 # Quick File Creation
@@ -528,7 +567,7 @@ function trash($path) {
         $item = Get-Item $fullPath
 
         if ($item.PSIsContainer) {
-          # Handle directory
+            # Handle directory
             $parentPath = $item.Parent.FullName
         } else {
             # Handle file
@@ -552,16 +591,19 @@ function trash($path) {
 ### Quality of Life Aliases
 
 # Navigation Shortcuts
+
 # Go to Documents
 function dc {
     $dc = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
     Set-Location -Path $dc
 }
+
 # Go to Desktop
 function dt {
     $dt = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Documents"}
     Set-Location -Path $dt
 }
+
 # Go to Downloads folder
 function do {
     $do = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
@@ -614,14 +656,28 @@ function sy { Get-ComputerInfo }
 
 # Networking Utilities
 function dn {
-	Clear-DnsClientCache
-	Write-Host "✔ Clean Cache DNS"
+    Clear-DnsClientCache
+    Write-Host "DNS has been flushed"
 }
 
 # Clipboard Utilities
 function cp { Set-Clipboard $args[0] }
 
 function ps { Get-Clipboard }
+
+# Set-PSReadLineOption Compatibility for PowerShell Desktop
+function Set-PSReadLineOptionsCompat {
+    param([hashtable]$Options)
+    if ($PSVersionTable.PSEdition -eq "Core") {
+        Set-PSReadLineOption @Options
+    } else {
+        # Remove unsupported keys for Desktop and silence errors
+        $SafeOptions = $Options.Clone()
+        $SafeOptions.Remove('PredictionSource')
+        $SafeOptions.Remove('PredictionViewStyle')
+        Set-PSReadLineOption @SafeOptions
+    }
+}
 
 # Enhanced PowerShell Experience
 # Enhanced PSReadLine Configuration
@@ -645,7 +701,7 @@ $PSReadLineOptions = @{
     PredictionViewStyle = 'ListView'
     BellStyle = 'None'
 }
-Set-PSReadLineOption @PSReadLineOptions
+Set-PSReadLineOptionsCompat -Options $PSReadLineOptions
 
 # Custom key handlers
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
@@ -667,16 +723,19 @@ Set-PSReadLineOption -AddToHistoryHandler {
     return ($null -eq $hasSensitive)
 }
 
-# Improved prediction settings
+# Fix Set-PredictionSource for Desktop
 function Set-PredictionSource {
-    # If function "Set-PredictionSource_Override" is defined in profile.ps1 file
+    # If "Set-PredictionSource_Override" is defined in profile.ps1 file
     # then call it instead.
     if (Get-Command -Name "Set-PredictionSource_Override" -ErrorAction SilentlyContinue) {
-        Set-PredictionSource_Override;
+        Set-PredictionSource_Override
+    } elseif ($PSVersionTable.PSEdition -eq "Core") {
+        # Improved prediction settings
+        Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+        Set-PSReadLineOption -MaximumHistoryCount 10000
     } else {
-	# Improved prediction settings
-	Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-	Set-PSReadLineOption -MaximumHistoryCount 10000
+        # Desktop version - use History only
+        Set-PSReadLineOption -MaximumHistoryCount 10000
     }
 }
 Set-PredictionSource
@@ -689,7 +748,7 @@ $scriptblock = {
         'npm' = @('install', 'start', 'run', 'test', 'build')
         'deno' = @('run', 'compile', 'bundle', 'test', 'lint', 'fmt', 'cache', 'info', 'doc', 'upgrade')
     }
-    
+
     $command = $commandAst.CommandElements[0].Value
     if ($customCompletions.ContainsKey($command)) {
         $customCompletions[$command] | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
@@ -702,18 +761,37 @@ Register-ArgumentCompleter -Native -CommandName git, npm, deno -ScriptBlock $scr
 $scriptblock = {
     param($wordToComplete, $commandAst, $cursorPosition)
     dotnet complete --position $cursorPosition $commandAst.ToString() |
-        ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-        }
+    ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
 }
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
-$env:POSH_GIT_ENABLED = $true
+# If function "Get-Theme_Override" is defined in profile.ps1 file
+# then call it instead. 
 if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
-    Get-Theme_Override;
-}
-else {
-    oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json | Invoke-Expression
+    Get-Theme_Override
+} else {
+    # Oh My Posh initialization with local theme fallback and auto-download
+    $localThemePath = Join-Path (Get-ProfileDir) "cobalt2.omp.json"
+    if (-not (Test-Path $localThemePath)) {
+        # Try to download the theme file to the detected local path
+        # $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json"
+        $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json"
+        try {
+            Invoke-RestMethod -Uri $themeUrl -OutFile $localThemePath
+            Write-Host "Downloaded missing Oh My Posh theme to $localThemePath"
+        } catch {
+            Write-Warning "Failed to download theme file. Falling back to remote theme. Error: $_"
+        }
+    }
+    if (Test-Path $localThemePath) {
+        oh-my-posh init pwsh --config $localThemePath | Invoke-Expression
+    } else {
+        # Fallback to remote theme if local file doesn't exist
+        # oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json | Invoke-Expression
+        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
+    }
 }
 
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
@@ -800,7 +878,6 @@ $($sectionHeader.Invoke("👤", "Profile Management" ))
 $($cmd.Invoke("up","","Update Profile",        "🔄"))
 $($cmd.Invoke("uo","","Update PowerShell",     "🔄"))
 $($cmd.Invoke("ep","","Edit Profile",          "📝"))
-$($cmd.Invoke("reload-profile","","Reload ",   "♻️"))
 $border
 $($sectionHeader.Invoke("⚡", "Examples"           ))
 $($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray)   Display Help Menu.$($PSStyle.Reset)
