@@ -807,6 +807,121 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     }
 }
 
+# Clones GitHub repository to PC
+function Clone-GitHubRepo {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false, Position = 0)]
+        [ValidatePattern('^https?://github\.com/[\w\-]+/[\w\-\. ]+(? : \.git)?$')]
+        [string]$Url,
+
+        [Parameter(Mandatory = $false, Position = 1)]
+        [ValidateScript({
+            if (Test-Path $_ -PathType Container) { $true }
+            else { throw "The path '$_' does not exist or is not a directory." }
+        })]
+        [string]$Destination
+    )
+
+    begin {
+        # Check if git is installed
+        try {
+            $gitVersion = git --version 2>$null
+            if (-not $gitVersion) {
+                throw "Git is not installed or not in PATH."
+            }
+            Write-Verbose "Git found:  $gitVersion"
+        }
+        catch {
+            Write-Error "Git is not available. Please install Git first."
+            return
+        }
+    }
+
+    process {
+        # Prompt for URL if not provided
+        if (-not $Url) {
+            Write-Host "`nGitHub Repository Clone" -ForegroundColor Cyan
+            Write-Host "═" * 50 -ForegroundColor Cyan
+            $Url = Read-Host "Enter the GitHub repository URL (e.g., https://github.com/owner/repo.git)"
+
+            # Validate the URL format
+            if ($Url -notmatch '^https?://github\.com/[\w\-]+/[\w\-\.]+(?:\.git)?$') {
+                Write-Error "Invalid GitHub URL format. Expected format: https://github.com/owner/repo.git"
+                return
+            }
+        }
+
+        # Ensure URL ends with .git
+        if ($Url -notmatch '\.git$') {
+            $Url = "$Url.git"
+        }
+
+        Write-Host "`nCloning repository from: $Url" -ForegroundColor Green
+
+        try {
+            # Clone the repository
+            if ($Destination) {
+                Push-Location $Destination
+                git clone $Url
+                Pop-Location
+                Write-Host "`nRepository cloned successfully to: $Destination" -ForegroundColor Green
+            }
+            else {
+                git clone $Url
+                Write-Host "`nRepository cloned successfully!" -ForegroundColor Green
+            }
+        }
+        catch {
+            Write-Error "Failed to clone repository:  $_"
+            return
+        }
+    }
+}
+
+# Alias Clone-GitHubRepo
+Set-Alias -Name cl -Value Clone-GitHubRepo
+
+# Downloads YouTube video using yt-dlp
+function Get-YouTubeVideo {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$Url
+    )
+    # Check if yt-dlp is available
+    if (-not (Get-Command yt-dlp -ErrorAction SilentlyContinue)) {
+        Write-Error "yt-dlp is not installed or not in PATH. Install it first:  winget install yt-dlp"
+        return
+    }
+    # Prompt for URL if not provided
+    if ([string]::IsNullOrWhiteSpace($Url)) {
+        $Url = Read-Host "Enter YouTube video URL"
+    }
+    # Validate URL
+    if ([string]::IsNullOrWhiteSpace($Url)) {
+        Write-Warning "No URL provided. Operation cancelled."
+        return
+    }
+    # Set download path to Desktop
+    $DesktopPath = [Environment]::GetFolderPath("Desktop")
+
+    Write-Host "Downloading video to:  $DesktopPath" -ForegroundColor Cyan
+    Write-Host "URL: $Url" -ForegroundColor Cyan
+
+    # Download video
+    try {
+        yt-dlp -P $DesktopPath $Url
+        Write-Host "`nDownload completed successfully!" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Download failed: $_"
+    }
+}
+
+# Create an alias for easier access
+Set-Alias -Name dv -Value Get-YouTubeVideo
+
 # Help Function
 function hh {
     $border = "$($PSStyle.Foreground.DarkGray) $($PSStyle.Reset)"
@@ -879,15 +994,9 @@ $($cmd.Invoke("up","","Update Profile",        "🔄"))
 $($cmd.Invoke("uo","","Update PowerShell",     "🔄"))
 $($cmd.Invoke("ep","","Edit Profile",          "📝"))
 $border
-$($sectionHeader.Invoke("⚡", "Examples"           ))
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)hh$($PSStyle.Foreground.DarkGray)   Display Help Menu.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)dc$($PSStyle.Foreground.DarkGray)   Go to Documents.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)o9$($PSStyle.Foreground.DarkGray)   Run o9.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)oc$($PSStyle.Foreground.DarkGray)   Change Directory.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)gs$($PSStyle.Foreground.DarkGray)   Show Git Status.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)gm$($PSStyle.Foreground.DarkGray)   Git Commit.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)lg$($PSStyle.Foreground.DarkGray)   Git Add, Commit, Push.$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)$($PSStyle.Reset)cp$($PSStyle.Foreground.DarkGray)   Copy File.$($PSStyle.Reset)
+$($sectionHeader.Invoke("💾", "Downloader"         ))
+$($cmd.Invoke("cl","","Clone Repo",            "⚡"))
+$($cmd.Invoke("dv","","Download video",        "⚡"))
 
 Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to Display Help.
 $border
@@ -900,3 +1009,4 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
 }
 
 Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
+
