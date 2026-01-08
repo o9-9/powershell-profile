@@ -897,6 +897,15 @@ Set-Alias -Name cl -Value Clone-GitHubRepo
 
 # Downloads YouTube video using yt-dlp
 function Get-YouTubeVideo {
+    # Interactive (prompts for URL)
+    # Get-YouTubeVideo
+    # 
+    # Or with the alias
+    # vd
+    # 
+    # Direct (provide URL as parameter)
+    # Get-YouTubeVideo -Url "https://www.youtube.com/watch?v=example"
+    # vd -Url "https://www.youtube.com/watch?v=example"
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
@@ -1022,5 +1031,6 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
 }
 
 Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
+
 
 
