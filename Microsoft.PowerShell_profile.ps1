@@ -181,7 +181,7 @@ function Update-Profile {
         }
     }
 }
-Set-Alias -Name up -Value Update-Profile
+Set-Alias -Name upr -Value Update-Profile
 
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
 if (-not $debug -and `
@@ -227,7 +227,7 @@ function Update-PowerShell {
         }
     }
 }
-Set-Alias -Name uo -Value Update-PowerShell
+Set-Alias -Name upo -Value Update-PowerShell
 
 # skip in debug mode
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
@@ -351,35 +351,44 @@ function prompt {
 $adminSuffix = if ($isAdmin) { " [ADMIN]" } else { "" }
 $Host.UI.RawUI.WindowTitle = "PowerShell {0}$adminSuffix" -f $PSVersionTable.PSVersion.ToString()
 
-# Utility Functions
+# ====================
+# Editor Configuration
+# ====================
+
+# Force Cursor as default
+$EDITOR_Override = 'cursor'
+
+# Test if command exists
 function Test-CommandExists {
     param($command)
     $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
     return $exists
 }
 
-# Editor Configuration
+# Set editor with fallback
 if ($EDITOR_Override){
     $EDITOR = $EDITOR_Override
 } else {
-    $EDITOR = if (Test-CommandExists nvim) { 'nvim' }
-    elseif (Test-CommandExists pvim) { 'pvim' }
-    elseif (Test-CommandExists vim) { 'vim' }
-    elseif (Test-CommandExists vi) { 'vi' }
+    $EDITOR = if (Test-CommandExists cursor) { 'cursor' }
     elseif (Test-CommandExists code) { 'code' }
     elseif (Test-CommandExists codium) { 'codium' }
     elseif (Test-CommandExists notepad++) { 'notepad++' }
     elseif (Test-CommandExists sublime_text) { 'sublime_text' }
     else { 'notepad' }
-    Set-Alias -Name vim -Value $EDITOR
+    # Editor  aliases
+    Set-Alias -Name e -Value $EDITOR -Force
+    Set-Alias -Name edit -Value $EDITOR -Force
 }
-
+# Cursor-specific shortcuts
+function Open-InCursor { param($file) cursor $file }
+Set-Alias -Name c -Value Open-InCursor -Force
 # Quick Access to Editing the Profile
 function Edit-Profile {
-    vim $PROFILE.CurrentUserAllHosts
+    cursor $PROFILE.CurrentUserAllHosts
 }
 Set-Alias -Name ep -Value Edit-Profile
 
+# Invoke Profile
 function Invoke-Profile {
     if ($PSVersionTable.PSEdition -eq "Desktop") {
         Write-Host "Note: Some Oh My Posh/PSReadLine errors are expected in PowerShell 5. The profile still works fine." -ForegroundColor Yellow
@@ -387,7 +396,10 @@ function Invoke-Profile {
     & $PROFILE
 }
 
-function cr($file) { "" | Out-File $file -Encoding ASCII }
+# Create Empty File with ASCII Encoding
+function new($file) { "" | Out-File $file -Encoding ASCII }
+
+# Find File Recursively
 function ff($name) {
     Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output "$($_.FullName)"
@@ -395,16 +407,16 @@ function ff($name) {
 }
 
 # Get public IP address using Cloudflare (privacy-respecting, no logs for this endpoint)
-function ip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
-# Open o9 full-release
+# Run o9 Utility release
 function o9 {
     Invoke-Expression (Invoke-RestMethod https://o9ll.com/o9)
 }
 
-# Open o9 pre-release
+# Run o9 Utility pre-release
 function o99 {
-	# If function "o99_Override" is defined in profile.ps1 file
+	  # If function "o99_Override" is defined in profile.ps1 file
     # then call it instead.
     if (Get-Command -Name "o99_Override" -ErrorAction SilentlyContinue) {
         o99_Override
@@ -414,12 +426,12 @@ function o99 {
 }
 
 # Install VS Code setup
-function vs {
+function vsc {
 	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
 }
 
 # Install cursor setup
-function cs {
+function cur {
 	irm https://raw.githubusercontent.com/o9-9/cursor-setup/main/setup.ps1 | iex
 }
 
@@ -441,7 +453,8 @@ function admin {
 # Set UNIX-like aliases for the admin command, so sudo <command> will run the command with elevated rights.
 Set-Alias -Name su -Value admin
 
-function ti {
+# System Uptime
+function uptime {
     try {
         # find date/time format
         $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
@@ -481,11 +494,14 @@ function ti {
     }
 }
 
-function un ($file) {
+# Extract Archive to Current Directory
+function unzip ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
 }
+
+# Upload File to Hastebin and copy URL to clipboard
 function hb {
     if ($args.Length -eq 0) {
         Write-Error "No File Path specified."
@@ -512,7 +528,9 @@ function hb {
         Write-Error "Failed to upload Document. Error: $_"
     }
 }
-function se($regex, $dir) {
+
+# Search for Text in Files
+function grep($regex, $dir) {
     if ( $dir ) {
         Get-ChildItem $dir | select-string $regex
         return
@@ -520,46 +538,55 @@ function se($regex, $dir) {
     $input | select-string $regex
 }
 
-function di {
+# Disk Information
+function df {
     get-volume
 }
 
-function ch($file, $find, $replace) {
+# Change Text in File
+function sed($file, $find, $replace) {
     (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
-function sh($name) {
+# Show Command Definition
+function which($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function ev($name, $value) {
+# Set Environment Variable
+function export($name, $value) {
     set-item -force -path "env:$name" -value $value;
 }
 
-function kp($name) {
+# Kill Processes
+function pkill($name) {
     Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
-function lp($name) {
+# List Processes
+function pgrep($name) {
     Get-Process $name
 }
 
-function fl {
+# Show First Lines of File
+function head {
     param($Path, $n = 10)
     Get-Content $Path -Head $n
 }
 
-function lf {
+# Show File
+function tail {
     param($Path, $n = 10, [switch]$f = $false)
     Get-Content $Path -Tail $n -Wait:$f
 }
 
 # Quick File Creation
-function nn { param($name) New-Item -ItemType "file" -Path . -Name $name }
+function nf { param($name) New-Item -ItemType "file" -Path . -Name $name }
 
 # Directory Management
-function oc { param($dir) mkdir $dir -Force; Set-Location $dir }
+function mkcd { param($dir) mkdir $dir -Force; Set-Location $dir }
 
+# Move files or directories to Recycle Bin
 function trash($path) {
     $fullPath = (Resolve-Path -Path $path).Path
 
@@ -590,80 +617,104 @@ function trash($path) {
 
 ### Quality of Life Aliases
 
-# Navigation Shortcuts
-
-# Go to Documents
-function dc {
-    $dc = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
-    Set-Location -Path $dc
+#Navigation Shortcuts
+# Go to Documents folder
+function doc {
+    $doc = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
+    Set-Location -Path $doc
 }
-
-# Go to Desktop
-function dt {
-    $dt = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Documents"}
-    Set-Location -Path $dt
+# Go to Desktop folder
+function dto {
+    $dto = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Desktop"}
+    Set-Location -Path $dto
 }
-
 # Go to Downloads folder
-function do {
-    $do = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
-    Set-Location -Path $do
+function dow {
+    $dow = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
+    Set-Location -Path $dow
 }
-
-# Go to Local AppData folder
-function lc {
-    $lc = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local"}
-    Set-Location -Path $lc
+# Go to o9 folder
+function o9f {
+    $o9f = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local\o9"}
+    Set-Location -Path $o9f
 }
-
-# Go to Roaming AppData folder
+# Go to Local folder
+function lo {
+    $lo = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local"}
+    Set-Location -Path $lo
+}
+# Go to Roaming folder
 function ro {
     $ro = if(([Environment]::GetFolderPath("ApplicationData"))) {([Environment]::GetFolderPath("ApplicationData"))} else {$HOME + "\AppData\Roaming"}
     Set-Location -Path $ro
 }
+# Go to Temp folder
+function tm {
+    $tm = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local\Temp"}
+    Set-Location -Path $tm
+}
+# Go to Program Files folder
+function pf {
+    $pf = 'C:\Program Files'
+    Set-Location $pf
+}
+# Go to Github folder in D
+function gh {
+    $gh = 'D:\10_Github'
+    Set-Location -Path $gh
+}
+# Go to Githyb Folder in C
+function g { __zoxide_z github }
+
 # Simplified Process Management
 function k9 { Stop-Process -Name $args[0] }
 
 # Enhanced Listing
+# List files in table format
 function la { Get-ChildItem | Format-Table -AutoSize }
+# List all files including hidden in table format
 function ll { Get-ChildItem -Force | Format-Table -AutoSize }
 
 # Git Shortcuts
+# Git status
 function gs { git status }
-
+# Git add
 function ga { git add . }
-
+# Git commit
 function gc { param($m) git commit -m "$m" }
-
+# Git push
 function gp { git push }
-
-function g { __zoxide_z github }
-
+# Git pull
+function gpu { git pull }
+# Git clone
 function gcl { git clone "$args" }
-
-function gm {
+# Git add and commit with message
+function gcom {
     git add .
     git commit -m "$args"
 }
-function lg {
+# Git add, commit with message, and push
+function gall {
     git add .
     git commit -m "$args"
     git push
 }
 
 # Quick Access to System Information
-function sy { Get-ComputerInfo }
+function info { Get-ComputerInfo }
 
 # Networking Utilities
-function dn {
+function flushdns {
     Clear-DnsClientCache
     Write-Host "DNS has been flushed"
 }
 
 # Clipboard Utilities
-function cp { Set-Clipboard $args[0] }
+# Copy to clipboard
+function cpy { Set-Clipboard $args[0] }
 
-function ps { Get-Clipboard }
+# Paste from clipboard
+function pst { Get-Clipboard }
 
 # Set-PSReadLineOption Compatibility for PowerShell Desktop
 function Set-PSReadLineOptionsCompat {
@@ -776,11 +827,10 @@ if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
     $localThemePath = Join-Path (Get-ProfileDir) "cobalt2.omp.json"
     if (-not (Test-Path $localThemePath)) {
         # Try to download the theme file to the detected local path
-        # $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json"
         $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json"
         try {
             Invoke-RestMethod -Uri $themeUrl -OutFile $localThemePath
-            Write-Host "Downloaded missing Oh My Posh theme to $localThemePath"
+            Write-Host "✔ Downloaded missing Oh My Posh theme to $localThemePath"
         } catch {
             Write-Warning "Failed to download theme file. Falling back to remote theme. Error: $_"
         }
@@ -789,7 +839,6 @@ if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
         oh-my-posh init pwsh --config $localThemePath | Invoke-Expression
     } else {
         # Fallback to remote theme if local file doesn't exist
-        # oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json | Invoke-Expression
         oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
     }
 }
@@ -800,34 +849,49 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Write-Host "zoxide command not found. Attempting to install via winget..."
     try {
         winget install -e --id ajeetdsouza.zoxide
-        Write-Host "zoxide installed successfully. Initializing..."
+        Write-Host "✔ zoxide installed successfully. Initializing..."
         Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
     } catch {
         Write-Error "Failed to install zoxide. Error: $_"
     }
 }
 
-# Clones GitHub repository to PC
+# Clone GitHub Repo
 function Clone-GitHubRepo {
-    # Usage examples:
-    #
-    # Interactive mode (will prompt for URL)
-    # Clone-GitHubRepo
-    #
-    # Direct URL
-    # Clone-GitHubRepo -Url "https://github.com/example/example.git"
-    #
-    # With specific destination
-    # Clone-GitHubRepo -Url "https://github.com/example/example.git" -Destination "C:\Projects"
-    #
-    # Using alias
-    # gcr
+    <#
+    .SYNOPSIS
+        Clones GitHub repo.
+
+    .DESCRIPTION
+        Prompts for GitHub repo URL and clones it using git clone.
+        Validates the URL format and checks if git is available.
+
+    .PARAMETER Url
+        The GitHub repo URL to clone.  If not provided, will prompt interactively.
+
+    . PARAMETER Destination
+        Optional destination path where the repo will be cloned. 
+        If not specified, clones to the current directory.
+
+    .EXAMPLE
+        Clone-GitHubRepo
+        Prompts for URL and clones to current directory.
+
+    . EXAMPLE
+        Clone-GitHubRepo -Url "https://github.com/o9-9/o9.git"
+        Clones the specified repo to current directory.
+
+    . EXAMPLE
+        Clone-GitHubRepo -Url "https://github.com/o9-9/o9.git" -Destination "D:\10_Github"
+        Clones the specified repo to D:\10_Github.
+    #>
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false, Position = 0)]
         [ValidatePattern('^https?://github\.com/[\w\-]+/[\w\-\. ]+(? : \.git)?$')]
         [string]$Url,
-
+        
         [Parameter(Mandatory = $false, Position = 1)]
         [ValidateScript({
             if (Test-Path $_ -PathType Container) { $true }
@@ -854,13 +918,13 @@ function Clone-GitHubRepo {
     process {
         # Prompt for URL if not provided
         if (-not $Url) {
-            Write-Host "`nGitHub Repository Clone" -ForegroundColor Cyan
+            Write-Host "`nGitHub Repo Clone" -ForegroundColor Cyan
             Write-Host "═" * 50 -ForegroundColor Cyan
-            $Url = Read-Host "Enter the GitHub repository URL (e.g., https://github.com/owner/repo.git)"
+            $Url = Read-Host "Enter Repo URL"
 
             # Validate the URL format
             if ($Url -notmatch '^https?://github\.com/[\w\-]+/[\w\-\.]+(?:\.git)?$') {
-                Write-Error "Invalid GitHub URL format. Expected format: https://github.com/owner/repo.git"
+                Write-Error "Invalid GitHub URL format. Expected format: https://github.com/o9-9/o9.git"
                 return
             }
         }
@@ -870,82 +934,100 @@ function Clone-GitHubRepo {
             $Url = "$Url.git"
         }
 
-        Write-Host "`nCloning repository from: $Url" -ForegroundColor Green
+        Write-Host "`nCloning repo from: $Url" -ForegroundColor Green
 
         try {
-            # Clone the repository
+            # Clone Repo
             if ($Destination) {
                 Push-Location $Destination
                 git clone $Url
                 Pop-Location
-                Write-Host "`nRepository cloned successfully to: $Destination" -ForegroundColor Green
+                Write-Host "`n✔ Repo cloned successfully to: $Destination" -ForegroundColor Green
             }
             else {
                 git clone $Url
-                Write-Host "`nRepository cloned successfully!" -ForegroundColor Green
+                Write-Host "`n✔ Repo cloned successfully!" -ForegroundColor Green
             }
         }
         catch {
-            Write-Error "Failed to clone repository:  $_"
+            Write-Error "Failed to clone repo:  $_"
             return
         }
     }
 }
-
-# Alias Clone-GitHubRepo
+# Create Clone-GitHubRepo alias
 Set-Alias -Name cl -Value Clone-GitHubRepo
 
-# Downloads YouTube video using yt-dlp
+# Downloads YouTube video
 function Get-YouTubeVideo {
-    # Interactive (prompts for URL)
-    # Get-YouTubeVideo
-    # 
-    # Or with the alias
-    # vd
-    # 
-    # Direct (provide URL as parameter)
-    # Get-YouTubeVideo -Url "https://www.youtube.com/watch?v=example"
-    # vd -Url "https://www.youtube.com/watch?v=example"
+    <#
+    .SYNOPSIS
+        Downloads YouTube video to D:\07_Videos using yt-dlp. 
+
+    .DESCRIPTION
+        Prompts for YouTube URL and downloads the video to D:\07_Videos.
+        Requires yt-dlp to be installed and available in PATH.
+
+    .PARAMETER Url
+        The YouTube video URL.  If not provided, will prompt for input.
+
+    .EXAMPLE
+        Get-YouTubeVideo
+        Prompts for URL and downloads video
+
+    .EXAMPLE
+        Get-YouTubeVideo -Url "https://www.youtube.com/watch?v=o9"
+        Downloads video directly from provided URL
+    #>
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         [string]$Url
     )
+
     # Check if yt-dlp is available
     if (-not (Get-Command yt-dlp -ErrorAction SilentlyContinue)) {
         Write-Error "yt-dlp is not installed or not in PATH. Install it first:  winget install yt-dlp"
         return
     }
+
     # Prompt for URL if not provided
     if ([string]::IsNullOrWhiteSpace($Url)) {
-        $Url = Read-Host "Enter YouTube video URL"
+        $Url = Read-Host "Enter Video URL"
     }
+
     # Validate URL
     if ([string]::IsNullOrWhiteSpace($Url)) {
         Write-Warning "No URL provided. Operation cancelled."
         return
     }
-    # Set download path to Desktop
-    $DesktopPath = [Environment]::GetFolderPath("Desktop")
 
-    Write-Host "Downloading video to:  $DesktopPath" -ForegroundColor Cyan
+    # Set download path to Desktop
+    $DownloadPath = "D:\07_Videos"
+
+    # Create the folder if it doesn't exist
+    if (-not (Test-Path -Path $DownloadPath)) {
+        New-Item -Path $DownloadPath -ItemType Directory | Out-Null
+    }
+
+    Write-Host "Downloading video to:  $DownloadPath" -ForegroundColor Cyan
     Write-Host "URL: $Url" -ForegroundColor Cyan
 
     # Download video
     try {
-        yt-dlp -P $DesktopPath $Url
-        Write-Host "`nDownload completed successfully!" -ForegroundColor Green
+        yt-dlp -P $DownloadPath $Url
+        Write-Host "`n✔ Video downloaded successfully to: $DownloadPath" -ForegroundColor Green
     }
     catch {
         Write-Error "Download failed: $_"
     }
 }
-
-# Create an alias for easier access
+# Create Get-YouTubeVideo alias
 Set-Alias -Name dv -Value Get-YouTubeVideo
 
-# Help Function
-function hh {
+<# Help Function
+function h {
     $border = "$($PSStyle.Foreground.DarkGray) $($PSStyle.Reset)"
     $sectionHeader = { param($emoji, $title) "$($PSStyle.Foreground.Magenta)$emoji  $title$($PSStyle.Reset)" }
     $cmd = { param($cmd, $alias, $desc, $sym)
@@ -954,83 +1036,155 @@ function hh {
 
     $helpText = @"
 $border
-$($sectionHeader.Invoke("⚡", "o9 Profile Help"    ))
-$border
-$($sectionHeader.Invoke("🚀", "Navigation"         ))
-$($cmd.Invoke("dc","","Go to Documents",       "📄"))
-$($cmd.Invoke("dt","","Go to Desktop",         "🖥️"))
-$($cmd.Invoke("do","","Go to Downloads",       "⬇️"))
-$($cmd.Invoke("lc","","Go to Local",           "📁"))
-$($cmd.Invoke("ro","","Go to Roaming",         "📁"))
-$($cmd.Invoke("oc","","Change Directory",      "📂"))
-$border
-$($sectionHeader.Invoke("🛠️", "System / Utility"   ))
-$($cmd.Invoke("o9","","Run o9",                "⚡"))
-$($cmd.Invoke("o99","","Run o99",              "⚡"))
-$($cmd.Invoke("vs","","VSCode Setup",          "⚡"))
-$($cmd.Invoke("cs","","Cursor Setup",          "⚡"))
-$($cmd.Invoke("pr","","Profile Setup",         "⚡"))
-$($cmd.Invoke("cc","","Clear Cache",           "🧹"))
-$($cmd.Invoke("rr","","Restarts Explorer",     "🔧"))
-$($cmd.Invoke("sy","","System Info",           "🖥️"))
-$($cmd.Invoke("dn","","Clear DNS Cache",       "🌐"))
-$($cmd.Invoke("kp","","Kill Process Name",     "💀"))
-$($cmd.Invoke("lp","","List Process Name",     "🔎"))
-$($cmd.Invoke("k9","","Kill Process",          "🪓"))
-$border
-$($sectionHeader.Invoke("📄", "Files & Directories"))
-$($cmd.Invoke("la","","List All Files",        "📁"))
-$($cmd.Invoke("ll","","List Hidden Files",     "👻"))
-$($cmd.Invoke("fl","","Show First Lines",      "🔝"))
-$($cmd.Invoke("lf","","Show Last Lines",       "🔚"))
-$($cmd.Invoke("cr","","Create Empty File",     "🆕"))
-$($cmd.Invoke("nn","","Create New File",       "✏️"))
-$($cmd.Invoke("ff","","Find Files",            "🔍"))
-$($cmd.Invoke("un","","Extract Zip File",      "🗜️"))
-$($cmd.Invoke("hb","","Upload URL",            "🌐"))
-$($cmd.Invoke("di","","Disk Free Space",       "ℹ️"))
-$($cmd.Invoke("sh","","Show Command Path",     "🛤️"))
-$($cmd.Invoke("ev","","Set Environmente",      "🌱"))
-$($cmd.Invoke("ch","","Replace in File",       "✂️"))
-$border
-$($sectionHeader.Invoke("🔎", "Search & Data"      ))
-$($cmd.Invoke("se","","Search Regex",          "🧬"))
-$($cmd.Invoke("ip","","Show Public IP",        "🌎"))
-$($cmd.Invoke("ti","","Show time",             "⏰"))
-$border
-$($sectionHeader.Invoke("🔗", "Clipboard"          ))
-$($cmd.Invoke("cp","","Copy File",             "📋"))
-$($cmd.Invoke("ps","","Paste File",            "📋"))
+$($sectionHeader.Invoke("⚡", "o9 Profile Help"     ))
+$($cmd.Invoke("c","","Edit in Cursor",         "⚙️"))
+$($cmd.Invoke("e","","Edit file",              "⚙️"))
+$($cmd.Invoke("edit","","Edit file",           "⚙️"))
+$($cmd.Invoke("ep","","Edit Profile",          "⚙️"))
+$($cmd.Invoke("upr","","Update Profile",       "🔄"))
+$($cmd.Invoke("upo","","Update PowerShell",    "🔄"))
 $border
 $($sectionHeader.Invoke("🌱", "Git Shortcuts"      ))
+$($cmd.Invoke("cl","","git clone",             "⬇️"))
+$($cmd.Invoke("gcl","","git clone",            "⬇️"))
 $($cmd.Invoke("gs","","git status",            "🟢"))
 $($cmd.Invoke("ga","","git add .",             "➕"))
 $($cmd.Invoke("gc","","git commit -m",         "💬"))
 $($cmd.Invoke("gp","","git push",              "🚀"))
-$($cmd.Invoke("g","","GitHub Folder",          "🌐"))
-$($cmd.Invoke("gm","","Add & Commit",          "📝"))
-$($cmd.Invoke("lg","","Add-Commit-Push",       "🚀"))
+$($cmd.Invoke("gpu","","git pull",             "⬇️"))
+$($cmd.Invoke("gcom","","Add & Commit",        "📝"))
+$($cmd.Invoke("gall","","Add-Commit-Push",     "🚀"))
 $border
-$($sectionHeader.Invoke("👤", "Profile Management" ))
-$($cmd.Invoke("up","","Update Profile",        "🔄"))
-$($cmd.Invoke("uo","","Update PowerShell",     "🔄"))
-$($cmd.Invoke("ep","","Edit Profile",          "📝"))
+$($sectionHeader.Invoke("🚀", "Shortcuts"          ))
+$($cmd.Invoke("cpy","","Copy File",            "📋"))
+$($cmd.Invoke("pst","","Paste File",           "📋"))
+$($cmd.Invoke("df","","Disk Free Space",       "ℹ️"))
+$($cmd.Invoke("g","","GitHub folder",          "📁"))
+$($cmd.Invoke("gh","","GitHub folder in D",    "📁"))
+$($cmd.Invoke("doc","","Documents folder",     "📁"))
+$($cmd.Invoke("dto","","Desktop folder",       "📁"))
+$($cmd.Invoke("dow","","Downloads folder",     "📁"))
+$($cmd.Invoke("o9f","","o9 folder",            "📁"))
+$($cmd.Invoke("lo","","Local folder",          "📁"))
+$($cmd.Invoke("ro","","Roaming folder",        "📁"))
+$($cmd.Invoke("tm","","Temp folder",           "📁"))
+$($cmd.Invoke("pf","","Program Files folder",  "📁"))
+$($cmd.Invoke("export","","Set Environmente",  "🌱"))
+$($cmd.Invoke("ff","","Find Files",            "🔍"))
+$($cmd.Invoke("flushdns","","Clear DNS Cache", "🌐"))
+$($cmd.Invoke("pubip","","Show Public IP",     "🌎"))
+$($cmd.Invoke("grep","","Search Regex",        "🧬"))
+$($cmd.Invoke("hb","","Upload URL",            "🌐"))
+$($cmd.Invoke("head","","Show First Lines",    "🔝"))
+$($cmd.Invoke("k9","","Kill Process",          "🪓"))
+$($cmd.Invoke("la","","List All Files",        "📁"))
+$($cmd.Invoke("ll","","List Hidden Files",     "👻"))
+$($cmd.Invoke("mkcd","","Change Directory",    "📂"))
+$($cmd.Invoke("nf","","Create Empty File",     "🆕"))
+$($cmd.Invoke("pkill","","Kill Process Name",  "💀"))
+$($cmd.Invoke("pgrep","","List Process Name",  "🔎"))
+$($cmd.Invoke("sed","","Replace in File",      "✂️"))
+$($cmd.Invoke("info","","System Info",         "🖥️"))
+$($cmd.Invoke("tail","","Show Last Lines",     "🔚"))
+$($cmd.Invoke("new","","Create New File",      "✏️"))
+$($cmd.Invoke("unzip","","Extract Zip File",   "🗜️"))
+$($cmd.Invoke("uptime","","Show time",         "⏰"))
+$($cmd.Invoke("which","","Show Command Path",  "🛤️"))
 $border
-$($sectionHeader.Invoke("💾", "Downloader"         ))
-$($cmd.Invoke("cl","","Clone Repo",            "⚡"))
-$($cmd.Invoke("dv","","Download video",        "⚡"))
+$($cmd.Invoke("o9","","Run o9",                 "⚡"))
+$($cmd.Invoke("o99","","Run o99",               "⚡"))
+$($cmd.Invoke("pr","","Profile Setup",          "⚡"))
+$($cmd.Invoke("vsc","","VSCode Setup",          "⚡"))
+$($cmd.Invoke("cur","","Cursor Setup",          "⚡"))
+$($cmd.Invoke("dv","","Download Video",        "💾"))
+$($cmd.Invoke("cc","","Clear Cache",           "🧹"))
+$($cmd.Invoke("rr","","Restarts Explorer",     "🔧"))
+$border
 
-Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to Display Help.
+Use '$($PSStyle.Foreground.Magenta)H$($PSStyle.Reset)' to display this help message.
 $border
 "@
     Write-Host $helpText
 }
+#>
 
-if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
-    Invoke-Expression -Command "& `"$PSScriptRoot\o9Custom.ps1`""
+# Help Function
+function h {
+    $helpText = @"
+$($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)c$($PSStyle.Reset) - Opens file in cursor editor.
+$($PSStyle.Foreground.Green)e$($PSStyle.Reset) - Opens file in editor.
+$($PSStyle.Foreground.Green)edit$($PSStyle.Reset) - Opens file in editor.
+$($PSStyle.Foreground.Green)ep$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
+$($PSStyle.Foreground.Green)upr$($PSStyle.Reset) - Checks for profile updates from a remote repository and updates if necessary.
+$($PSStyle.Foreground.Green)upo$($PSStyle.Reset) - Checks for the latest PowerShell release and updates if a new version is available.
+
+$($PSStyle.Foreground.Cyan)Git Shortcuts$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)cl$($PSStyle.Reset) <repo> - Shortcut for 'git clone'.
+$($PSStyle.Foreground.Green)gcl$($PSStyle.Reset) <repo> - Shortcut for 'git clone'.
+$($PSStyle.Foreground.Green)ga$($PSStyle.Reset) - Shortcut for 'git add .'.
+$($PSStyle.Foreground.Green)gc$($PSStyle.Reset) <message> - Shortcut for 'git commit -m'.
+$($PSStyle.Foreground.Green)gcom$($PSStyle.Reset) <message> - Adds all changes and commits with the specified message.
+$($PSStyle.Foreground.Green)gp$($PSStyle.Reset) - Shortcut for 'git push'.
+$($PSStyle.Foreground.Green)gpu$($PSStyle.Reset) - Shortcut for 'git pull'.
+$($PSStyle.Foreground.Green)gs$($PSStyle.Reset) - Shortcut for 'git status'.
+$($PSStyle.Foreground.Green)gall$($PSStyle.Reset) <message> - Adds all changes, commits with the specified message, and pushes to the remote repository.
+
+$($PSStyle.Foreground.Cyan)Shortcuts$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)cpy$($PSStyle.Reset) <text> - Copies the specified text to the clipboard.
+$($PSStyle.Foreground.Green)df$($PSStyle.Reset) - Displays information about volumes.
+$($PSStyle.Foreground.Green)g$($PSStyle.Reset) - Changes to the C:GitHub directory.
+$($PSStyle.Foreground.Green)gh$($PSStyle.Reset) - Changes to the D:GitHub directory.
+$($PSStyle.Foreground.Green)doc$($PSStyle.Reset) - Changes the current directory to Documents folder.
+$($PSStyle.Foreground.Green)dto$($PSStyle.Reset) - Changes the current directory to Desktop folder.
+$($PSStyle.Foreground.Green)dow$($PSStyle.Reset) - Changes the current directory to Downloads folder.
+$($PSStyle.Foreground.Green)o9f$($PSStyle.Reset) - Changes the current directory to o9 folder.
+$($PSStyle.Foreground.Green)lo$($PSStyle.Reset) - Changes the current directory to Local folder.
+$($PSStyle.Foreground.Green)ro$($PSStyle.Reset) - Changes the current directory to Roaming folder.
+$($PSStyle.Foreground.Green)tm$($PSStyle.Reset) - Changes the current directory to the user's Temp folder.  
+$($PSStyle.Foreground.Green)pf$($PSStyle.Reset) - Changes the current directory to Program Files folder.
+$($PSStyle.Foreground.Green)export$($PSStyle.Reset) <name> <value> - Sets an environment variable.
+$($PSStyle.Foreground.Green)ff$($PSStyle.Reset) <name> - Finds files recursively with the specified name.
+$($PSStyle.Foreground.Green)flushdns$($PSStyle.Reset) - Clears the DNS cache.
+$($PSStyle.Foreground.Green)pubip$($PSStyle.Reset) - Retrieves the public IP address of the machine.
+$($PSStyle.Foreground.Green)grep$($PSStyle.Reset) <regex> [dir] - Searches for a regex pattern in files within the specified directory or from the pipeline input.
+$($PSStyle.Foreground.Green)hb$($PSStyle.Reset) <file> - Uploads the specified file's content to a hastebin-like service and returns the URL.
+$($PSStyle.Foreground.Green)head$($PSStyle.Reset) <path> [n] - Displays the first n lines of a file (default 10).
+$($PSStyle.Foreground.Green)k9$($PSStyle.Reset) <name> - Kills a process by name.
+$($PSStyle.Foreground.Green)la$($PSStyle.Reset) - Lists all files in the current directory with detailed formatting.
+$($PSStyle.Foreground.Green)ll$($PSStyle.Reset) - Lists all files, including hidden, in the current directory with detailed formatting.
+$($PSStyle.Foreground.Green)mkcd$($PSStyle.Reset) <dir> - Creates and changes to a new directory.
+$($PSStyle.Foreground.Green)nf$($PSStyle.Reset) <name> - Creates a new file with the specified name.
+$($PSStyle.Foreground.Green)pgrep$($PSStyle.Reset) <name> - Lists processes by name.
+$($PSStyle.Foreground.Green)pkill$($PSStyle.Reset) <name> - Kills processes by name.
+$($PSStyle.Foreground.Green)pst$($PSStyle.Reset) - Retrieves text from the clipboard.
+$($PSStyle.Foreground.Green)sed$($PSStyle.Reset) <file> <find> <replace> - Replaces text in a file.
+$($PSStyle.Foreground.Green)info$($PSStyle.Reset) - Displays detailed system information.
+$($PSStyle.Foreground.Green)tail$($PSStyle.Reset) <path> [n] - Displays the last n lines of a file (default 10).
+$($PSStyle.Foreground.Green)new$($PSStyle.Reset) <file> - Creates a new empty file.
+$($PSStyle.Foreground.Green)unzip$($PSStyle.Reset) <file> - Extracts a zip file to the current directory.
+$($PSStyle.Foreground.Green)uptime$($PSStyle.Reset) - Displays the system uptime.
+$($PSStyle.Foreground.Green)which$($PSStyle.Reset) <name> - Shows the path of the command.
+$($PSStyle.Foreground.Green)o9$($PSStyle.Reset) - Runs the latest o9 full-release script from o9.
+$($PSStyle.Foreground.Green)o99$($PSStyle.Reset) - Runs the latest o99 pre-release script from o9.
+$($PSStyle.Foreground.Green)pr$($PSStyle.Reset) - Runs PowerShell Profile Setup script from o9.
+$($PSStyle.Foreground.Green)vsc$($PSStyle.Reset) - Runs VS Code Setup script from o9.
+$($PSStyle.Foreground.Green)cur$($PSStyle.Reset) - Runs Cursor Setup script from o9.
+$($PSStyle.Foreground.Green)dv$($PSStyle.Reset) - Download Video from YouTube.
+$($PSStyle.Foreground.Green)cc$($PSStyle.Reset) - Clear Cache.
+$($PSStyle.Foreground.Green)rr$($PSStyle.Reset) - Restarts Explorer.
+$($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+
+Use '$($PSStyle.Foreground.Magenta)h$($PSStyle.Reset)' to display this help message.
+"@
+    Write-Host $helpText
 }
 
-Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
+if (Test-Path "$PSScriptRoot\o9custom.ps1") {
+    Invoke-Expression -Command "& `"$PSScriptRoot\o9custom.ps1`""
+}
 
-
-
+Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'h' to display help$($PSStyle.Reset)"
