@@ -809,6 +809,19 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 
 # Clones GitHub repository to PC
 function Clone-GitHubRepo {
+    # Usage examples:
+    #
+    # Interactive mode (will prompt for URL)
+    # Clone-GitHubRepo
+    #
+    # Direct URL
+    # Clone-GitHubRepo -Url "https://github.com/example/example.git"
+    #
+    # With specific destination
+    # Clone-GitHubRepo -Url "https://github.com/example/example.git" -Destination "C:\Projects"
+    #
+    # Using alias
+    # gcr
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false, Position = 0)]
@@ -1009,4 +1022,5 @@ if (Test-Path "$PSScriptRoot\o9Custom.ps1") {
 }
 
 Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' to display help$($PSStyle.Reset)"
+
 
