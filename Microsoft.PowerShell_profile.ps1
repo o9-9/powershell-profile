@@ -653,71 +653,61 @@ function ga {
 }
 
 # Clone repo
-function gl { git clone "$args" }
+function gg { git clone "$args" }
 
 # Clone repo
 function Clone-GitHubRepo {
-     # cl -Url "https://github.com/o9-9/o9.git"
-    # cl -Url "https://github.com/o9-9/o9.git" -Destination "D:\10_Github"
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $false, Position = 0)]
-        [ValidatePattern('^https?://github\.com/[\w\-]+/[\w\-\. ]+(? : \.git)?$')]
+        [Parameter(Position = 0)]
+        [ValidatePattern('^https?://github\.com/[\w.-]+/[\w.-]+(?:\.git)?$')]
         [string]$Url,
-        [Parameter(Mandatory = $false, Position = 1)]
+
+        [Parameter(Position = 1)]
         [ValidateScript({
             if (Test-Path $_ -PathType Container) { $true }
             else { throw "The path '$_' does not exist or is not directory." }
         })]
         [string]$Destination
     )
-    begin {
-        # Check if git is installed
-        try {
-            $gitVersion = git --version 2>$null
-            if (-not $gitVersion) {
-                throw "Git is not installed or not in PATH."
-            }
-            Write-Verbose "Git found:  $gitVersion"
-        }
-        catch {
-            Write-Error "Git is not available. Please install Git first."
-            return
-        }
-    }
+
     process {
-        # Prompt for URL if not provided
         if (-not $Url) {
-            Write-Host "`nGitHub Repo Clone" -ForegroundColor Cyan
-            Write-Host "═" * 50 -ForegroundColor Cyan
             $Url = Read-Host "Enter Repo URL"
-            # Validate URL format
-            if ($Url -notmatch '^https?://github\.com/[\w\-]+/[\w\-\.]+(?:\.git)?$') {
-                Write-Error "Invalid GitHub URL format. Expected format: https://github.com/o9-9/o9.git"
-                return
+            if ($Url -notmatch '^https?://github\.com/[\w.-]+/[\w.-]+(?:\.git)?$') {
+                throw "Invalid GitHub URL format."
             }
         }
-        # Ensure URL ends with .git
+
         if ($Url -notmatch '\.git$') {
-            $Url = "$Url.git"
+            $Url += '.git'
         }
+
+        $repoName = ([IO.Path]::GetFileNameWithoutExtension($Url))
+        $basePath = if ($Destination) { $Destination } else { Get-Location }
+        $targetPath = Join-Path $basePath $repoName
+
+        if (Test-Path $targetPath) {
+            $i = 1
+            do {
+                $targetPath = Join-Path $basePath "$repoName-$i"
+                $i++
+            } while (Test-Path $targetPath)
+        }
+
         Write-Host "`nCloning repo from: $Url" -ForegroundColor Green
+        Write-Host "Target folder: $targetPath" -ForegroundColor Cyan
+
         try {
-            # Clone Repo
-            if ($Destination) {
-                Push-Location $Destination
+            git clone $Url $targetPath
+            if ($LASTEXITCODE -ne 0) {
+                throw "git clone failed"
                 git clone $Url
-                Pop-Location
-                Write-Host "`n✔ Repo cloned successfully to: $Destination" -ForegroundColor Green
             }
-            else {
-                git clone $Url
-                Write-Host "`n✔ Repo cloned successfully!" -ForegroundColor Green
-            }
+            Write-Host "`n✔ Repo cloned successfully to: $targetPath" -ForegroundColor Green
         }
         catch {
-            Write-Error "Failed to clone repo:  $_"
-            return
+            Write-Error "Failed to clone repo: $_"
         }
     }
 }
@@ -919,8 +909,265 @@ function Get-YouTubeVideo {
         Write-Error "Download failed: $_"
     }
 }
-# Create Get-YouTubeVideo alias
 Set-Alias -Name dv -Value Get-YouTubeVideo
+
+# install o9-theme
+function Install-Theme {
+    [CmdletBinding()]
+    param ()
+
+    $zipUrl  = 'https://github.com/o9-9/o9-theme/archive/refs/heads/main.zip'
+    $tempZip = Join-Path -Path $env:TEMP -ChildPath 'o9-theme.zip'
+    $tempDir = Join-Path -Path $env:TEMP -ChildPath 'o9-theme'
+
+    try {
+        if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force }
+        if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force }
+
+        Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip -UseBasicParsing
+
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force
+
+        $extractedRoot = Get-ChildItem -Path $tempDir -Directory | Select-Object -First 1
+        if (-not $extractedRoot) {
+            throw "Extraction failed; no folder found in $tempDir"
+        }
+        $themeFolder = Join-Path -Path $tempDir -ChildPath $extractedRoot.Name
+
+        Write-Host ""
+        Write-Host "Choose target:"
+        Write-Host ""
+        Write-Host "  1. Cursor"
+        Write-Host "  2. VS Code"
+        Write-Host ""
+
+        do {
+            $choice = Read-Host "Enter 1 or 2"
+        } until ($choice -in '1','2')
+
+        switch ($choice) {
+
+            '1' {
+                $dest = Join-Path -Path $env:SystemDrive -ChildPath 'Program Files\cursor\resources\app\extensions\o9-theme'
+            }
+
+            '2' {
+                $dest = Join-Path -Path $env:SystemDrive -ChildPath 'Program Files\Microsoft VS Code\resources\app\extensions\o9-theme'
+            }
+        }
+
+        $parent = Split-Path -Path $dest -Parent
+        if (-not (Test-Path $parent)) {
+            New-Item -Path $parent -ItemType Directory -Force | Out-Null
+        }
+
+        if (Test-Path $dest) {
+            Remove-Item -Path $dest -Recurse -Force
+        }
+
+        Move-Item -Path $themeFolder -Destination $dest
+
+        Write-Host "Installation completed successfully." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+    }
+    finally {
+        if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force }
+        if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force }
+    }
+}
+Set-Alias -Name th -Value Install-Theme
+
+# Remove discord krisp and spell check
+function Remove-Krisp {
+    $builds = @{
+        '1' = @{ Name = 'Discord Stable'; Path = "$env:LOCALAPPDATA\Discord" }
+        '2' = @{ Name = 'Discord Canary'; Path = "$env:LOCALAPPDATA\DiscordCanary" }
+        '3' = @{ Name = 'Discord PTB';    Path = "$env:LOCALAPPDATA\DiscordPTB" }
+    }
+
+    while ($true) {
+        Write-Host ""
+        Write-Host "Choose Discord:"
+      	Write-Host ""
+        Write-Host "1. Stable"
+        Write-Host "2. Canary"
+        Write-Host "3. PTB"
+      	Write-Host ""
+        Write-Host "0. Exit"
+      	Write-Host ""
+        $selection = Read-Host "Enter 1-3"
+        $selection = $selection.Trim()
+
+        if ($selection -eq '0') {
+            Write-Host "Exiting..."
+            break
+        }
+
+        if (-not $builds.ContainsKey($selection)) {
+            Write-Warning "Invalid choice. enter 1, 2, 3 or 0 to exit."
+            continue
+        }
+
+        $buildInfo = $builds[$selection]
+        $basePath = $buildInfo.Path
+
+        if (-not (Test-Path $basePath)) {
+            Write-Warning "Base path not found: $basePath"
+            continue
+        }
+
+        $versionFolder = Get-ChildItem -Path $basePath -Directory |
+                         Where-Object { $_.Name -like 'app-*' } |
+                         Sort-Object Name -Descending |
+                         Select-Object -First 1
+
+        if (-not $versionFolder) {
+            Write-Warning "No version folder found under $basePath"
+            continue
+        }
+
+        $modulesPath = Join-Path $versionFolder.FullName 'modules'
+        if (-not (Test-Path $modulesPath)) {
+            Write-Warning "Modules folder not found: $modulesPath"
+            continue
+        }
+
+        $targets = @(
+            'discord_krisp-1',
+            'discord_spellcheck-1'
+        )
+
+        foreach ($t in $targets) {
+            $fullPath = Join-Path $modulesPath $t
+            if (Test-Path $fullPath) {
+                try {
+                    Remove-Item -Path $fullPath -Recurse -Force -ErrorAction Stop
+                    Write-Host "Deleted: $fullPath"
+                } catch {
+                    Write-Warning "Failed to delete $fullPath – $($_.Exception.Message)"
+                }
+            } else {
+                Write-Host "Not present: $fullPath"
+            }
+        }
+
+        Write-Host "Done cleaning $($buildInfo.Name). Returning to menu..."
+    }
+}
+Set-Alias -Name de -Value Remove-Krisp
+
+# Full help
+function hh {
+    $helpText = @"
+$($PSStyle.Foreground.Cyan)o9 Full Help$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)c$($PSStyle.Reset)   Open Cursor           <file>
+$($PSStyle.Foreground.Green)e$($PSStyle.Reset)   Open editor           <file>
+$($PSStyle.Foreground.Green)ed$($PSStyle.Reset)  Edit profile
+$($PSStyle.Foreground.Green)u1$($PSStyle.Reset)  Update profile
+$($PSStyle.Foreground.Green)u2$($PSStyle.Reset)  Update PowerShell
+
+$($PSStyle.Foreground.Cyan)Git$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)cl$($PSStyle.Reset)  Clone repo            <repo>
+$($PSStyle.Foreground.Green)gg$($PSStyle.Reset)  Clone repo            <repo>
+$($PSStyle.Foreground.Green)gd$($PSStyle.Reset)  Add changes
+$($PSStyle.Foreground.Green)gc$($PSStyle.Reset)  Add commit            <message>
+$($PSStyle.Foreground.Green)gp$($PSStyle.Reset)  Push changes
+$($PSStyle.Foreground.Green)gu$($PSStyle.Reset)  Pull changes
+$($PSStyle.Foreground.Green)gs$($PSStyle.Reset)  Show status
+$($PSStyle.Foreground.Green)gm$($PSStyle.Reset)  Add + commit          <message>
+$($PSStyle.Foreground.Green)ga$($PSStyle.Reset)  Add + commit + push   <message>
+
+$($PSStyle.Foreground.Cyan)Navigation$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)g$($PSStyle.Reset)   GitHub C
+$($PSStyle.Foreground.Green)gh$($PSStyle.Reset)  Github D
+$($PSStyle.Foreground.Green)of$($PSStyle.Reset)  o9 local
+$($PSStyle.Foreground.Green)tm$($PSStyle.Reset)  User Temp
+$($PSStyle.Foreground.Green)dc$($PSStyle.Reset)  Documents
+$($PSStyle.Foreground.Green)dt$($PSStyle.Reset)  Desktop
+$($PSStyle.Foreground.Green)dw$($PSStyle.Reset)  Downloads
+$($PSStyle.Foreground.Green)lo$($PSStyle.Reset)  Local
+$($PSStyle.Foreground.Green)ro$($PSStyle.Reset)  Roaming
+$($PSStyle.Foreground.Green)pf$($PSStyle.Reset)  Program Files
+
+$($PSStyle.Foreground.Cyan)System$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)df$($PSStyle.Reset)  Show disk volumes
+$($PSStyle.Foreground.Green)ex$($PSStyle.Reset)  Environment variable  <name> <value>
+$($PSStyle.Foreground.Green)sy$($PSStyle.Reset)  Show system info
+$($PSStyle.Foreground.Green)ut$($PSStyle.Reset)  Show uptime
+$($PSStyle.Foreground.Green)pi$($PSStyle.Reset)  Get public IP
+$($PSStyle.Foreground.Green)fd$($PSStyle.Reset)  Flush DNS cache
+$($PSStyle.Foreground.Green)k9$($PSStyle.Reset)  Kill process          <name>
+$($PSStyle.Foreground.Green)pg$($PSStyle.Reset)  Find process by name  <name>
+$($PSStyle.Foreground.Green)pk$($PSStyle.Reset)  Kill process by name  <name>
+
+$($PSStyle.Foreground.Cyan)Files$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)la$($PSStyle.Reset)  List files
+$($PSStyle.Foreground.Green)ll$($PSStyle.Reset)  List hidden files
+$($PSStyle.Foreground.Green)ff$($PSStyle.Reset)  Find files by name    <name>
+$($PSStyle.Foreground.Green)nf$($PSStyle.Reset)  Create file + name    <name> 
+$($PSStyle.Foreground.Green)ne$($PSStyle.Reset)  Creates empty file    <file>
+$($PSStyle.Foreground.Green)md$($PSStyle.Reset)  cd to directory       <dir>
+$($PSStyle.Foreground.Green)uz$($PSStyle.Reset)  Unzip file            <file>
+$($PSStyle.Foreground.Green)hd$($PSStyle.Reset)  Show first n lines    <path> [n]
+$($PSStyle.Foreground.Green)tl$($PSStyle.Reset)  Show last n lines     <path> [n]
+$($PSStyle.Foreground.Green)gr$($PSStyle.Reset)  Search text by regex  <regex> [dir]
+$($PSStyle.Foreground.Green)sd$($PSStyle.Reset)  Replace text in file  <file> <find> <replace>
+$($PSStyle.Foreground.Green)wh$($PSStyle.Reset)  Show command path     <name>
+
+$($PSStyle.Foreground.Cyan)Clipboard$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)cy$($PSStyle.Reset)  Copy text             <text>
+$($PSStyle.Foreground.Green)pt$($PSStyle.Reset)  Paste from clipboard
+$($PSStyle.Foreground.Green)hb$($PSStyle.Reset)  Upload to hastebin    <file>
+
+$($PSStyle.Foreground.Cyan)Scripts$($PSStyle.Reset)
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)o9$($PSStyle.Reset)  Run latest o9
+$($PSStyle.Foreground.Green)9o$($PSStyle.Reset)  Run latest o99
+$($PSStyle.Foreground.Green)pr$($PSStyle.Reset)  Run profile setup
+$($PSStyle.Foreground.Green)vs$($PSStyle.Reset)  Run vs code setup
+$($PSStyle.Foreground.Green)cs$($PSStyle.Reset)  Run cursor setup
+$($PSStyle.Foreground.Green)dv$($PSStyle.Reset)  Download video
+$($PSStyle.Foreground.Green)de$($PSStyle.Reset)  Remove discord krisp and spell check
+$($PSStyle.Foreground.Green)th$($PSStyle.Reset)  install o9 theme
+$($PSStyle.Foreground.Green)cc$($PSStyle.Reset)  Clear cache
+$($PSStyle.Foreground.Green)rr$($PSStyle.Reset)  Restart explorer
+
+$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
+Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground. Magenta)hs$($PSStyle.Reset)' for compact help
+"@
+    Write-Host $helpText
+}
+
+# Compact help
+function hs {
+    $compact = @"
+$($PSStyle.Foreground.Cyan)o9 Compact Help$($PSStyle.Reset) (• 'hh' Full Help)
+$($PSStyle.Foreground.Yellow)Profile: $($PSStyle.Reset) c e ed u1 u2
+$($PSStyle.Foreground.Yellow)Git:$($PSStyle.Reset) cl gl gd gc gp gu gs gm ga
+$($PSStyle.Foreground.Yellow)Nav:$($PSStyle.Reset) g gh dc dt dw of lo ro tm pf
+$($PSStyle.Foreground.Yellow)System:$($PSStyle.Reset) df ex sy ut pi fd k9 pg pk
+$($PSStyle.Foreground.Yellow)Files:$($PSStyle.Reset) la ll ff nf ne md uz hd tl gr sd wh
+$($PSStyle.Foreground.Yellow)Clip:$($PSStyle.Reset) cy pt hb
+$($PSStyle.Foreground.Yellow)Scripts:$($PSStyle.Reset) o9 9o pr vs cs dv de th cc rr
+"@
+    Write-Host $compact
+}
+
+Write-Host ""
+Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' for full help • 'hs' for compact help$($PSStyle.Reset)"
+Write-Host ""
+
+if (Test-Path "$PSScriptRoot\o9custom.ps1") {
+    Invoke-Expression -Command "& `"$PSScriptRoot\o9custom.ps1`""
+}
 
 <# 
 # Help Function
@@ -942,7 +1189,7 @@ $($cmd.Invoke("u2","","Update PowerShell",     "🔄"))
 $border
 $($sectionHeader.Invoke("🌱", "Git Shortcuts"      ))
 $($cmd.Invoke("cl","","git clone",             "⬇️"))
-$($cmd.Invoke("gl","","git clone",             "⬇️"))
+$($cmd.Invoke("gg","","git clone",             "⬇️"))
 $($cmd.Invoke("gs","","git status",            "🟢"))
 $($cmd.Invoke("gd","","git add .",             "➕"))
 $($cmd.Invoke("gc","","git commit -m",         "💬"))
@@ -1017,7 +1264,7 @@ $($PSStyle.Foreground.Green)u2$($PSStyle.Reset) - Checks for latest PowerShell r
 $($PSStyle.Foreground.Cyan)Git Shortcuts$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
 $($PSStyle.Foreground.Green)cl$($PSStyle.Reset) <repo> - git clone
-$($PSStyle.Foreground.Green)gl$($PSStyle.Reset) <repo> - git clone
+$($PSStyle.Foreground.Green)gg$($PSStyle.Reset) <repo> - git clone
 $($PSStyle.Foreground.Green)gd$($PSStyle.Reset) - git add .
 $($PSStyle.Foreground.Green)gc$($PSStyle.Reset) <message> - git commit -m
 $($PSStyle.Foreground.Green)gp$($PSStyle.Reset) - git push
@@ -1081,115 +1328,6 @@ Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to display this help mes
     Write-Host $helpText
 }
 #>
-
-# Full help
-function hh {
-    $helpText = @"
-$($PSStyle.Foreground.Cyan)o9 Full Help$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)c$($PSStyle.Reset)   Open Cursor           <file>
-$($PSStyle.Foreground.Green)e$($PSStyle.Reset)   Open editor           <file>
-$($PSStyle.Foreground.Green)ed$($PSStyle.Reset)  Edit profile
-$($PSStyle.Foreground.Green)u1$($PSStyle.Reset)  Update profile
-$($PSStyle.Foreground.Green)u2$($PSStyle.Reset)  Update PowerShell
-
-$($PSStyle.Foreground.Cyan)Git$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)cl$($PSStyle.Reset)  Clone repo            <repo>
-$($PSStyle.Foreground.Green)gl$($PSStyle.Reset)  Clone repo            <repo>
-$($PSStyle.Foreground.Green)gd$($PSStyle.Reset)  Add changes
-$($PSStyle.Foreground.Green)gc$($PSStyle.Reset)  Add commit            <message>
-$($PSStyle.Foreground.Green)gp$($PSStyle.Reset)  Push changes
-$($PSStyle.Foreground.Green)gu$($PSStyle.Reset)  Pull changes
-$($PSStyle.Foreground.Green)gs$($PSStyle.Reset)  Show status
-$($PSStyle.Foreground.Green)gm$($PSStyle.Reset)  Add + commit          <message>
-$($PSStyle.Foreground.Green)ga$($PSStyle.Reset)  Add + commit + push   <message>
-
-$($PSStyle.Foreground.Cyan)Navigation$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)g$($PSStyle.Reset)   GitHub C
-$($PSStyle.Foreground.Green)gh$($PSStyle.Reset)  Github D
-$($PSStyle.Foreground.Green)of$($PSStyle.Reset)  o9 local
-$($PSStyle.Foreground.Green)tm$($PSStyle.Reset)  User Temp
-$($PSStyle.Foreground.Green)dc$($PSStyle.Reset)  Documents
-$($PSStyle.Foreground.Green)dt$($PSStyle.Reset)  Desktop
-$($PSStyle.Foreground.Green)dw$($PSStyle.Reset)  Downloads
-$($PSStyle.Foreground.Green)lo$($PSStyle.Reset)  Local
-$($PSStyle.Foreground.Green)ro$($PSStyle.Reset)  Roaming
-$($PSStyle.Foreground.Green)pf$($PSStyle.Reset)  Program Files
-
-$($PSStyle.Foreground.Cyan)System$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)df$($PSStyle.Reset)  Show disk volumes
-$($PSStyle.Foreground.Green)ex$($PSStyle.Reset)  Environment variable  <name> <value>
-$($PSStyle.Foreground.Green)sy$($PSStyle.Reset)  Show system info
-$($PSStyle.Foreground.Green)ut$($PSStyle.Reset)  Show uptime
-$($PSStyle.Foreground.Green)pi$($PSStyle.Reset)  Get public IP
-$($PSStyle.Foreground.Green)fd$($PSStyle.Reset)  Flush DNS cache
-$($PSStyle.Foreground.Green)k9$($PSStyle.Reset)  Kill process          <name>
-$($PSStyle.Foreground.Green)pg$($PSStyle.Reset)  Find process by name  <name>
-$($PSStyle.Foreground.Green)pk$($PSStyle.Reset)  Kill process by name  <name>
-
-$($PSStyle.Foreground.Cyan)Files$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)la$($PSStyle.Reset)  List files
-$($PSStyle.Foreground.Green)ll$($PSStyle.Reset)  List hidden files
-$($PSStyle.Foreground.Green)ff$($PSStyle.Reset)  Find files by name    <name>
-$($PSStyle.Foreground.Green)nf$($PSStyle.Reset)  Create file + name    <name> 
-$($PSStyle.Foreground.Green)ne$($PSStyle.Reset)  Creates empty file    <file>
-$($PSStyle.Foreground.Green)md$($PSStyle.Reset)  cd to directory       <dir>
-$($PSStyle.Foreground.Green)uz$($PSStyle.Reset)  Unzip file            <file>
-$($PSStyle.Foreground.Green)hd$($PSStyle.Reset)  Show first n lines    <path> [n]
-$($PSStyle.Foreground.Green)tl$($PSStyle.Reset)  Show last n lines     <path> [n]
-$($PSStyle.Foreground.Green)gr$($PSStyle.Reset)  Search text by regex  <regex> [dir]
-$($PSStyle.Foreground.Green)sd$($PSStyle.Reset)  Replace text in file  <file> <find> <replace>
-$($PSStyle.Foreground.Green)wh$($PSStyle.Reset)  Show command path     <name>
-
-$($PSStyle.Foreground.Cyan)Clipboard$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)cy$($PSStyle.Reset)  Copy text             <text>
-$($PSStyle.Foreground.Green)pt$($PSStyle.Reset)  Paste from clipboard
-$($PSStyle.Foreground.Green)hb$($PSStyle.Reset)  Upload to hastebin    <file>
-
-$($PSStyle.Foreground.Cyan)Scripts$($PSStyle.Reset)
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)o9$($PSStyle.Reset)  Run latest o9
-$($PSStyle.Foreground.Green)9o$($PSStyle.Reset)  Run latest o99
-$($PSStyle.Foreground.Green)pr$($PSStyle.Reset)  Run profile setup
-$($PSStyle.Foreground.Green)vs$($PSStyle.Reset)  Run vs code setup
-$($PSStyle.Foreground.Green)cs$($PSStyle.Reset)  Run cursor setup
-$($PSStyle.Foreground.Green)dv$($PSStyle.Reset)  Download video
-$($PSStyle.Foreground.Green)cc$($PSStyle.Reset)  Clear cache
-$($PSStyle.Foreground.Green)rr$($PSStyle.Reset)  Restart explorer
-
-$($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground. Magenta)hs$($PSStyle.Reset)' for compact help
-"@
-    Write-Host $helpText
-}
-
-# Compact help
-function hs {
-    $compact = @"
-$($PSStyle.Foreground.Cyan)o9 Compact Help$($PSStyle.Reset) (hh for details)
-$($PSStyle.Foreground.Yellow)Profile: $($PSStyle.Reset) c e ed u1 u2
-$($PSStyle.Foreground.Yellow)Git:$($PSStyle.Reset) cl gl gd gc gp gu gs gm ga
-$($PSStyle.Foreground.Yellow)Nav:$($PSStyle.Reset) g gh dc dt dw of lo ro tm pf
-$($PSStyle.Foreground.Yellow)System:$($PSStyle.Reset) df ex sy ut pi fd k9 pg pk cc rr
-$($PSStyle.Foreground.Yellow)Files:$($PSStyle.Reset) la ll ff nf ne md uz hd tl gr sd wh
-$($PSStyle.Foreground.Yellow)Clip:$($PSStyle.Reset) cy pt hb
-$($PSStyle.Foreground.Yellow)Scripts:$($PSStyle.Reset) o9 9o pr vs cs dv
-"@
-    Write-Host $compact
-}
-
-Write-Host ""
-Write-Host "$($PSStyle.Foreground.DarkMagenta)Type 'hh' for help • 'hs' for quick ref$($PSStyle.Reset)"
-Write-Host ""
-
-if (Test-Path "$PSScriptRoot\o9custom.ps1") {
-    Invoke-Expression -Command "& `"$PSScriptRoot\o9custom.ps1`""
-}
 
 # Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' for full help$($PSStyle.Reset)"
 # Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hs' for compact help$($PSStyle.Reset)"
