@@ -1,3 +1,9 @@
+# Handle PowerShell 7.4+ UTF-8 encoding issues
+$previousOutputEncoding = [Console]::OutputEncoding
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+
+$debug = $false
+
 <#
 .SYNOPSIS
     PowerShell Profile Refactor 
@@ -32,8 +38,6 @@
                       Set-PredictionSource
 #>
 
-# SetDebug mode
-$debug = $false
 if ($debug_Override){
     # If variable debug_Override is defined in profile.ps1 file. then use it instead.
     $debug = $debug_Override
