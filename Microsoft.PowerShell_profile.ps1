@@ -1,42 +1,39 @@
-### PowerShell Profile Refactor
-### Version 1.00 - Refactored
-### https://github.com/o9-9/powershell-profile
+<#
+.SYNOPSIS
+    PowerShell Profile Refactor 
+    Version 1.00
+    https://github.com/o9-9/powershell-profile
+
+.DESCRIPTION
+                                          !!!   WARNING:   !!!
+                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
+                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
+                            https://github.com/o9-9/powershell-profile.git.
+    
+                      TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES
+                      OR FUNCTIONS. USE Edit-Profile FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
+                      TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE
+                      OR FUNCTION, ADDING "_Override" TO NAME.
+
+                      FOLLOWING VARIABLES RESPECT _Override:
+                      $EDITOR_Override
+                      $debug_Override
+                      $repo_root_Override  [To point to fork, for example]
+                      $timeFilePath_Override
+                      $updateInterval_Override
+
+                      FOLLOWING FUNCTIONS RESPECT _Override:
+                      Debug-Message_Override
+                      Update-Profile_Override
+                      Update-PowerShell_Override
+                      Clear-Cache_Override
+                      Get-Theme_Override
+                      o99_Override [To call fork, for example]
+                      Set-PredictionSource
+#>
 
 # SetDebug mode
 $debug = $false
-
-#################################################################################################################################
-############                                                                                                         ############
-############                                          !!!   WARNING:   !!!                                           ############
-############                                                                                                         ############
-############                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.                  ############
-############                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO                      ############
-############                            https://github.com/o9-9/powershell-profile.git.                              ############
-############                                                                                                         ############
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
-############                                                                                                         ############
-############                      TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES             ############
-############                      OR FUNCTIONS. USE Edit-Profile FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.       ############
-############                      TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE                         ############
-############                      OR FUNCTION, ADDING "_Override" TO NAME.                                           ############
-############                                                                                                         ############
-############                      FOLLOWING VARIABLES RESPECT _Override:                                             ############
-############                      $EDITOR_Override                                                                   ############
-############                      $debug_Override                                                                    ############
-############                      $repo_root_Override  [To point to fork, for example]                               ############
-############                      $timeFilePath_Override                                                             ############
-############                      $updateInterval_Override                                                           ############
-############                                                                                                         ############
-############                      FOLLOWING FUNCTIONS RESPECT _Override:                                             ############
-############                      Debug-Message_Override                                                             ############
-############                      Update-Profile_Override                                                            ############
-############                      Update-PowerShell_Override                                                         ############
-############                      Clear-Cache_Override                                                               ############
-############                      Get-Theme_Override                                                                 ############
-############                      o99_Override [To call fork, for example]                                           ############
-############                      Set-PredictionSource                                                               ############
-#################################################################################################################################
-
 if ($debug_Override){
     # If variable debug_Override is defined in profile.ps1 file. then use it instead.
     $debug = $debug_Override
