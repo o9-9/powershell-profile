@@ -1179,7 +1179,7 @@ $($PSStyle.Foreground.Yellow)Profile: $($PSStyle.Reset) c e ed u1 u2
 $($PSStyle.Foreground.Yellow)Git:$($PSStyle.Reset) cl gl gd gc gp gu gs gm ga
 $($PSStyle.Foreground.Yellow)Nav:$($PSStyle.Reset) g gh dc dt dw of lo ro tm pf
 $($PSStyle.Foreground.Yellow)System:$($PSStyle.Reset) df ex sy ut pi fd k9 pg pk cc rr
-$($PSStyle.Foreground.Yellow)Files:$($PSStyle.Reset) la ll ff nf md uz hd tl gr sd wh
+$($PSStyle.Foreground.Yellow)Files:$($PSStyle.Reset) la ll ff nf ne md uz hd tl gr sd wh
 $($PSStyle.Foreground.Yellow)Clip:$($PSStyle.Reset) cy pt hb
 $($PSStyle.Foreground.Yellow)Scripts:$($PSStyle.Reset) o9 9o pr vs cs dv
 "@
