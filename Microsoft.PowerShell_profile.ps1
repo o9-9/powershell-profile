@@ -1087,80 +1087,80 @@ function hh {
     $helpText = @"
 $($PSStyle.Foreground.Cyan)o9 Full Help$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)c$($PSStyle.Reset)   <file>                  Open file in Cursor
-$($PSStyle.Foreground.Green)e$($PSStyle.Reset)   <file>                  Open file in editor
-$($PSStyle.Foreground.Green)ed$($PSStyle.Reset)                          Edit profile
-$($PSStyle.Foreground.Green)u1$($PSStyle.Reset)                          Update profile from repo
-$($PSStyle.Foreground.Green)u2$($PSStyle.Reset)                          Update PowerShell version
+$($PSStyle.Foreground.Green)c$($PSStyle.Reset)   Open Cursor           <file>
+$($PSStyle.Foreground.Green)e$($PSStyle.Reset)   Open editor           <file>
+$($PSStyle.Foreground.Green)ed$($PSStyle.Reset)  Edit profile
+$($PSStyle.Foreground.Green)u1$($PSStyle.Reset)  Update profile
+$($PSStyle.Foreground.Green)u2$($PSStyle.Reset)  Update PowerShell
 
 $($PSStyle.Foreground.Cyan)Git$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)cl$($PSStyle.Reset)  <repo>                  Clone repo
-$($PSStyle.Foreground.Green)gl$($PSStyle.Reset)  <repo>                  Clone repo
-$($PSStyle.Foreground.Green)gd$($PSStyle.Reset)                          Add changes
-$($PSStyle.Foreground.Green)gc$($PSStyle.Reset)  <message>               Add commit
-$($PSStyle.Foreground.Green)gp$($PSStyle.Reset)                          Push changes
-$($PSStyle.Foreground.Green)gu$($PSStyle.Reset)                          Pull changes
-$($PSStyle.Foreground.Green)gs$($PSStyle.Reset)                          Show status
-$($PSStyle.Foreground.Green)gm$($PSStyle.Reset)  <message>               Add + commit
-$($PSStyle.Foreground.Green)ga$($PSStyle.Reset)  <message>               Add + commit + push
+$($PSStyle.Foreground.Green)cl$($PSStyle.Reset)  Clone repo            <repo>
+$($PSStyle.Foreground.Green)gl$($PSStyle.Reset)  Clone repo            <repo>
+$($PSStyle.Foreground.Green)gd$($PSStyle.Reset)  Add changes
+$($PSStyle.Foreground.Green)gc$($PSStyle.Reset)  Add commit            <message>
+$($PSStyle.Foreground.Green)gp$($PSStyle.Reset)  Push changes
+$($PSStyle.Foreground.Green)gu$($PSStyle.Reset)  Pull changes
+$($PSStyle.Foreground.Green)gs$($PSStyle.Reset)  Show status
+$($PSStyle.Foreground.Green)gm$($PSStyle.Reset)  Add + commit          <message>
+$($PSStyle.Foreground.Green)ga$($PSStyle.Reset)  Add + commit + push   <message>
 
 $($PSStyle.Foreground.Cyan)Navigation$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)g$($PSStyle.Reset)                           GitHub C
-$($PSStyle.Foreground.Green)gh$($PSStyle.Reset)                          Github D
-$($PSStyle.Foreground.Green)of$($PSStyle.Reset)                          o9 local
-$($PSStyle.Foreground.Green)tm$($PSStyle.Reset)                          User Temp
-$($PSStyle.Foreground.Green)dc$($PSStyle.Reset)                          Documents
-$($PSStyle.Foreground.Green)dt$($PSStyle.Reset)                          Desktop
-$($PSStyle.Foreground.Green)dw$($PSStyle.Reset)                          Downloads
-$($PSStyle.Foreground.Green)lo$($PSStyle.Reset)                          Local
-$($PSStyle.Foreground.Green)ro$($PSStyle.Reset)                          Roaming
-$($PSStyle.Foreground.Green)pf$($PSStyle.Reset)                          Program Files
+$($PSStyle.Foreground.Green)g$($PSStyle.Reset)   GitHub C
+$($PSStyle.Foreground.Green)gh$($PSStyle.Reset)  Github D
+$($PSStyle.Foreground.Green)of$($PSStyle.Reset)  o9 local
+$($PSStyle.Foreground.Green)tm$($PSStyle.Reset)  User Temp
+$($PSStyle.Foreground.Green)dc$($PSStyle.Reset)  Documents
+$($PSStyle.Foreground.Green)dt$($PSStyle.Reset)  Desktop
+$($PSStyle.Foreground.Green)dw$($PSStyle.Reset)  Downloads
+$($PSStyle.Foreground.Green)lo$($PSStyle.Reset)  Local
+$($PSStyle.Foreground.Green)ro$($PSStyle.Reset)  Roaming
+$($PSStyle.Foreground.Green)pf$($PSStyle.Reset)  Program Files
 
 $($PSStyle.Foreground.Cyan)System$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)df$($PSStyle.Reset)                          Show disk volumes
-$($PSStyle.Foreground.Green)ex$($PSStyle.Reset)  <name> <value>          Set environment variable
-$($PSStyle.Foreground.Green)sy$($PSStyle.Reset)                          Show system info
-$($PSStyle.Foreground.Green)ut$($PSStyle.Reset)                          Show uptime
-$($PSStyle.Foreground.Green)pi$($PSStyle.Reset)                          Get public IP
-$($PSStyle.Foreground.Green)fd$($PSStyle.Reset)                          Flush DNS cache
-$($PSStyle.Foreground.Green)k9$($PSStyle.Reset)  <name>                  Kill process
-$($PSStyle.Foreground.Green)pg$($PSStyle.Reset)  <name>                  Find process by name
-$($PSStyle.Foreground.Green)pk$($PSStyle.Reset)  <name>                  Kill process by name
+$($PSStyle.Foreground.Green)df$($PSStyle.Reset)  Show disk volumes
+$($PSStyle.Foreground.Green)ex$($PSStyle.Reset)  Environment variable  <name> <value>
+$($PSStyle.Foreground.Green)sy$($PSStyle.Reset)  Show system info
+$($PSStyle.Foreground.Green)ut$($PSStyle.Reset)  Show uptime
+$($PSStyle.Foreground.Green)pi$($PSStyle.Reset)  Get public IP
+$($PSStyle.Foreground.Green)fd$($PSStyle.Reset)  Flush DNS cache
+$($PSStyle.Foreground.Green)k9$($PSStyle.Reset)  Kill process          <name>
+$($PSStyle.Foreground.Green)pg$($PSStyle.Reset)  Find process by name  <name>
+$($PSStyle.Foreground.Green)pk$($PSStyle.Reset)  Kill process by name  <name>
 
 $($PSStyle.Foreground.Cyan)Files$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)la$($PSStyle.Reset)                          List all files
-$($PSStyle.Foreground.Green)ll$($PSStyle.Reset)                          List all + hidden files
-$($PSStyle.Foreground.Green)ff$($PSStyle.Reset)  <name>                  Find files by name
-$($PSStyle.Foreground.Green)nf$($PSStyle.Reset)  <name>                  Create new file with name
-$($PSStyle.Foreground.Green)ne$($PSStyle.Reset)  <file>                  Creates new empty file
-$($PSStyle.Foreground.Green)md$($PSStyle.Reset)  <dir>                   Make + cd to directory
-$($PSStyle.Foreground.Green)uz$($PSStyle.Reset)  <file>                  Unzip file
-$($PSStyle.Foreground.Green)hd$($PSStyle.Reset)  <path> [n]              Show first n lines
-$($PSStyle.Foreground.Green)tl$($PSStyle.Reset)  <path> [n]              Show last n lines
-$($PSStyle.Foreground.Green)gr$($PSStyle.Reset)  <regex> [dir]           Search text by regex
-$($PSStyle.Foreground.Green)sd$($PSStyle.Reset)  <file> <find> <replace> Replace text in file
-$($PSStyle.Foreground.Green)wh$($PSStyle.Reset)  <name>                  Show command path
+$($PSStyle.Foreground.Green)la$($PSStyle.Reset)  List files
+$($PSStyle.Foreground.Green)ll$($PSStyle.Reset)  List hidden files
+$($PSStyle.Foreground.Green)ff$($PSStyle.Reset)  Find files by name    <name>
+$($PSStyle.Foreground.Green)nf$($PSStyle.Reset)  Create file + name    <name> 
+$($PSStyle.Foreground.Green)ne$($PSStyle.Reset)  Creates empty file    <file>
+$($PSStyle.Foreground.Green)md$($PSStyle.Reset)  cd to directory       <dir>
+$($PSStyle.Foreground.Green)uz$($PSStyle.Reset)  Unzip file            <file>
+$($PSStyle.Foreground.Green)hd$($PSStyle.Reset)  Show first n lines    <path> [n]
+$($PSStyle.Foreground.Green)tl$($PSStyle.Reset)  Show last n lines     <path> [n]
+$($PSStyle.Foreground.Green)gr$($PSStyle.Reset)  Search text by regex  <regex> [dir]
+$($PSStyle.Foreground.Green)sd$($PSStyle.Reset)  Replace text in file  <file> <find> <replace>
+$($PSStyle.Foreground.Green)wh$($PSStyle.Reset)  Show command path     <name>
 
 $($PSStyle.Foreground.Cyan)Clipboard$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)cy$($PSStyle.Reset)  <text>                  Copy text to clipboard
-$($PSStyle.Foreground.Green)pt$($PSStyle.Reset)                          Paste from clipboard
-$($PSStyle.Foreground.Green)hb$($PSStyle.Reset)  <file>                  Upload file to hastebin
+$($PSStyle.Foreground.Green)cy$($PSStyle.Reset)  Copy text             <text>
+$($PSStyle.Foreground.Green)pt$($PSStyle.Reset)  Paste from clipboard
+$($PSStyle.Foreground.Green)hb$($PSStyle.Reset)  Upload to hastebin    <file>
 
 $($PSStyle.Foreground.Cyan)Scripts$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-$($PSStyle.Foreground.Green)o9$($PSStyle.Reset)                          Run latest o9
-$($PSStyle.Foreground.Green)9o$($PSStyle.Reset)                          Run latest o99
-$($PSStyle.Foreground.Green)pr$($PSStyle.Reset)                          Run profile setup
-$($PSStyle.Foreground.Green)vs$($PSStyle.Reset)                          Run vs code setup
-$($PSStyle.Foreground.Green)cs$($PSStyle.Reset)                          Run cursor setup
-$($PSStyle.Foreground.Green)dv$($PSStyle.Reset)                          Download video
-$($PSStyle.Foreground.Green)cc$($PSStyle.Reset)                          Clear cache
-$($PSStyle.Foreground.Green)rr$($PSStyle.Reset)                          Restart explorer
+$($PSStyle.Foreground.Green)o9$($PSStyle.Reset)  Run latest o9
+$($PSStyle.Foreground.Green)9o$($PSStyle.Reset)  Run latest o99
+$($PSStyle.Foreground.Green)pr$($PSStyle.Reset)  Run profile setup
+$($PSStyle.Foreground.Green)vs$($PSStyle.Reset)  Run vs code setup
+$($PSStyle.Foreground.Green)cs$($PSStyle.Reset)  Run cursor setup
+$($PSStyle.Foreground.Green)dv$($PSStyle.Reset)  Download video
+$($PSStyle.Foreground.Green)cc$($PSStyle.Reset)  Clear cache
+$($PSStyle.Foreground.Green)rr$($PSStyle.Reset)  Restart explorer
 
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
 Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground. Magenta)hs$($PSStyle.Reset)' for compact help
