@@ -17,7 +17,7 @@ $debug = $false
                             https://github.com/o9-9/powershell-profile.git.
     
                       TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES
-                      OR FUNCTIONS. USE Edit-Profile FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
+                      OR FUNCTIONS. USE ed FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
                       TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE
                       OR FUNCTION, ADDING "_Override" TO NAME.
 
@@ -329,11 +329,15 @@ if ($EDITOR_Override){
 function Open-InCursor { param($file) cursor $file }
 Set-Alias -Name c -Value Open-InCursor -Force
 
-# Edit Profile
-function Edit-Profile {
+# Edit profile.ps1
+function ed {
     cursor $PROFILE.CurrentUserAllHosts
 }
-Set-Alias -Name ed -Value Edit-Profile
+
+# Edit Microsoft.PowerShell_profile.ps1
+function ce {
+    c $PROFILE
+}
 
 # Run Profile
 function Invoke-Profile {
