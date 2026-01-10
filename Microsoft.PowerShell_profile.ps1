@@ -248,71 +248,49 @@ function Clear-Cache {
         # Add clear cache logic here
         Write-Host "Clearing cache..." -ForegroundColor Cyan
         # Clear Windows Prefetch
+        Write-Host ""
         Write-Host "Clearing Windows Prefetch..." -ForegroundColor Cyan
         Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
         # Clear Windows Temp
+        Write-Host ""
         Write-Host "Clearing Windows Temp..." -ForegroundColor Cyan
         Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
         # Clear User Temp
+        Write-Host ""
         Write-Host "Clearing User Temp..." -ForegroundColor Cyan
         Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
         # Clear Internet Explorer Cache
+        Write-Host ""
         Write-Host "Clearing Internet Explorer Cache..." -ForegroundColor Cyan
         Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host ""
         Write-Host "Cache clearing completed." -ForegroundColor Green
         # Run Disk Cleanup on Drive C
+        Write-Host ""
         Write-Host "Running Disk Cleanup on Drive C..." -ForegroundColor Cyan
         cleanmgr.exe /d C: /VERYLOWDISK
         Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+        Write-Host ""
         Write-Host "Cleanup completed." -ForegroundColor Green
+        # Remove icon cache
+        Write-Host ""
+        Write-Host "Remove icon cache..." -ForegroundColor Cyan
+        Stop-Process -Name explorer -Force
+        Remove-Item -Path "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache*" -Force -ErrorAction SilentlyContinue
+        Start-Process explorer.exe
+        Write-Host ""
+        Write-Host "Remove icon completed." -ForegroundColor Green
     }
 }
 Set-Alias -Name cc -Value Clear-Cache
 
 # Function to restart Windows Explorer
 function Restarts-Explorer {
-    param (
-        [string]$action = "refresh"
-    )
-    if ($action -eq "refresh") {
-        if (-not ("Win32.NativeMethods" -as [type])) {
-            Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
-[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
-public static extern IntPtr SendMessageTimeout(
-    IntPtr hWnd,
-    uint Msg,
-    IntPtr wParam,
-    string lParam,
-    uint fuFlags,
-    uint uTimeout,
-    out IntPtr lpdwResult);
-"@
-        }
-        $HWND_BROADCAST = [IntPtr]0xffff
-        $WM_SETTINGCHANGE = 0x1A
-        $SMTO_ABORTIFHUNG = 0x2
-        $timeout = 100
-        $result = [IntPtr]::Zero
-        [Win32.NativeMethods]::SendMessageTimeout(
-            $HWND_BROADCAST, 
-            $WM_SETTINGCHANGE, 
-            [IntPtr]::Zero, 
-            "ImmersiveColorSet", 
-            $SMTO_ABORTIFHUNG, 
-            $timeout, 
-            [ref]$result
-        )
-        Write-Output "Explorer UI settings have been refreshed"
-    } 
-    elseif ($action -eq "restart") {
-        Write-Output "Restarting Explorer..."
-        Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-        Start-Process "explorer.exe"
-        Write-Output "Explorer has been restarted"
-    }
-    else {
-        Write-Error "Invalid action. Use 'refresh' or 'restart'"
-    }
+        # Stop Windows Explorer
+        Stop-Process -Name explorer -Force
+        # Restart Windows Explorer
+        Start-Process explorer.exe
 }
 Set-Alias -Name rr -Value Restarts-Explorer
 
