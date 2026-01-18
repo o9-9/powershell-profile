@@ -1045,7 +1045,7 @@ function Remove-Krisp {
 Set-Alias -Name de -Value Remove-Krisp
 
 # Set SVG
-function sv {
+function ss {
     Push-Location "C:\Program Files\SVG"
     & regsvr32 win_svg_thumbs.dll
     Pop-Location
@@ -1132,7 +1132,7 @@ $($PSStyle.Foreground.Green)de$($PSStyle.Reset)  Remove discord krisp and spell 
 $($PSStyle.Foreground.Green)th$($PSStyle.Reset)  install o9 theme
 $($PSStyle.Foreground.Green)cc$($PSStyle.Reset)  Clear cache
 $($PSStyle.Foreground.Green)rr$($PSStyle.Reset)  Restart explorer
-$($PSStyle.Foreground.Green)sv$($PSStyle.Reset)  Setup SVG
+$($PSStyle.Foreground.Green)ss$($PSStyle.Reset)  Setup SVG
 
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
 Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground. Magenta)hs$($PSStyle.Reset)' for compact help
@@ -1176,7 +1176,7 @@ Write-Host "$c la List            ll Hidden          ff Find          $r"
 Write-Host "$c nf Create          ne Empty           md Change        $r"
 Write-Host "$c uz Unzip           hd First           tl Last          $r"
 Write-Host "$c gr Search          sd Replace         wh Path          $r"
-Write-Host "$c o9 Run o9          rr Restart         sv SVG           $r"
+Write-Host "$c o9 Run o9          rr Restart         ss SVG           $r"
 Write-Host "$c vs VSCode          cc Clear           dv Download      $r"
 Write-Host "$c cs Cursor          de Krisp           th Theme         $r"
 Write-Host ""
