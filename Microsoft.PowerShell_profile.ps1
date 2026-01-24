@@ -6,7 +6,7 @@ $debug = $false
 
 <#
 .SYNOPSIS
-    PowerShell Profile Refactor 
+    PowerShell Profile Refactor
     Version 1.00
     https://github.com/o9-9/powershell-profile
 
@@ -15,7 +15,7 @@ $debug = $false
                 DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
                     ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
                             https://github.com/o9-9/powershell-profile.git.
-    
+
                       TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES
                       OR FUNCTIONS. USE ed FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
                       TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE
@@ -415,7 +415,7 @@ function ut {
             $lastBoot = $bootTime.ToString("$dateFormat $timeFormat")
         } else {
             # Get-ti cmdlet was introduced in PowerShell 6.0
-            $lastBoot = (Get-ti -Since).ToString("$dateFormat $timeFormat")			
+            $lastBoot = (Get-ti -Since).ToString("$dateFormat $timeFormat")
             $bootTime = [System.DateTime]::ParseExact($lastBoot, "$dateFormat $timeFormat", [System.Globalization.CultureInfo]::InvariantCulture)
         }
         # Format start time
@@ -1044,6 +1044,13 @@ function Remove-Krisp {
 }
 Set-Alias -Name de -Value Remove-Krisp
 
+# Set SVG
+function ss {
+    Push-Location "C:\Program Files\SVG"
+    & regsvr32 win_svg_thumbs.dll
+    Pop-Location
+}
+
 # Full help
 function hh {
     $helpText = @"
@@ -1097,7 +1104,7 @@ $($PSStyle.Foreground.Yellow)═════════════════
 $($PSStyle.Foreground.Green)la$($PSStyle.Reset)  List files
 $($PSStyle.Foreground.Green)ll$($PSStyle.Reset)  List hidden files
 $($PSStyle.Foreground.Green)ff$($PSStyle.Reset)  Find files by name    <name>
-$($PSStyle.Foreground.Green)nf$($PSStyle.Reset)  Create file + name    <name> 
+$($PSStyle.Foreground.Green)nf$($PSStyle.Reset)  Create file + name    <name>
 $($PSStyle.Foreground.Green)ne$($PSStyle.Reset)  Creates empty file    <file>
 $($PSStyle.Foreground.Green)md$($PSStyle.Reset)  cd to directory       <dir>
 $($PSStyle.Foreground.Green)uz$($PSStyle.Reset)  Unzip file            <file>
@@ -1125,6 +1132,7 @@ $($PSStyle.Foreground.Green)de$($PSStyle.Reset)  Remove discord krisp and spell 
 $($PSStyle.Foreground.Green)th$($PSStyle.Reset)  install o9 theme
 $($PSStyle.Foreground.Green)cc$($PSStyle.Reset)  Clear cache
 $($PSStyle.Foreground.Green)rr$($PSStyle.Reset)  Restart explorer
+$($PSStyle.Foreground.Green)ss$($PSStyle.Reset)  Setup SVG
 
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
 Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground. Magenta)hs$($PSStyle.Reset)' for compact help
@@ -1142,20 +1150,43 @@ $($PSStyle.Foreground.Yellow)Nav:$($PSStyle.Reset) g gh dc dt dw of lo ro tm pf
 $($PSStyle.Foreground.Yellow)System:$($PSStyle.Reset) df ex sy ut pi fd k9 pg pk
 $($PSStyle.Foreground.Yellow)Files:$($PSStyle.Reset) la ll ff nf ne md uz hd tl gr sd wh
 $($PSStyle.Foreground.Yellow)Clip:$($PSStyle.Reset) cy pt hb
-$($PSStyle.Foreground.Yellow)Scripts:$($PSStyle.Reset) o9 9o pr vs cs dv de th cc rr
+$($PSStyle.Foreground.Yellow)Scripts:$($PSStyle.Reset) o9 9o pr vs cs dv de th cc rr sv
 "@
     Write-Host $compact
 }
 
-Write-Host ""
-Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' for full help • 'hs' for compact help$($PSStyle.Reset)"
-Write-Host ""
+# ═══════════════════════════════════════════════════════════
+# Auto-display compact command reference on startup
+# ═══════════════════════════════════════════════════════════
+$c = $PSStyle.Foreground.DarkMagenta; $r = $PSStyle.Reset
+$cy = $PSStyle.Foreground. Cyan
 
+Write-Host "$c u1 Profile         u2 PowerShell      hb Hastebin      $r"
+Write-Host "$c cl Clone           gg Clone           gd Add           $r"
+Write-Host "$c gc Commit          gp Push            gu Pull          $r"
+Write-Host "$c gs Status          gm Add+Commit      ga All           $r"
+Write-Host "$c cy Copy            pt Paste           pf Program       $r"
+Write-Host "$c g  C GitHub        tm Temp            of Folder        $r"
+Write-Host "$c gh D Github        dc Documents       dt Desktop       $r"
+Write-Host "$c dw Downloads       lo Local           ro Roaming       $r"
+Write-Host "$c sy Info            df Volume          k9 Kill          $r"
+Write-Host "$c fd DNS             ut Time            pk Kill          $r"
+Write-Host "$c pi IP              ex Environment     pg Find          $r"
+Write-Host "$c la List            ll Hidden          ff Find          $r"
+Write-Host "$c nf Create          ne Empty           md Change        $r"
+Write-Host "$c uz Unzip           hd First           tl Last          $r"
+Write-Host "$c gr Search          sd Replace         wh Path          $r"
+Write-Host "$c o9 Run o9          rr Restart         ss SVG           $r"
+Write-Host "$c vs VSCode          cc Clear           dv Download      $r"
+Write-Host "$c cs Cursor          de Krisp           th Theme         $r"
+Write-Host ""
+Write-Host "$c Use 'hh' for full help • 'hs' for compact help$r`n"
+Write-Host ""
 if (Test-Path "$PSScriptRoot\o9custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9custom.ps1`""
 }
 
-<# 
+<#
 # Help Function
 function hh {
     $border = "$($PSStyle.Foreground.DarkGray) $($PSStyle.Reset)"
