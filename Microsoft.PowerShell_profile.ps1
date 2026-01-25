@@ -605,9 +605,9 @@ function pf {
 function g { __zoxide_z github }
 
 # Github D
-function gh {
-    $gh = 'D:\10_Github'
-    Set-Location -Path $gh
+function g1 {
+    $g1 = 'D:\10_Github'
+    Set-Location -Path $g1
 }
 
 # Show status
@@ -1077,7 +1077,7 @@ $($PSStyle.Foreground.Green)ga$($PSStyle.Reset)  Add + commit + push   <message>
 $($PSStyle.Foreground.Cyan)Navigation$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
 $($PSStyle.Foreground.Green)g$($PSStyle.Reset)   GitHub C
-$($PSStyle.Foreground.Green)gh$($PSStyle.Reset)  Github D
+$($PSStyle.Foreground.Green)g1$($PSStyle.Reset)  Github D
 $($PSStyle.Foreground.Green)of$($PSStyle.Reset)  o9 local
 $($PSStyle.Foreground.Green)tm$($PSStyle.Reset)  User Temp
 $($PSStyle.Foreground.Green)dc$($PSStyle.Reset)  Documents
@@ -1146,7 +1146,7 @@ function hs {
 $($PSStyle.Foreground.Cyan)o9 Compact Help$($PSStyle.Reset) (• 'hh' Full Help)
 $($PSStyle.Foreground.Yellow)Profile: $($PSStyle.Reset) c e ed u1 u2
 $($PSStyle.Foreground.Yellow)Git:$($PSStyle.Reset) cl gl gd gc gp gu gs gm ga
-$($PSStyle.Foreground.Yellow)Nav:$($PSStyle.Reset) g gh dc dt dw of lo ro tm pf
+$($PSStyle.Foreground.Yellow)Nav:$($PSStyle.Reset) g g1 dc dt dw of lo ro tm pf
 $($PSStyle.Foreground.Yellow)System:$($PSStyle.Reset) df ex sy ut pi fd k9 pg pk
 $($PSStyle.Foreground.Yellow)Files:$($PSStyle.Reset) la ll ff nf ne md uz hd tl gr sd wh
 $($PSStyle.Foreground.Yellow)Clip:$($PSStyle.Reset) cy pt hb
@@ -1162,20 +1162,11 @@ $c = $PSStyle.Foreground.DarkMagenta; $r = $PSStyle.Reset
 $cy = $PSStyle.Foreground. Cyan
 
 Write-Host "$c u1 Profile         u2 PowerShell      hb Hastebin      $r"
+Write-Host ""
 Write-Host "$c cl Clone           gg Clone           gd Add           $r"
 Write-Host "$c gc Commit          gp Push            gu Pull          $r"
 Write-Host "$c gs Status          gm Add+Commit      ga All           $r"
-Write-Host "$c cy Copy            pt Paste           pf Program       $r"
-Write-Host "$c g  C GitHub        tm Temp            of Folder        $r"
-Write-Host "$c gh D Github        dc Documents       dt Desktop       $r"
-Write-Host "$c dw Downloads       lo Local           ro Roaming       $r"
-Write-Host "$c sy Info            df Volume          k9 Kill          $r"
-Write-Host "$c fd DNS             ut Time            pk Kill          $r"
-Write-Host "$c pi IP              ex Environment     pg Find          $r"
-Write-Host "$c la List            ll Hidden          ff Find          $r"
-Write-Host "$c nf Create          ne Empty           md Change        $r"
-Write-Host "$c uz Unzip           hd First           tl Last          $r"
-Write-Host "$c gr Search          sd Replace         wh Path          $r"
+Write-Host ""
 Write-Host "$c o9 Run o9          rr Restart         ss SVG           $r"
 Write-Host "$c vs VSCode          cc Clear           dv Download      $r"
 Write-Host "$c cs Cursor          de Krisp           th Theme         $r"
@@ -1220,7 +1211,7 @@ $($cmd.Invoke("cy","","Copy File",             "📋"))
 $($cmd.Invoke("pt","","Paste File",            "📋"))
 $($cmd.Invoke("df","","Disk Free Space",       "ℹ️"))
 $($cmd.Invoke("g","","GitHub folder",          "📁"))
-$($cmd.Invoke("gh","","GitHub folder in D",    "📁"))
+$($cmd.Invoke("g1","","GitHub folder in D",    "📁"))
 $($cmd.Invoke("dc","","Documents folder",      "📁"))
 $($cmd.Invoke("dt","","Desktop folder",        "📁"))
 $($cmd.Invoke("dw","","Downloads folder",      "📁"))
@@ -1293,7 +1284,7 @@ $($PSStyle.Foreground.Green)ga$($PSStyle.Reset) <message> - Adds all changes + c
 $($PSStyle.Foreground.Cyan)Shortcuts$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
 $($PSStyle.Foreground.Green)g$($PSStyle.Reset)  - GitHub C
-$($PSStyle.Foreground.Green)gh$($PSStyle.Reset) - Github D
+$($PSStyle.Foreground.Green)g1$($PSStyle.Reset) - Github D
 $($PSStyle.Foreground.Green)of$($PSStyle.Reset) - o9 local
 $($PSStyle.Foreground.Green)tm$($PSStyle.Reset) - User Temp
 $($PSStyle.Foreground.Green)dc$($PSStyle.Reset) - Documents
