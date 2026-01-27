@@ -1135,7 +1135,7 @@ $($PSStyle.Foreground.Green)rr$($PSStyle.Reset)  Restart explorer
 $($PSStyle.Foreground.Green)ss$($PSStyle.Reset)  Setup SVG
 
 $($PSStyle.Foreground.Yellow)═══════════════════════$($PSStyle.Reset)
-Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground. Magenta)hs$($PSStyle.Reset)' for compact help
+Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' for full help • '$($PSStyle.Foreground.Magenta)hs$($PSStyle.Reset)' for compact help
 "@
     Write-Host $helpText
 }
@@ -1155,24 +1155,39 @@ $($PSStyle.Foreground.Yellow)Scripts:$($PSStyle.Reset) o9 9o pr vs cs dv de th c
     Write-Host $compact
 }
 
-# ═══════════════════════════════════════════════════════════
-# Auto-display compact command reference on startup
-# ═══════════════════════════════════════════════════════════
-$c = $PSStyle.Foreground.DarkMagenta; $r = $PSStyle.Reset
-$cy = $PSStyle.Foreground. Cyan
+# Multi-column layout with colored aliases and descriptions
+$cyan = $PSStyle.Foreground.Cyan
+$magenta = $PSStyle.Foreground.Magenta
+$r = $PSStyle.Reset
+$w = [Math]::Floor($Host.UI.RawUI.WindowSize.Width / 3) - 2
 
-Write-Host "$c u1 Profile         u2 PowerShell      hb Hastebin      $r"
+$cmds = @(
+    "o9 Run o9", "rr Restart", "ss SVG",
+    "vs VSCode", "cc Clear",   "dv Download",
+    "cs Cursor", "de Krisp",   "th Theme"
+)
+
+Write-Host "`n${magenta}Help: ${cyan}hh${magenta} • ${cyan}hs$r`n"
+for ($i = 0; $i -lt $cmds.Count; $i += 3) {
+    $col1 = if ($cmds[$i]) {
+        $parts = $cmds[$i].TrimStart() -split ' ', 2
+        "$cyan$($parts[0])$magenta $($parts[1])$r".PadRight($w + 2)
+    } else { " " * $w }
+
+    $col2 = if ($cmds[$i+1]) {
+        $parts = $cmds[$i+1].TrimStart() -split ' ', 2
+        "$cyan$($parts[0])$magenta $($parts[1])$r".PadRight($w + 2)
+    } else { " " * $w }
+
+    $col3 = if ($cmds[$i+2]) {
+        $parts = $cmds[$i+2].TrimStart() -split ' ', 2
+        "$cyan$($parts[0])$magenta $($parts[1])$r"
+    } else { "" }
+
+    Write-Host "$col1 $col2 $col3"
+}
 Write-Host ""
-Write-Host "$c cl Clone           gg Clone           gd Add           $r"
-Write-Host "$c gc Commit          gp Push            gu Pull          $r"
-Write-Host "$c gs Status          gm Add+Commit      ga All           $r"
-Write-Host ""
-Write-Host "$c o9 Run o9          rr Restart         ss SVG           $r"
-Write-Host "$c vs VSCode          cc Clear           dv Download      $r"
-Write-Host "$c cs Cursor          de Krisp           th Theme         $r"
-Write-Host ""
-Write-Host "$c Use 'hh' for full help • 'hs' for compact help$r`n"
-Write-Host ""
+
 if (Test-Path "$PSScriptRoot\o9custom.ps1") {
     Invoke-Expression -Command "& `"$PSScriptRoot\o9custom.ps1`""
 }
