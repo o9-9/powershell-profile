@@ -1,7 +1,6 @@
 # Logically Arranged Compact Command Reference
 
 ```powershell
-<#
 # Help Function
 function hh {
     $border = "$($PSStyle.Foreground.DarkGray) $($PSStyle.Reset)"
@@ -159,16 +158,14 @@ Use '$($PSStyle.Foreground.Magenta)hh$($PSStyle.Reset)' to display this help mes
 "@
     Write-Host $helpText
 }
-#>
 
-# Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' for full help$($PSStyle.Reset)"
-# Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hs' for compact help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hh' for full help$($PSStyle.Reset)"
+Write-Host "$($PSStyle.Foreground.DarkMagenta)Use 'hs' for compact help$($PSStyle.Reset)"
 ```
 
 ```powershell
-# ═══════════════════════════════════════════════════════════
 # Auto-display compact command reference on startup
-# ═══════════════════════════════════════════════════════════
+
 $c = $PSStyle. Foreground.Magenta; $r = $PSStyle.Reset
 $cmds = @(
     # Editors & Profile
@@ -213,12 +210,11 @@ Write-Host "$c`nUse 'hh' for full help • 'hs' for compact help$r`n"
 
 ---
 
-## 🎯 **Alternative: Categorized with Headers**
+## Alternative: Categorized with Headers
 
 ```powershell
-# ═══════════════════════════════════════════════════════════
 # Auto-display compact command reference on startup
-# ═══════════════════════════════════════════════════════════
+
 $c = $PSStyle.Foreground.Magenta; $r = $PSStyle.Reset
 $cy = $PSStyle.Foreground. Cyan
 
