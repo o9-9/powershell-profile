@@ -573,7 +573,7 @@ function dw {
     Set-Location -Path $dw
 }
 
-# o9 local
+# o9 Folder
 function of {
     $of = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local\o9"}
     Set-Location -Path $of
@@ -603,14 +603,15 @@ function pf {
     Set-Location $pf
 }
 
-# Github C
+# Github D
 function g { __zoxide_z github }
 
-# Github D
+# Github C
 function gf {
-    $gf = 'C:\Users\o9\Documents\github'
+    $gf = if(([Environment]::GetFolderPath("MyGithub"))) {([Environment]::GetFolderPath("MyGithub"))} else {$HOME + "\Documents\Github"}
     Set-Location -Path $gf
 }
+
 
 # Show status
 function gs { git status }
@@ -918,10 +919,10 @@ function Install-Theme {
         }
         $themeFolder = Join-Path -Path $tempDir -ChildPath $extractedRoot.Name
         Write-Host ""
-        Write-Host "o9 Theme"
+        Write-Host "Install Theme"
         Write-Host ""
         Write-Host "1. Cursor"
-        Write-Host "2. VS Code"
+        Write-Host "2. VSCode"
         Write-Host ""
         do {
             $choice = Read-Host "Enter:"
@@ -954,6 +955,11 @@ function Install-Theme {
     }
 }
 Set-Alias -Name th -Value Install-Theme
+
+# Website Source
+function cm { 
+    $cm = Copy-Item -Path ".\o9-theme" -Destination "C:\Program Files\cursor\resources\app\extensions" -Recurse -Force
+}
 
 
 # Remove Discord Folders (Krisp and SpellCheck)
@@ -1031,6 +1037,11 @@ function ss {
     Pop-Location
 }
 
+# Website Source
+function sa { 
+    $urlSrc = Read-Host 'Enter URL'
+    Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
+}
 
 # Color
 $C = $PSStyle.Foreground.Cyan
@@ -1063,57 +1074,6 @@ $Ascii = @'
            ⢿⣿⣦⣄⣀⣠⣴⣿⣿  ⠈⠻⣿⣿⣿⣿⡿⠇
            ⠈⠛⠻⠿⠿⠿⠿⠋⠁
 '@
-<#
-$Ascii = @'
-       ┌────┬───────────┬────┬───────────────┬────┬──────────────┐
-       │ c  │ Cursor    │ o9 │ Utility       │ ll │ Hidden       │
-       │ vs │ VS Code   │ e  │ Editor        │ dc │ Documents    │
-       │ ff │ Find      │ cs │ Cursor        │ ed │ Edit Profile │
-       │ dt │ Desktop   │ nf │ File          │ dv │ Downloader   │
-       │ u1 │ UProfile  │ dw │ Downloads     │ ne │ Empty        │
-       │ de │ krisp     │ u2 │ UPowershell   │ lo │ Local        │
-       │ md │ Directory │ th │ Theme         │ cl │ Clone        │
-       │ ro │ Roaming   │ uz │ Unzip         │ cc │ Clearup      │
-       │ gg │ Clone     │ pf │ Program Files │ hd │ First        │
-       │ rr │ Restart   │ gd │ Add           │ df │ Volume       │
-       │ tl │ Last      │ gc │ Commit        │ ex │ Environment  │
-       │ gr │ Regex     │ gp │ Push          │ sy │ System       │
-       │ sd │ Replace   │ gu │ Pull          │ ut │ Time         │
-       │ wh │ Path      │ pi │ IP            │ cy │ Copy         │
-       │ gm │ Commit    │ fd │ DNS           │ pt │ Paste        │
-       │ hb │ Upload    │ ga │ Git All       │ pg │ Find         │
-       │ gf │ C GitHub  │ k9 │ Kill          │ ss │ SVG          │
-       │ pr │ Profile   │ tm │ Temp          │ la │ List         │
-       └────┴───────────┴────┴───────────────┴────┴──────────────┘
-'@
-#>
-<#
-$Ascii = @'
-┌───────────── Git ────────────┬─────── User/Profile ───────┬─────── Files/Dirs ────────┬─────── System/Utility ────┐
-│ 01. cl > Clone               │ 11. ed > EProfile          │ 21. dc > Documents        │ 31. ex > Environment      │
-│ 02. gg > Clone               │ 12. ga > AddCommitPush     │ 22. dt > Desktop          │ 32. sy > Systemnfo        │
-│ 03. gd > Add                 │ 13. gm > AddCommit         │ 23. dw > Downloads        │ 33. ut > Time             │
-│ 04. gc > Commit              │ 14. gs > Status            │ 24. lo > Local            │ 34. pi > IP               │
-│ 05. gp > Push                │ 15. u1 > UProfile          │ 25. ro > Roaming          │ 35. fd > DNS              │
-│ 06. gu > Pull                │ 16. u2 > UPowerShell       │ 26. pf > ProgramFiles     │ 36. df > Volume           │
-│ 07. gf > CGitHub             │ 17. pr > Profile           │ 27. md > Directory        │ 37. wh > Path             │
-│ 08. g  > DGithub             │                            │ 28. la > List             │ 38. tm > Temp             │
-│ 09. hb > Upload              │                            │ 29. uz > Unzip            │ 39. o9 > Utility          │
-│ 10. gs > Status              │                            │ 30. hd > First            │ 40. o99 > Utility         │
-│                                                                                                                   │
-├───────── Edit/Clip ───────────────── Search/Replace ────────── Copy/Move/Setup ──────────────── Other ────────────┤
-│                                                                                                                   │
-│ 41. e  > Editor              │ 51. ff > Find              │ 61. cy > Copy              │ 71. th > Theme           │
-│ 42. vs > VSCode              │ 52. pg > Find              │ 62. pt > Paste             │ 72. cc > Clearup         │
-│ 43. cs > Cursor              │ 53. sd > Replace           │ 63. ll > Hidden            │ 73. rr > Restart         │
-│ 44. c  > Cursor              │ 54. gr > Regex             │ 64. ne > Empty             │ 74. ss > SVG Setup       │
-│ 45. pt > Paste               │                            │ 65. ff > Find              │ 75. dv > Downloader      │
-│ 46. cy > Copy                │                            │                            │ 76. de > krisp           │
-│ 47. pk > Kill                │                            │                            │ 77. k9 > Kill            │
-│ 48. k9 > Kill                │                            │                            │                          │
-└──────────────────────────────┴────────────────────────────┴────────────────────────────┴──────────────────────────┘
-'@
-#>
 
 
 # Print Ascii
@@ -1121,13 +1081,11 @@ function Write-Ascii {
     Write-Host $Ascii
 }
 
-
 # Size Width
 function Get-PrintableWidth {
     param([string]$Text)
     ($Text -replace "\e\[[0-9;]*m", '').Length
 }
-
 
 # Title
 function Write-FrameTitle {
@@ -1147,7 +1105,6 @@ function Write-FrameTitle {
     Write-Host ("$Y│$R" + (' ' * $padLeft) + $Text + (' ' * $padRight) + "$Y│$R")
     Write-Host ("$Y╰" + ('─' * $inner) + "╯$R")
 }
-
 
 # Help Panel Design
 function Write-HelpSection {
@@ -1174,14 +1131,12 @@ function Write-HelpSection {
     }
 }
 
-
 # Footer
 function Write-ModeFooter {
     Write-Host ""
     Write-Host "$Y$('─' * 72)$R"
     #Write-Host "'$Mhh$R' HH '•' '$Mhs$R' HS"
 }
-
 
 # Help Full
 $script:HelpSections = @(
@@ -1281,24 +1236,20 @@ $script:HelpSections = @(
     }
 )
 
-
 # Help Compact
 $script:CompactSections = @(
     @{
         Name  = 'Fast Commands'
         Items = @(
-            [pscustomobject]@{ Key = 'c '; Desc = 'Editor' }
             [pscustomobject]@{ Key = 'o9'; Desc = 'Utility' }
             [pscustomobject]@{ Key = 'dv'; Desc = 'Downloader' }
             [pscustomobject]@{ Key = 'cc'; Desc = 'Cleanup' }
             [pscustomobject]@{ Key = 'rr'; Desc = 'Restart' }
             [pscustomobject]@{ Key = 'de'; Desc = 'Krisp' }
-            [pscustomobject]@{ Key = 'gg'; Desc = 'Clone' }
-            [pscustomobject]@{ Key = 'ga'; Desc = 'Git' }
+            [pscustomobject]@{ Key = 'sa'; Desc = 'Source' }
         )
     }
 )
-
 
 # Help Full
 function hh {
@@ -1310,7 +1261,6 @@ function hh {
     Write-Host "$Y$('─' * 16)$R"
     #Write-ModeFooter
 }
-
 
 # Help Compact
 function hs {
@@ -1336,10 +1286,8 @@ function hs {
     #Write-ModeFooter
 }
 
-
 # View
 hs
-
 
 # Custom Script
 #if (Test-Path "$PSScriptRoot\custom.ps1") {
