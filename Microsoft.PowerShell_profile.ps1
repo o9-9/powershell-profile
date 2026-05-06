@@ -1,40 +1,42 @@
 <#
 .SYNOPSIS
     PowerShell Profile Refactor
-    Version 1.00
+    Version 9.00
     https://github.com/o9-9/powershell-profile
 
 .DESCRIPTION
-                                          !!!   WARNING:   !!!
-                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
-                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
-                            https://github.com/o9-9/powershell-profile.git.
+                        !!!   WARNING:   !!!
+    DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
+        ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
+                https://github.com/o9-9/powershell-profile.git.
 
-                      TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES
-                      OR FUNCTIONS. USE ed FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
-                      TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE
-                      OR FUNCTION, ADDING "_Override" TO NAME.
+    TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES
+    OR FUNCTIONS. USE ed FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
+    TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE
+    OR FUNCTION, ADDING "_Override" TO NAME.
 
-                      FOLLOWING VARIABLES RESPECT _Override:
-                      $EDITOR_Override
-                      $debug_Override
-                      $repo_root_Override  [To point to fork, for example]
-                      $timeFilePath_Override
-                      $updateInterval_Override
+    FOLLOWING VARIABLES RESPECT _Override:
+    $EDITOR_Override
+    $debug_Override
+    $repo_root_Override  [To point to fork, for example]
+    $timeFilePath_Override
+    $updateInterval_Override
 
-                      FOLLOWING FUNCTIONS RESPECT _Override:
-                      Debug-Message_Override
-                      Update-Profile_Override
-                      Update-PowerShell_Override
-                      Clear-Cache_Override
-                      Get-Theme_Override
-                      o99_Override [To call fork, for example]
-                      Set-PredictionSource
+    FOLLOWING FUNCTIONS RESPECT _Override:
+    Debug-Message_Override
+    Update-Profile_Override
+    Update-PowerShell_Override
+    Clear-Cache_Override
+    Get-Theme_Override
+    o99_Override [To call fork, for example]
+    Set-PredictionSource
 #>
+
 
 # Handle PowerShell 7.4+ UTF-8 encoding issues
 $previousOutputEncoding = [Console]::OutputEncoding
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
+
 
 # Debug mode
 $debug = $false
@@ -46,6 +48,7 @@ if ($debug_Override){
     $debug = $false
 }
 
+
 # Define path to file that stores last execution time
 if ($repo_root_Override){
     # If variable $repo_root_Override is defined in profile.ps1 file. then use it instead.
@@ -53,6 +56,7 @@ if ($repo_root_Override){
 } else {
     $repo_root = "https://raw.githubusercontent.com/o9-9"
 }
+
 
 # Helper function for cross-edition compatibility
 function Get-ProfileDir {
@@ -66,6 +70,7 @@ function Get-ProfileDir {
     }
 }
 
+
 # Define path to file that stores last execution time
 if ($timeFilePath_Override){
     # If variable $timeFilePath_Override is defined in profile.ps1 file. then use it instead.
@@ -75,6 +80,7 @@ if ($timeFilePath_Override){
     $timeFilePath = "$profileDir\LastExecutionTime.txt"
 }
 
+
 # Define update interval in days, set to -1 to always check
 if ($updateInterval_Override){
     # If variable $updateInterval_Override is defined in profile.ps1 file. then use it instead.
@@ -82,6 +88,7 @@ if ($updateInterval_Override){
 } else {
     $updateInterval = 7
 }
+
 
 # Debug mode message
 function Debug-Message{
@@ -102,20 +109,24 @@ function Debug-Message{
     }
 }
 
+
 # Check Debug mode
 if ($debug) {
     Debug-Message
 }
 
-# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
-if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
-    [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
-}
 
 # Opt-out of telemetry before doing anything, only if PowerShell is run as admin
 if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
     [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
 }
+
+
+# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
+if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
+    [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
+}
+
 
 # Initial GitHub.com connectivity check
 function Test-GitHubConnection {
@@ -131,6 +142,7 @@ function Test-GitHubConnection {
 }
 $global:canConnectToGitHub = Test-GitHubConnection
 
+
 # Ensure Terminal-Icons module is installed before importing
 if (-not (Get-Module -ListAvailable -Name Terminal-Icons)) {
     Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
@@ -141,15 +153,17 @@ if (Test-Path($ChocolateyProfile)) {
     Import-Module "$ChocolateyProfile"
 }
 
+
 # Safely read and parse last execution date once to avoid exceptions when file is missing or empty
 $lastExecRaw = if (Test-Path $timeFilePath) { (Get-Content -Path $timeFilePath -Raw).Trim() } else { $null }
 $lastExec = $null
 if (-not [string]::IsNullOrWhiteSpace($lastExecRaw)) {
     [datetime]$parsed = [datetime]::MinValue
-    if ([datetime]::TryParseExact($lastExecRaw, 'yyyy-MM-dd', $null, [System.Globalization.DateTimeStyles]::None, [ref]$parsed)) {
+    if ([datetime]::TryParseExact($lastExecRaw, 'dd-MM-yyyy', $null, [System.Globalization.DateTimeStyles]::None, [ref]$parsed)) {
         $lastExec = $parsed
     }
 }
+
 
 # Check for Profile Updates
 function Update-Profile {
@@ -158,6 +172,11 @@ function Update-Profile {
         Update-Profile_Override
     }
     else {
+        if (Test-Path -LiteralPath $PROFILE) {
+            $profileDir = Split-Path -Path $PROFILE -Parent
+            $backupName = "profile-backup-$(Get-Date -Format 'd-M-yyyy_HHmmss').ps1"
+            Copy-Item -LiteralPath $PROFILE -Destination (Join-Path $profileDir $backupName) -Force
+        }
         try {
             $url = "$repo_root/powershell-profile/main/Microsoft.PowerShell_profile.ps1"
             $oldhash = Get-FileHash $PROFILE
@@ -181,20 +200,20 @@ function Update-Profile {
 }
 Set-Alias -Name u1 -Value Update-Profile
 
+
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than update interval)
 if (-not $debug -and `
     ($updateInterval -eq -1 -or `
             -not (Test-Path $timeFilePath) -or `
             $null -eq $lastExec -or `
         ((Get-Date).Date - $lastExec.Date).TotalDays -gt $updateInterval)) {
-
     Update-Profile
-    $currentTime = Get-Date -Format 'yyyy-MM-dd'
+    $currentTime = Get-Date -Format 'dd-MM-yyyy'
     $currentTime | Out-File -FilePath $timeFilePath
-
 } elseif ($debug) {
     Write-Warning "Skipping o9 profile update check in debug mode"
 }
+
 
 # Update PowerShell
 function Update-PowerShell {
@@ -212,7 +231,6 @@ function Update-PowerShell {
             if ($currentVersion -lt $latestVersion) {
                 $updateNeeded = $true
             }
-
             if ($updateNeeded) {
                 Write-Host "Updating o9 PowerShell..." -ForegroundColor DarkYellow
                 Start-Process powershell.exe -ArgumentList "-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements" -Wait -NoNewWindow
@@ -227,19 +245,20 @@ function Update-PowerShell {
 }
 Set-Alias -Name u2 -Value Update-PowerShell
 
+
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than update interval)
 if (-not $debug -and `
     ($updateInterval -eq -1 -or `
             -not (Test-Path $timeFilePath) -or `
             $null -eq $lastExec -or `
         ((Get-Date).Date - $lastExec.Date).TotalDays -gt $updateInterval)) {
-
     Update-PowerShell
-    $currentTime = Get-Date -Format 'yyyy-MM-dd'
+    $currentTime = Get-Date -Format 'dd-MM-yyyy'
     $currentTime | Out-File -FilePath $timeFilePath
 } elseif ($debug) {
     Write-Warning "Skipping o9 PowerShell update in debug mode"
 }
+
 
 # Cleanup cache
 function Clear-Cache {
@@ -286,6 +305,7 @@ function Clear-Cache {
 }
 Set-Alias -Name cc -Value Clear-Cache
 
+
 # Function to restart Windows Explorer
 function Restarts-Explorer {
         # Stop Windows Explorer
@@ -295,6 +315,7 @@ function Restarts-Explorer {
 }
 Set-Alias -Name rr -Value Restarts-Explorer
 
+
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 function prompt {
@@ -303,8 +324,10 @@ function prompt {
 $adminSuffix = if ($isAdmin) { " [ADMIN]" } else { "" }
 $Host.UI.RawUI.WindowTitle = "PowerShell {0}$adminSuffix" -f $PSVersionTable.PSVersion.ToString()
 
+
 # Force Cursor as default
 $EDITOR_Override = 'cursor'
+
 
 # Test if command exists
 function Test-CommandExists {
@@ -312,6 +335,7 @@ function Test-CommandExists {
     $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
     return $exists
 }
+
 
 # Set editor
 if ($EDITOR_Override){
@@ -326,19 +350,23 @@ if ($EDITOR_Override){
     Set-Alias -Name e -Value $EDITOR -Force
 }
 
+
 # Cursor editor
 function Open-InCursor { param($file) cursor $file }
 Set-Alias -Name c -Value Open-InCursor -Force
+
 
 # Edit profile.ps1
 function ed {
     cursor $PROFILE.CurrentUserAllHosts
 }
 
+
 # Edit Microsoft.PowerShell_profile.ps1
 function ce {
     c $PROFILE
 }
+
 
 # Run Profile
 function Invoke-Profile {
@@ -348,8 +376,10 @@ function Invoke-Profile {
     & $PROFILE
 }
 
+
 # Create Empty File
 function ne($file) { "" | Out-File $file -Encoding ASCII }
+
 
 # Find File Recursively
 function ff($name) {
@@ -358,13 +388,16 @@ function ff($name) {
     }
 }
 
+
 # Public IP
 function pi { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+
 
 # o9 Utility release
 function o9 {
     Invoke-Expression (Invoke-RestMethod https://o9ll.com/o9)
 }
+
 
 # o9 Utility pre-release
 function 9o {
@@ -376,20 +409,24 @@ function 9o {
     }
 }
 
+
 # VS Code setup
 function vs {
 	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
 }
+
 
 # Cursor setup
 function cs {
 	irm https://raw.githubusercontent.com/o9-9/cursor-setup/main/setup.ps1 | iex
 }
 
+
 # PowerShell Profile Setup
 function pr {
 	irm https://raw.githubusercontent.com/o9-9/powershell-profile/main/setup.ps1 | iex
 }
+
 
 # System Utilities
 function admin {
@@ -402,6 +439,7 @@ function admin {
     }
 }
 Set-Alias -Name su -Value admin
+
 
 # System Uptime
 function ut {
@@ -437,12 +475,14 @@ function ut {
     }
 }
 
+
 # Extract Archive
 function uz ($file) {
     Write-Output("Extracting", $file, "to", $pwd)
     $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
     Expand-Archive -Path $fullFile -DestinationPath $pwd
 }
+
 
 # Upload File to Hastebin
 function hb {
@@ -469,6 +509,7 @@ function hb {
     }
 }
 
+
 # Search Text by Regex
 function gr($regex, $dir) {
     if ( $dir ) {
@@ -478,38 +519,46 @@ function gr($regex, $dir) {
     $input | select-string $regex
 }
 
+
 # Disk Volumes
 function df {
     get-volume
 }
+
 
 # Replace Text in File
 function sd($file, $find, $replace) {
     (Get-Content $file).replace("$find", $replace) | Set-Content $file
 }
 
+
 # Show Command Definition
 function wh($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
+
 
 # Set Environment Variable
 function ex($name, $value) {
     set-item -force -path "env:$name" -value $value;
 }
 
+
 # Simplified Process Management
 function k9 { Stop-Process -Name $args[0] }
+
 
 # Kill Processes
 function pk($name) {
     Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
 }
 
+
 # List Processes
 function pg($name) {
     Get-Process $name
 }
+
 
 # Show First Lines of File
 function hd {
@@ -517,17 +566,21 @@ function hd {
     Get-Content $Path -Head $n
 }
 
+
 # Show File
 function tl {
     param($Path, $n = 10, [switch]$f = $false)
     Get-Content $Path -Tail $n -Wait:$f
 }
 
+
 # Quick File Creation
 function nf { param($name) New-Item -ItemType "file" -Path . -Name $name }
 
+
 # Directory Management
 function md { param($dir) mkdir $dir -Force; Set-Location $dir }
+
 
 # Move files or directories to Recycle Bin
 function trash($path) {
@@ -555,11 +608,13 @@ function trash($path) {
     }
 }
 
+
 # Documents
 function dc {
     $dc = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
     Set-Location -Path $dc
 }
+
 
 # Desktop
 function dt {
@@ -567,11 +622,13 @@ function dt {
     Set-Location -Path $dt
 }
 
+
 # Downloads
 function dw {
     $dw = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
     Set-Location -Path $dw
 }
+
 
 # o9 Folder
 function of {
@@ -579,11 +636,13 @@ function of {
     Set-Location -Path $of
 }
 
+
 # Local
 function lo {
     $lo = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local"}
     Set-Location -Path $lo
 }
+
 
 # Roaming
 function ro {
@@ -591,11 +650,13 @@ function ro {
     Set-Location -Path $ro
 }
 
+
 # Temp
 function tm {
     $tm = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local\Temp"}
     Set-Location -Path $tm
 }
+
 
 # Program Files
 function pf {
@@ -603,12 +664,14 @@ function pf {
     Set-Location $pf
 }
 
-# Github D
-function g { __zoxide_z github }
 
 # Github C
+function g { __zoxide_z github }
+
+
+# Github D
 function gf {
-    $gf = if(([Environment]::GetFolderPath("MyGithub"))) {([Environment]::GetFolderPath("MyGithub"))} else {$HOME + "\Documents\Github"}
+    $gf = 'D:\10-Github'
     Set-Location -Path $gf
 }
 
@@ -616,23 +679,29 @@ function gf {
 # Show status
 function gs { git status }
 
+
 # Add changes
 function gd { git add . }
+
 
 # Add commit
 function gc { param($m) git commit -m "$m" }
 
+
 # Push changes
 function gp { git push }
 
+
 # Pull changes
 function gu { git pull }
+
 
 # Git Add + commit
 function gm {
     git add .
     git commit -m "$args"
 }
+
 
 # Git Add + commit + push
 function ga {
@@ -644,6 +713,7 @@ function ga {
 # Clone repo
 function gg { git clone "$args" }
 
+
 # Clone repo
 function Clone-GitHubRepo {
     [CmdletBinding()]
@@ -651,7 +721,6 @@ function Clone-GitHubRepo {
         [Parameter(Position = 0)]
         [ValidatePattern('^https?://github\.com/[\w.-]+/[\w.-]+(?:\.git)?$')]
         [string]$Url,
-
         [Parameter(Position = 1)]
         [ValidateScript({
             if (Test-Path $_ -PathType Container) { $true }
@@ -659,7 +728,6 @@ function Clone-GitHubRepo {
         })]
         [string]$Destination
     )
-
     process {
         if (-not $Url) {
             $Url = Read-Host "Enter Repo URL"
@@ -667,15 +735,12 @@ function Clone-GitHubRepo {
                 throw "Invalid GitHub URL format."
             }
         }
-
         if ($Url -notmatch '\.git$') {
             $Url += '.git'
         }
-
         $repoName = ([IO.Path]::GetFileNameWithoutExtension($Url))
         $basePath = if ($Destination) { $Destination } else { Get-Location }
         $targetPath = Join-Path $basePath $repoName
-
         if (Test-Path $targetPath) {
             $i = 1
             do {
@@ -683,10 +748,8 @@ function Clone-GitHubRepo {
                 $i++
             } while (Test-Path $targetPath)
         }
-
         Write-Host "`nCloning repo from: $Url" -ForegroundColor Green
         Write-Host "Target folder: $targetPath" -ForegroundColor Cyan
-
         try {
             git clone $Url $targetPath
             if ($LASTEXITCODE -ne 0) {
@@ -702,14 +765,18 @@ function Clone-GitHubRepo {
 }
 Set-Alias -Name cl -Value Clone-GitHubRepo
 
+
 # List files in table format
 function la { Get-ChildItem | Format-Table -AutoSize }
+
 
 # List all files including hidden in table format
 function ll { Get-ChildItem -Force | Format-Table -AutoSize }
 
+
 # Quick Access to System Information
 function sy { Get-ComputerInfo }
+
 
 # Networking Utilities
 function fd {
@@ -717,11 +784,14 @@ function fd {
     Write-Host "DNS has been flushed"
 }
 
+
 # Copy to clipboard
 function cy { Set-Clipboard $args[0] }
 
+
 # Paste from clipboard
 function pt { Get-Clipboard }
+
 
 # Set-PSReadLineOption Compatibility for PowerShell Desktop
 function Set-PSReadLineOptionsCompat {
@@ -736,7 +806,6 @@ function Set-PSReadLineOptionsCompat {
         Set-PSReadLineOption @SafeOptions
     }
 }
-
 # Enhanced PSReadLine Configuration
 $PSReadLineOptions = @{
     EditMode = 'Windows'
@@ -759,7 +828,6 @@ $PSReadLineOptions = @{
     BellStyle = 'None'
 }
 Set-PSReadLineOptionsCompat -Options $PSReadLineOptions
-
 # Custom key handlers
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
@@ -771,7 +839,6 @@ Set-PSReadLineKeyHandler -Chord 'Ctrl+LeftArrow' -Function BackwardWord
 Set-PSReadLineKeyHandler -Chord 'Ctrl+RightArrow' -Function ForwardWord
 Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function Undo
 Set-PSReadLineKeyHandler -Chord 'Ctrl+y' -Function Redo
-
 # Custom functions for PSReadLine
 Set-PSReadLineOption -AddToHistoryHandler {
     param($line)
@@ -779,7 +846,6 @@ Set-PSReadLineOption -AddToHistoryHandler {
     $hasSensitive = $sensitive | Where-Object { $line -match $_ }
     return ($null -eq $hasSensitive)
 }
-
 # Fix Set-PredictionSource for Desktop
 function Set-PredictionSource {
     # If "Set-PredictionSource_Override" is defined in profile.ps1 file. then call it instead.
@@ -795,6 +861,7 @@ function Set-PredictionSource {
     }
 }
 Set-PredictionSource
+
 
 # Custom completion for common commands
 $scriptblock = {
@@ -812,7 +879,6 @@ $scriptblock = {
     }
 }
 Register-ArgumentCompleter -Native -CommandName git, npm, deno -ScriptBlock $scriptblock
-
 $scriptblock = {
     param($wordToComplete, $commandAst, $cursorPosition)
     dotnet complete --position $cursorPosition $commandAst.ToString() |
@@ -822,15 +888,19 @@ $scriptblock = {
 }
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
+
+# Oh My Posh Theme
 # If function "Get-Theme_Override" is defined in profile.ps1 file. then call it instead.
 if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
     Get-Theme_Override
 } else {
     # Oh My Posh initialization with local theme fallback and auto-download
-    $localThemePath = Join-Path (Get-ProfileDir) "cobalt2.omp.json"
+    $localThemePath = Join-Path (Get-ProfileDir) "catppuccin.omp.json"
+    #$localThemePath = Join-Path (Get-ProfileDir) "cobalt2.omp.json"
     if (-not (Test-Path $localThemePath)) {
         # Try to download theme file to detected local path
-        $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json"
+        $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json"
+        #$themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json"
         try {
             Invoke-RestMethod -Uri $themeUrl -OutFile $localThemePath
             Write-Host "✔ Downloaded missing Oh My Posh theme to $localThemePath"
@@ -842,10 +912,13 @@ if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
         oh-my-posh init pwsh --config $localThemePath | Invoke-Expression
     } else {
         # Fallback to remote theme if local file doesn't exist
-        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
+        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json | Invoke-Expression
+        #oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
     }
 }
 
+
+# Zoxide
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
 } else {
@@ -859,38 +932,40 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     }
 }
 
-# YT-DLP for Audio/Video Downloader
-# - Example Command: dv -Url "https://www.youtube.com/watch?v=657474"
+
+# YT-DLP
 function Get-YouTubeVideo {
+    <#
+    .SYNOPSIS
+        # YT-DLP Command
+    .DESCRIPTION
+        # Audio and Video Downloader
+    .EXAMPLE
+        # dv -Url "https://www.youtube.com/watch?v=657474"
+    #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         [string]$Url
     )
-    # Check if yt-dlp is available
     if (-not (Get-Command yt-dlp -ErrorAction SilentlyContinue)) {
         Write-Error "Run: winget install yt-dlp"
         Write-Error "Set: Path Environment Variable"
         return
     }
-    # Prompt for URL if not provided
     if ([string]::IsNullOrWhiteSpace($Url)) {
         $Url = Read-Host "Enter URL"
     }
-    # Validate URL
     if ([string]::IsNullOrWhiteSpace($Url)) {
         Write-Warning "No URL Provided"
         return
     }
-    # Set download path to Desktop
     $DownloadPath = "$env:userprofile\Downloads"
-    # Create folder if it doesn't exist
     if (-not (Test-Path -Path $DownloadPath)) {
         New-Item -Path $DownloadPath -ItemType Directory | Out-Null
     }
     Write-Host "Downloading video to:  $DownloadPath" -ForegroundColor Cyan
     Write-Host "URL: $Url" -ForegroundColor Cyan
-    # Download video
     try {
         yt-dlp -P $DownloadPath $Url
         Write-Host "`n✔ $DownloadPath" -ForegroundColor Green
@@ -901,7 +976,8 @@ function Get-YouTubeVideo {
 }
 Set-Alias -Name dv -Value Get-YouTubeVideo
 
-# Theme Setup
+
+# Install Theme
 function Install-Theme {
     [CmdletBinding()]
     param ()
@@ -956,13 +1032,14 @@ function Install-Theme {
 }
 Set-Alias -Name th -Value Install-Theme
 
-# Website Source
-function cm { 
-    $cm = Copy-Item -Path ".\o9-theme" -Destination "C:\Program Files\cursor\resources\app\extensions" -Recurse -Force
+
+# Move Theme to Cursor
+function thh { 
+    $thh = Copy-Item -Path ".\o9-theme" -Destination "C:\Program Files\cursor\resources\app\extensions" -Recurse -Force
 }
 
 
-# Remove Discord Folders (Krisp and SpellCheck)
+# Remove Discord Krisp and SpellCheck
 function Remove-Krisp {
     $builds = @{
         '1' = @{ Name = 'Discord Stable'; Path = "$env:LOCALAPPDATA\Discord" }
@@ -1030,18 +1107,26 @@ function Remove-Krisp {
 Set-Alias -Name de -Value Remove-Krisp
 
 
-# SVG
+# Install SVG
 function ss {
     Push-Location "C:\Program Files\SVG"
     & regsvr32 win_svg_thumbs.dll
     Pop-Location
 }
 
-# Website Source
+
+# Install Website Source
 function sa { 
     $urlSrc = Read-Host 'Enter URL'
     Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
 }
+
+
+# Install Stereo Hub
+function st {
+    python "C:\Users\o9\Documents\Github\discord-stereo-windows-macos-linux\STEREO HUB\discord_stereo_hub.py"
+}
+
 
 # Color
 $C = $PSStyle.Foreground.Cyan
@@ -1074,18 +1159,18 @@ $Ascii = @'
            ⢿⣿⣦⣄⣀⣠⣴⣿⣿  ⠈⠻⣿⣿⣿⣿⡿⠇
            ⠈⠛⠻⠿⠿⠿⠿⠋⠁
 '@
-
-
 # Print Ascii
 function Write-Ascii {
     Write-Host $Ascii
 }
+
 
 # Size Width
 function Get-PrintableWidth {
     param([string]$Text)
     ($Text -replace "\e\[[0-9;]*m", '').Length
 }
+
 
 # Title
 function Write-FrameTitle {
@@ -1105,6 +1190,7 @@ function Write-FrameTitle {
     Write-Host ("$Y│$R" + (' ' * $padLeft) + $Text + (' ' * $padRight) + "$Y│$R")
     Write-Host ("$Y╰" + ('─' * $inner) + "╯$R")
 }
+
 
 # Help Panel Design
 function Write-HelpSection {
@@ -1131,12 +1217,14 @@ function Write-HelpSection {
     }
 }
 
+
 # Footer
 function Write-ModeFooter {
     Write-Host ""
     Write-Host "$Y$('─' * 72)$R"
-    #Write-Host "'$Mhh$R' HH '•' '$Mhs$R' HS"
+    Write-Host "HH - Full Help • HS - Compact Help"
 }
+
 
 # Help Full
 $script:HelpSections = @(
@@ -1246,31 +1334,36 @@ $script:CompactSections = @(
             [pscustomobject]@{ Key = 'cc'; Desc = 'Cleanup' }
             [pscustomobject]@{ Key = 'rr'; Desc = 'Restart' }
             [pscustomobject]@{ Key = 'de'; Desc = 'Krisp' }
-            [pscustomobject]@{ Key = 'sa'; Desc = 'Source' }
+            [pscustomobject]@{ Key = 'sa'; Desc = 'Website Source' }
+            [pscustomobject]@{ Key = 'st'; Desc = 'Stereo Hub' }
+            #[pscustomobject]@{ Key = ''; Desc = '' }
+            #[pscustomobject]@{ Key = ''; Desc = '' }
         )
     }
 )
 
+
 # Help Full
 function hh {
-    Clear-Host
-    Write-FrameTitle 'o9'
+    #Clear-Host
+    #Write-FrameTitle 'o9'                          # Uncomment > Title
     foreach ($section in $script:HelpSections) {
         Write-HelpSection -Name $section.Name -Items $section.Items
     }
     Write-Host "$Y$('─' * 16)$R"
-    #Write-ModeFooter
+    #Write-ModeFooter                               # Uncomment > Footer
 }
+
 
 # Help Compact
 function hs {
-    Clear-Host
-    Write-Ascii
-    Write-FrameTitle 'o9'
+    #Clear-Host
+    #Write-Ascii                                    # Uncomment > Ascii
+    #Write-FrameTitle 'o9'                          # Uncomment > Title
     foreach ($section in $script:CompactSections) {
-        Write-Host ""
-        Write-Host "$C$($section.Name)$R"
-        Write-Host "$Y$('─' * 16)$R"
+        #Write-Host ""
+        #Write-Host "$C$($section.Name)$R"         # Uncomment > Section
+        #Write-Host "$Y$('─' * 16)$R"              # Uncomment > Separator
         foreach ($item in $section.Items) {
             $arg = if ($item.PSObject.Properties.Match('Arg').Count -gt 0 -and $item.Arg) {
                 " $D$($item.Arg)$R"
@@ -1283,17 +1376,23 @@ function hs {
         }
     }
     Write-Host "$Y$('─' * 16)$R"
-    #Write-ModeFooter
+    #Write-ModeFooter                               # Uncomment > Footer
 }
+
 
 # View
 hs
+
 
 # Custom Script
 #if (Test-Path "$PSScriptRoot\custom.ps1") {
     #. "$PSScriptRoot\custom.ps1"
 #}
-#f45873b3-b655-43a6-b217-97c00aa0db58 PowerToys CommandNotFound module
 
+
+# Install WinGet CommandNotFound module
+#Install-PSResource -Name Microsoft.WinGet.CommandNotFound
+
+
+# load WinGet CommandNotFound module
 Import-Module -Name Microsoft.WinGet.CommandNotFound
-#f45873b3-b655-43a6-b217-97c00aa0db58
