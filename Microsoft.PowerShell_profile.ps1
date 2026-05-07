@@ -1034,8 +1034,26 @@ Set-Alias -Name th -Value Install-Theme
 
 
 # Move Theme to Cursor
-function thh { 
-    $thh = Copy-Item -Path ".\o9-theme" -Destination "C:\Program Files\cursor\resources\app\extensions" -Recurse -Force
+function ct {
+    $srcCT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
+    $pointCT = "$env:PROGRAMFILES\Cursor\resources\app\extensions"
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile -Command `"Copy-Item -Path '$srcCT' -Destination '$pointCT' -Recurse -Force`""
+        return
+    }
+    Copy-Item -Path $srcCT -Destination $pointCT -Recurse -Force
+}
+
+
+# Move Theme to VS Code
+function vt {
+    $srcVT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
+    $pointVT = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\034f571df5\resources\app\extensions"
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile -Command `"Copy-Item -Path '$srcVT' -Destination '$pointVT' -Recurse -Force`""
+        return
+    }
+    Copy-Item -Path $srcVT -Destination $pointVT -Recurse -Force
 }
 
 
@@ -1329,15 +1347,15 @@ $script:CompactSections = @(
     @{
         Name  = 'Fast Commands'
         Items = @(
-            [pscustomobject]@{ Key = 'o9'; Desc = 'Utility' }
-            [pscustomobject]@{ Key = 'dv'; Desc = 'Downloader' }
-            [pscustomobject]@{ Key = 'cc'; Desc = 'Cleanup' }
-            [pscustomobject]@{ Key = 'rr'; Desc = 'Restart' }
-            [pscustomobject]@{ Key = 'de'; Desc = 'Krisp' }
+            [pscustomobject]@{ Key = 'o9'; Desc = 'Run Utility' }
+            [pscustomobject]@{ Key = 'dv'; Desc = 'Download Video/Voice' }
+            [pscustomobject]@{ Key = 'cc'; Desc = 'Clean Temp' }
+            [pscustomobject]@{ Key = 'rr'; Desc = 'Restart File Explorer' }
+            [pscustomobject]@{ Key = 'de'; Desc = 'Remove Krisp' }
             [pscustomobject]@{ Key = 'sa'; Desc = 'Website Source' }
-            [pscustomobject]@{ Key = 'st'; Desc = 'Stereo Hub' }
-            #[pscustomobject]@{ Key = ''; Desc = '' }
-            #[pscustomobject]@{ Key = ''; Desc = '' }
+            [pscustomobject]@{ Key = 'st'; Desc = 'Install Stereo' }
+            [pscustomobject]@{ Key = 'ct'; Desc = 'Move Theme to Cursor' }
+            [pscustomobject]@{ Key = 'vt'; Desc = 'Move Theme to VS Code' }
         )
     }
 )
