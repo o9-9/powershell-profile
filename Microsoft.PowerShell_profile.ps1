@@ -1392,7 +1392,5 @@ hs
 
 # Install WinGet CommandNotFound module
 #Install-PSResource -Name Microsoft.WinGet.CommandNotFound
-
-
 # load WinGet CommandNotFound module
 Import-Module -Name Microsoft.WinGet.CommandNotFound
