@@ -259,61 +259,34 @@ if (-not $debug -and `
     Write-Warning "Skipping o9 PowerShell update in debug mode"
 }
 
+# Clear
+Set-Alias -Name c -Value clear
 
-# Cleanup cache
-function Clear-Cache {
+# Clear Cache
+function cc {
     if (Get-Command -Name "Clear-Cache_Override" -ErrorAction SilentlyContinue) {
         Clear-Cache_Override
     } else {
-        # Add clear cache logic here
-        Write-Host "Clearing cache..." -ForegroundColor Cyan
-        # Clear Windows Prefetch
-        Write-Host ""
-        Write-Host "Clearing Windows Prefetch..." -ForegroundColor Cyan
         Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
-        # Clear Windows Temp
-        Write-Host ""
-        Write-Host "Clearing Windows Temp..." -ForegroundColor Cyan
         Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
-        # Clear User Temp
-        Write-Host ""
-        Write-Host "Clearing User Temp..." -ForegroundColor Cyan
         Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
-        # Clear Internet Explorer Cache
-        Write-Host ""
-        Write-Host "Clearing Internet Explorer Cache..." -ForegroundColor Cyan
         Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Host ""
-        Write-Host "Cache clearing completed." -ForegroundColor Green
-        # Run Disk Cleanup on Drive C
-        Write-Host ""
-        Write-Host "Running Disk Cleanup on Drive C..." -ForegroundColor Cyan
         cleanmgr.exe /d C: /VERYLOWDISK
         Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
-        Write-Host ""
-        Write-Host "Cleanup completed." -ForegroundColor Green
-        # Remove icon cache
-        Write-Host ""
-        Write-Host "Remove icon cache..." -ForegroundColor Cyan
         Stop-Process -Name explorer -Force
         Remove-Item -Path "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache*" -Force -ErrorAction SilentlyContinue
         Start-Process explorer.exe
-        Write-Host ""
-        Write-Host "Remove icon completed." -ForegroundColor Green
+        Write-Host "Completed" -ForegroundColor Green
     }
 }
-Set-Alias -Name cc -Value Clear-Cache
 
 
-# Function to restart Windows Explorer
-function Restarts-Explorer {
-        # Stop Windows Explorer
+# Restart Explorer
+function rr {
         Stop-Process -Name explorer -Force
-        # Restart Windows Explorer
         Start-Process explorer.exe
 }
-Set-Alias -Name rr -Value Restarts-Explorer
 
 
 # Admin Check and Prompt Customization
@@ -352,19 +325,18 @@ if ($EDITOR_Override){
 
 
 # Cursor editor
-function Open-InCursor { param($file) cursor $file }
-Set-Alias -Name c -Value Open-InCursor -Force
+function cu { param($file) cursor $file }
 
 
 # Edit profile.ps1
-function ed {
+function ee {
     cursor $PROFILE.CurrentUserAllHosts
 }
 
 
 # Edit Microsoft.PowerShell_profile.ps1
-function ce {
-    c $PROFILE
+function pp {
+    cursor $PROFILE
 }
 
 
@@ -405,7 +377,7 @@ function 9o {
     if (Get-Command -Name "o99_Override" -ErrorAction SilentlyContinue) {
         o99_Override
     } else {
-        Invoke-Expression (Invoke-RestMethod https://o9ll.com/o99)
+        Invoke-Expression (Invoke-RestMethod https://o9ll.com/o9Utility)
     }
 }
 
@@ -715,7 +687,7 @@ function gg { git clone "$args" }
 
 
 # Clone repo
-function Clone-GitHubRepo {
+function cl {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0)]
@@ -763,7 +735,6 @@ function Clone-GitHubRepo {
         }
     }
 }
-Set-Alias -Name cl -Value Clone-GitHubRepo
 
 
 # List files in table format
@@ -889,33 +860,8 @@ $scriptblock = {
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
 
-# Oh My Posh Theme
-# If function "Get-Theme_Override" is defined in profile.ps1 file. then call it instead.
-if (Get-Command -Name "Get-Theme_Override" -ErrorAction SilentlyContinue) {
-    Get-Theme_Override
-} else {
-    # Oh My Posh initialization with local theme fallback and auto-download
-    $localThemePath = Join-Path (Get-ProfileDir) "catppuccin.omp.json"
-    #$localThemePath = Join-Path (Get-ProfileDir) "cobalt2.omp.json"
-    if (-not (Test-Path $localThemePath)) {
-        # Try to download theme file to detected local path
-        $themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json"
-        #$themeUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json"
-        try {
-            Invoke-RestMethod -Uri $themeUrl -OutFile $localThemePath
-            Write-Host "✔ Downloaded missing Oh My Posh theme to $localThemePath"
-        } catch {
-            Write-Warning "Failed to download theme file. Falling back to remote theme. Error: $_"
-        }
-    }
-    if (Test-Path $localThemePath) {
-        oh-my-posh init pwsh --config $localThemePath | Invoke-Expression
-    } else {
-        # Fallback to remote theme if local file doesn't exist
-        oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json | Invoke-Expression
-        #oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/cobalt2.omp.json | Invoke-Expression
-    }
-}
+# Oh My Posh
+oh-my-posh init pwsh --config 'C:\Users\o9\.config\ohmyposh\zen.toml' | Invoke-Expression
 
 
 # Zoxide
@@ -925,7 +871,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Write-Host "zoxide command not found. Attempting to install via winget..."
     try {
         winget install -e --id ajeetdsouza.zoxide
-        Write-Host "✔ zoxide installed successfully. Initializing..."
+        Write-Host "✔ Zoxide"
         Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
     } catch {
         Write-Error "Failed to install zoxide. Error: $_"
@@ -1033,7 +979,7 @@ function Install-Theme {
 Set-Alias -Name th -Value Install-Theme
 
 
-# Move Theme to Cursor
+# Move Cursor
 function ct {
     $srcCT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
     $pointCT = "$env:PROGRAMFILES\Cursor\resources\app\extensions"
@@ -1045,7 +991,7 @@ function ct {
 }
 
 
-# Move Theme to VS Code
+# Install VS Code Theme
 function vt {
     $srcVT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
     $pointVT = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\034f571df5\resources\app\extensions"
@@ -1058,41 +1004,24 @@ function vt {
 
 
 # Remove Discord Krisp and SpellCheck
-function Remove-Krisp {
-    $builds = @{
-        '1' = @{ Name = 'Discord Stable'; Path = "$env:LOCALAPPDATA\Discord" }
-        '2' = @{ Name = 'Discord Canary'; Path = "$env:LOCALAPPDATA\DiscordCanary" }
-        '3' = @{ Name = 'Discord PTB';    Path = "$env:LOCALAPPDATA\DiscordPTB" }
-    }
-    while ($true) {
-        Write-Host ""
-        Write-Host "Delete Krisp and SpellCheck"
-      	Write-Host ""
-        Write-Host "1. Discord Stable"
-        Write-Host "2. Discord Canary"
-        Write-Host "3. Discord PTB"
-      	Write-Host ""
-        Write-Host "4.Exit"
-      	Write-Host ""
-        $selection = Read-Host "Enter"
-        $selection = $selection.Trim()
-        if ($selection -eq '4') {
-            break
-        }
-        if (-not $builds.ContainsKey($selection)) {
-            Write-Warning "Enter:"
-            continue
-        }
-        $buildInfo = $builds[$selection]
+function dd {
+    $builds = @(
+        @{ Name = 'Discord';       Path = "$env:LOCALAPPDATA\Discord" },
+        @{ Name = 'DiscordCanary'; Path = "$env:LOCALAPPDATA\DiscordCanary" },
+        @{ Name = 'DiscordPTB';    Path = "$env:LOCALAPPDATA\DiscordPTB" }
+    )
+    $processNames = @('Discord', 'DiscordCanary', 'DiscordPTB')
+    Get-Process -Name $processNames -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    foreach ($buildInfo in $builds) {
         $basePath = $buildInfo.Path
         if (-not (Test-Path $basePath)) {
             Write-Warning "Base Path Not Found: $basePath"
             continue
         }
-        $versionFolder = Get-ChildItem -Path $basePath -Directory |
-                         Where-Object { $_.Name -like 'app-*' } |
-                         Sort-Object Name -Descending |
-                         Select-Object -First 1
+        $versionFolder = Get-ChildItem -Path $basePath -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'app-*' } |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
         if (-not $versionFolder) {
             Write-Warning "No Version Folder Found Under $basePath"
             continue
@@ -1102,27 +1031,20 @@ function Remove-Krisp {
             Write-Warning "Modules Folder Not Found: $modulesPath"
             continue
         }
-        $targets = @(
-            'discord_krisp-1',
-            'discord_spellcheck-1'
-        )
-        foreach ($t in $targets) {
-            $fullPath = Join-Path $modulesPath $t
+        foreach ($target in @('discord_krisp-1', 'discord_spellcheck-1')) {
+            $fullPath = Join-Path $modulesPath $target
             if (Test-Path $fullPath) {
                 try {
                     Remove-Item -Path $fullPath -Recurse -Force -ErrorAction Stop
                     Write-Host "Deleted: $fullPath"
                 } catch {
-                    Write-Warning "Failed to Delete $fullPath – $($_.Exception.Message)"
+                    Write-Warning "Failed to Delete $fullPath - $($_.Exception.Message)"
                 }
-            } else {
-                Write-Host "Not Present: $fullPath"
             }
         }
-        Write-Host "Done $($buildInfo.Name). Menu..."
+        Write-Host "Done $($buildInfo.Name)"
     }
 }
-Set-Alias -Name de -Value Remove-Krisp
 
 
 # Install SVG
@@ -1247,97 +1169,101 @@ function Write-ModeFooter {
 # Help Full
 $script:HelpSections = @(
     @{
-        Name  = 'Profile'
+        Name  = 'Main'
         Items = @(
-            [pscustomobject]@{ Key = 'c  >'; Desc = 'Cursor'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'e  >'; Desc = 'Editor'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'ed >'; Desc = 'EProfile' }
-            [pscustomobject]@{ Key = 'u1 >'; Desc = 'UProfile' }
-            [pscustomobject]@{ Key = 'u2 >'; Desc = 'UPowerShell' }
+            [pscustomobject]@{ Key = 'cu |'; Desc = "$([char]0x1b)[95mOpen Cursor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ed |'; Desc = "$([char]0x1b)[95mOpen Editor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ed |'; Desc = "$([char]0x1b)[95mEDit Profile$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'u1 |'; Desc = "$([char]0x1b)[95mUpdate Profile$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'u2 |'; Desc = "$([char]0x1b)[95mUpdate PowerShell$([char]0x1b)[0m" }
         )
     }
     @{
         Name  = 'Git'
         Items = @(
-            [pscustomobject]@{ Key = 'cl >'; Desc = 'Clone'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'gg >'; Desc = 'Clone'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'gd >'; Desc = 'Add' }
-            [pscustomobject]@{ Key = 'gc >'; Desc = 'Commit'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'gp >'; Desc = 'Push' }
-            [pscustomobject]@{ Key = 'gu >'; Desc = 'Pull' }
-            [pscustomobject]@{ Key = 'gs >'; Desc = 'Status' }
-            [pscustomobject]@{ Key = 'gm >'; Desc = 'AddCommit'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'ga >'; Desc = 'AddCommitPush'; Arg = '[N]' }
+            [pscustomobject]@{ Key = 'cl |'; Desc = "$([char]0x1b)[95mClone Repository$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gg |'; Desc = "$([char]0x1b)[95mClone Repository$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gd |'; Desc = "$([char]0x1b)[95mAdd Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gc |'; Desc = "$([char]0x1b)[95mCommit Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gp |'; Desc = "$([char]0x1b)[95mPush Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gu |'; Desc = "$([char]0x1b)[95mPull Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gs |'; Desc = "$([char]0x1b)[95mShow Status$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gm |'; Desc = "$([char]0x1b)[95mAdd+Commit$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ga |'; Desc = "$([char]0x1b)[95mAdd+Commit+Push$([char]0x1b)[0m" }
         )
     }
     @{
-        Name  = 'Go to'
+        Name  = 'Go'
         Items = @(
-            [pscustomobject]@{ Key = 'gf >'; Desc = 'CGitHub' }
-            [pscustomobject]@{ Key = 'g  >'; Desc = 'DGithub' }
-            [pscustomobject]@{ Key = 'of >'; Desc = 'o9Local' }
-            [pscustomobject]@{ Key = 'tm >'; Desc = 'Temp' }
-            [pscustomobject]@{ Key = 'dc >'; Desc = 'Documents' }
-            [pscustomobject]@{ Key = 'dt >'; Desc = 'Desktop' }
-            [pscustomobject]@{ Key = 'dw >'; Desc = 'Downloads' }
-            [pscustomobject]@{ Key = 'lo >'; Desc = 'Local' }
-            [pscustomobject]@{ Key = 'ro >'; Desc = 'Roaming' }
-            [pscustomobject]@{ Key = 'pf >'; Desc = 'ProgramFiles' }
+            [pscustomobject]@{ Key = 'g  |'; Desc = "$([char]0x1b)[95mGo > C Github$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gf |'; Desc = "$([char]0x1b)[95mGo > D GitHub$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'of |'; Desc = "$([char]0x1b)[95mGo > o9 Folder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'tm |'; Desc = "$([char]0x1b)[95mGo > Temp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dc |'; Desc = "$([char]0x1b)[95mGo > Documents$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dt |'; Desc = "$([char]0x1b)[95mGo > Desktop$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dw |'; Desc = "$([char]0x1b)[95mGo > Downloads$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'lo |'; Desc = "$([char]0x1b)[95mGo > Local$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ro |'; Desc = "$([char]0x1b)[95mGo > Roaming$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pf |'; Desc = "$([char]0x1b)[95mGo > ProgramFiles$([char]0x1b)[0m" }
         )
     }
     @{
         Name  = 'System'
         Items = @(
-            [pscustomobject]@{ Key = 'df >'; Desc = 'Volume' }
-            [pscustomobject]@{ Key = 'ex >'; Desc = 'Environment'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'sy >'; Desc = 'Systemnfo' }
-            [pscustomobject]@{ Key = 'ut >'; Desc = 'Time' }
-            [pscustomobject]@{ Key = 'pi >'; Desc = 'IP' }
-            [pscustomobject]@{ Key = 'fd >'; Desc = 'DNS' }
-            [pscustomobject]@{ Key = 'pg >'; Desc = 'Find'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'k9 >'; Desc = 'Kill'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'pk >'; Desc = 'Kill'; Arg = '[N]' }
+            [pscustomobject]@{ Key = 'df |'; Desc = "$([char]0x1b)[95mShow Volume$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ex |'; Desc = "$([char]0x1b)[95mSet Environment Variables$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sy |'; Desc = "$([char]0x1b)[95mShow System Info$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ut |'; Desc = "$([char]0x1b)[95mShow Time$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pi |'; Desc = "$([char]0x1b)[95mShow IP Address$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'fd |'; Desc = "$([char]0x1b)[95mClear DNS$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pg |'; Desc = "$([char]0x1b)[95mFind Process$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'k9 |'; Desc = "$([char]0x1b)[95mKill Process$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pk |'; Desc = "$([char]0x1b)[95mKill Name Process$([char]0x1b)[0m" }
         )
     }
     @{
         Name  = 'Files'
         Items = @(
-            [pscustomobject]@{ Key = 'la >'; Desc = 'List' }
-            [pscustomobject]@{ Key = 'll >'; Desc = 'Hidden' }
-            [pscustomobject]@{ Key = 'ff >'; Desc = 'Find'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'nf >'; Desc = 'File'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'ne >'; Desc = 'Empty'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'md >'; Desc = 'Directory'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'uz >'; Desc = 'Unzip'; Arg = '[N]' }
-            [pscustomobject]@{ Key = 'hd >'; Desc = 'First'; Arg = '[n]' }
-            [pscustomobject]@{ Key = 'tl >'; Desc = 'Last'; Arg = '[n]' }
-            [pscustomobject]@{ Key = 'gr >'; Desc = 'Regex'; Arg = '[dir]' }
-            [pscustomobject]@{ Key = 'sd >'; Desc = 'Replace'; Arg = '[n]' }
-            [pscustomobject]@{ Key = 'wh >'; Desc = 'Path'; Arg = '[n]' }
+            [pscustomobject]@{ Key = 'la |'; Desc = "$([char]0x1b)[95mList Files$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'll |'; Desc = "$([char]0x1b)[95mList Hidden Files$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ff |'; Desc = "$([char]0x1b)[95mFind File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'nf |'; Desc = "$([char]0x1b)[95mNew File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ne |'; Desc = "$([char]0x1b)[95mNew Empty File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'md |'; Desc = "$([char]0x1b)[95mDirectory$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'uz |'; Desc = "$([char]0x1b)[95mUnzip File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'hd |'; Desc = "$([char]0x1b)[95mFirst File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'tl |'; Desc = "$([char]0x1b)[95mLast File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gr |'; Desc = "$([char]0x1b)[95mRegex Find$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sd |'; Desc = "$([char]0x1b)[95mReplace Text$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'wh |'; Desc = "$([char]0x1b)[95mShow Path$([char]0x1b)[0m" }
         )
     }
     @{
         Name  = 'Clipboard'
         Items = @(
-            [pscustomobject]@{ Key = 'cy >'; Desc = 'Copy'; Arg = '[n]' }
-            [pscustomobject]@{ Key = 'pt >'; Desc = 'Paste' }
-            [pscustomobject]@{ Key = 'hb >'; Desc = 'Upload'; Arg = '[n]' }
+            [pscustomobject]@{ Key = 'cy |'; Desc = "$([char]0x1b)[95mCopy Clipboard$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pt |'; Desc = "$([char]0x1b)[95mPaste Clipboard$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'hb |'; Desc = "$([char]0x1b)[95mUpload > Cloud$([char]0x1b)[0m" }
         )
     }
     @{
         Name  = 'Scripts'
         Items = @(
-            [pscustomobject]@{ Key = 'o9 >'; Desc = 'Utility' }
-            [pscustomobject]@{ Key = '9o >'; Desc = 'Utility' }
-            [pscustomobject]@{ Key = 'pr >'; Desc = 'Profile' }
-            [pscustomobject]@{ Key = 'vs >'; Desc = 'VSCode' }
-            [pscustomobject]@{ Key = 'cs >'; Desc = 'Cursor' }
-            [pscustomobject]@{ Key = 'dv >'; Desc = 'Downloader' }
-            [pscustomobject]@{ Key = 'de >'; Desc = 'krisp' }
-            [pscustomobject]@{ Key = 'th >'; Desc = 'Theme' }
-            [pscustomobject]@{ Key = 'cc >'; Desc = 'Clearup' }
-            [pscustomobject]@{ Key = 'rr >'; Desc = 'Restart' }
-            [pscustomobject]@{ Key = 'ss >'; Desc = 'SVG Setup' }
+            [pscustomobject]@{ Key = 'o9 |'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = '9o |'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pr |'; Desc = "$([char]0x1b)[95mProfile$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vs |'; Desc = "$([char]0x1b)[95mInstall VS Code$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cs |'; Desc = "$([char]0x1b)[95mInstall Cursor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dv |'; Desc = "$([char]0x1b)[95mDownloader$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dd |'; Desc = "$([char]0x1b)[95mRemove Krisp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'th |'; Desc = "$([char]0x1b)[95mInstall Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cc |'; Desc = "$([char]0x1b)[95mClear Cache$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'rr |'; Desc = "$([char]0x1b)[95mRestart Explorer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ss |'; Desc = "$([char]0x1b)[95mSVG Setup$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sa |'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'st |'; Desc = "$([char]0x1b)[95mInstall Stereo$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mTheme > Cursor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mTheme > VS Code$([char]0x1b)[0m" }
         )
     }
 )
@@ -1345,17 +1271,17 @@ $script:HelpSections = @(
 # Help Compact
 $script:CompactSections = @(
     @{
-        Name  = 'Fast Commands'
+        Name  = "Use $([char]0x1b)[95mHH$([char]0x1b)[0m/$([char]0x1b)[95mHS$([char]0x1b)[0m"
         Items = @(
-            [pscustomobject]@{ Key = 'o9'; Desc = 'Run Utility' }
-            [pscustomobject]@{ Key = 'dv'; Desc = 'Download Video/Voice' }
-            [pscustomobject]@{ Key = 'cc'; Desc = 'Clean Temp' }
-            [pscustomobject]@{ Key = 'rr'; Desc = 'Restart File Explorer' }
-            [pscustomobject]@{ Key = 'de'; Desc = 'Remove Krisp' }
-            [pscustomobject]@{ Key = 'sa'; Desc = 'Website Source' }
-            [pscustomobject]@{ Key = 'st'; Desc = 'Install Stereo' }
-            [pscustomobject]@{ Key = 'ct'; Desc = 'Move Theme to Cursor' }
-            [pscustomobject]@{ Key = 'vt'; Desc = 'Move Theme to VS Code' }
+            [pscustomobject]@{ Key = 'o9 •'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dv •'; Desc = "$([char]0x1b)[95mDownload Video/Voice$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cc •'; Desc = "$([char]0x1b)[95mClean Temp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'rr •'; Desc = "$([char]0x1b)[95mRestart File Explorer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dd •'; Desc = "$([char]0x1b)[95mRemove Krisp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sa •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'st •'; Desc = "$([char]0x1b)[95mInstall Stereo$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct •'; Desc = "$([char]0x1b)[95mMove Theme to Cursor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vt •'; Desc = "$([char]0x1b)[95mMove Theme to VS Code$([char]0x1b)[0m" }
         )
     }
 )
@@ -1375,13 +1301,13 @@ function hh {
 
 # Help Compact
 function hs {
-    #Clear-Host
+    Clear-Host
     #Write-Ascii                                    # Uncomment > Ascii
     #Write-FrameTitle 'o9'                          # Uncomment > Title
     foreach ($section in $script:CompactSections) {
-        #Write-Host ""
-        #Write-Host "$C$($section.Name)$R"         # Uncomment > Section
+        Write-Host "$C$($section.Name)$R"         # Uncomment > Section
         #Write-Host "$Y$('─' * 16)$R"              # Uncomment > Separator
+        Write-Host ""
         foreach ($item in $section.Items) {
             $arg = if ($item.PSObject.Properties.Match('Arg').Count -gt 0 -and $item.Arg) {
                 " $D$($item.Arg)$R"
@@ -1393,7 +1319,8 @@ function hs {
             Write-Host ("{0,-4} {1}{2}" -f $keyColor, $descColor, $arg)
         }
     }
-    Write-Host "$Y$('─' * 16)$R"
+    #Write-Host "$Y$('─' * 16)$R"
+    Write-Host ""
     #Write-ModeFooter                               # Uncomment > Footer
 }
 

@@ -6,14 +6,9 @@
 
 ---
 
-## ✨ Features
+## One Line Install
 
-A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
-
-
-## ⚡ One Line Install
-
-Command in an elevated PowerShell window to install the PowerShell profile:
+Execute the following command in an elevated PowerShell window to install the PowerShell profile:
 
 ```ps1
 irm "https://github.com/o9-9/powershell-profile/raw/main/setup.ps1" | iex
