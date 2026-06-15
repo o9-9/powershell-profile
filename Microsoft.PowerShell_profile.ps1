@@ -861,23 +861,69 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
 
 # Oh My Posh
-oh-my-posh init pwsh --config 'C:\Users\o9\.config\ohmyposh\zen.toml' | Invoke-Expression
+<#
+clean.json
+cloud.json
+cobalt.json
+emodipt.json
+hul.json
+jblab.json
+jonnychipz.json
+kushal.json
+montys.json
+night.json
+shell.json
+sitecorian.json
+smoothie.json
+tea.json
+tokyo.json
+wholespace.json
+diamonds.yaml
+zen.toml
+#>
+oh-my-posh init pwsh --config 'C:\Users\o9\.config\ohmyposh\mocha.omp.yaml' | Invoke-Expression
 
 
 # Zoxide
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
+    Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
+
+    function z {
+        $result = zoxide query -l @args | fzf `
+            --height 40% `
+            --layout reverse `
+            --border `
+            --info inline
+
+        if ($result) {
+            Set-Location $result
+        }
+    }
 } else {
     Write-Host "zoxide command not found. Attempting to install via winget..."
+
     try {
         winget install -e --id ajeetdsouza.zoxide
-        Write-Host "✔ Zoxide"
-        Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
+
+        Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
+
+        function z {
+            $result = zoxide query -l @args | fzf `
+                --height 40% `
+                --layout reverse `
+                --border `
+                --info inline
+
+            if ($result) {
+                Set-Location $result
+            }
+        }
+
+        Write-Host "✔ zoxide installed and configured"
     } catch {
         Write-Error "Failed to install zoxide. Error: $_"
     }
 }
-
 
 # YT-DLP
 function Get-YouTubeVideo {
@@ -1056,16 +1102,20 @@ function ss {
 
 
 # Install Website Source
-function sa { 
+function ws { 
     $urlSrc = Read-Host 'Enter URL'
     Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
 }
 
 
-# Install Stereo Hub
-function st {
-    python "C:\Users\o9\Documents\Github\discord-stereo-windows-macos-linux\STEREO HUB\discord_stereo_hub.py"
-}
+$Stereo = "$Env:USERPROFILE\Documents\Githubb\stereo"
+
+function sip { & "$Stereo\StereoInstaller.ps1" }
+function sib { & "$Stereo\StereoInstaller.bat" }
+function spp { & "$Stereo\StereoPatcher.ps1" }
+function spb { & "$Stereo\StereoPatcher.bat" }
+function smp { python "$Stereo\StereoMIN.py" }
+function sfg { python "$Stereo\StereoFinderGUI.py" }
 
 
 # Color
@@ -1077,27 +1127,50 @@ $D = $PSStyle.Foreground.DarkCyan
 $R = $PSStyle.Reset
 
 
+# Check Empty Folder
+function cf {
+    $Path = Read-Host 'Enter folder path'
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        Write-Error 'Folder does not exist.'
+        return
+    }
+
+    Get-ChildItem -LiteralPath $Path -Directory -Recurse |
+        Where-Object {
+            -not (Get-ChildItem -LiteralPath $_.FullName -Force)
+        } |
+        Select-Object -ExpandProperty FullName
+}
+
+
 # Ascii
 $Ascii = @'
-                ⣀⣤⣶⣶⣶⣶⣦⣤⣀⣀
-            ⢀⣴⣿⡿⠛⠉⠙⠛⠛⠛⠛⠻⢿⣿⣷⣄
-            ⣼⣿⠋       ⣀⣀⣀⡈⢻⣿⣿⡄
-           ⣸⣿⡏   ⣠⣶⣾⣿⣿⣿⠿⠿⠿⢿⣿⣿⣿⣄
-           ⣿⣿⠁  ⢰⣿⣿⣯⠁       ⠈⠙⢿⣷⡄
-      ⣀⣤⣴⣶⣶⣿⡟   ⢸⣿⣿⣿⣆          ⣿⣷
-     ⢰⣿⡟⠋⠉⣹⣿⡇   ⠘⣿⣿⣿⣿⣷⣦⣤⣤⣤⣶⣶⣶⣶⣿⣿
-     ⢸⣿⡇  ⣿⣿⡇    ⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿
-     ⣸⣿⡇  ⣿⣿⡇     ⠉⠻⠿⣿⣿⣿⣿⡿⠿⠿⠛⢻⣿⡇
-     ⣿⣿⠁  ⣿⣿⡇                ⢸⣿⣿⠃
-     ⣿⣿   ⣿⣿⡇                ⢸⣿⣿
-     ⣿⣿   ⣿⣿⡇                ⢸⣿⣿
-     ⢿⣿⡆  ⣿⣿⡇                ⢼⣿⡇
-     ⠸⣿⣧⡀ ⣿⣿⡇                ⣿⣿⡇
-      ⠛⢿⣿⣿⣿⣿⣇     ⣰⣿⣿⣷⣶⣿⣷⡆  ⣿⣿
-           ⣿⣿     ⣿⣿⡇ ⣽⣿⡟⠁  ⢸⣿⡟
-           ⣿⣿     ⣿⣿⡇ ⢹⣿⡆   ⣼⣿⡇
-           ⢿⣿⣦⣄⣀⣠⣴⣿⣿  ⠈⠻⣿⣿⣿⣿⡿⠇
-           ⠈⠛⠻⠿⠿⠿⠿⠋⠁
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⡰⠦⢤⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⡞⢿⣾⣿⣷⣤⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠻⣻⣽⢈⣿⡸⣹⠀⡠
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣮⡻⣿⣸⣿⣳⣌⣷⠃
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣿⣿⣿⣿⣿⡏⠀⡹⣿⣿⡏⢠
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣗⣾⣿⣿⣿⣿⡿⣣⣿⣨⠊⡙⠡⣟
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⣿⣮⣫⣻⣼⠆⣡⣾
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⡆⠀⢨⠾⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣷⢛⣿⣛⡻⠭⠽⠿⣿⣶⣬⡻⠻⣿⣿⣿⣿⣿⣿⡃⣿⣿⣳⢳⢀⡼
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⠟⠛⠀⠀⠀⠀⠀⠈⢿⣿⣷⡀⠀⠀⠈⠈⠻⢿⠇⡻⢿⣿⡄⠁⠀⢨
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣱⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣧⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⠁⡄⠀⠸
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⡡⣄⢀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⣿⣿⣄⣦⣤⣤⣤⣶⣶⣮⣭⣛⠠⠿⣂⣄
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠛⠛⢿⣿⡿⣿⣦⠀⠀⠀⠀⠀⠀⠀⣠⠟⡜⢻⣿⣿⣿⣿⣿⣿⡿⣛⣛⠻⢏⠘⠋⠫
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⢸⣿⣇⢻⣿⠀⠀⢀⣀⣠⣤⡾⣫⣾⣿⣾⣿⣿⣿⣿⣿⢟⣬⠾⢛⣡
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⡀⠀⣸⣿⣿⣦⣿⣿⣞⣫⣭⣭⣥⣬⣷⣿⣿⣿⣿⣿⣿⡿⡘⢈⣵
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠧⢸⠿⠻⢻⣿⣿⣿⣿⣟⢸⣿⣿⣿⣿⣿⣭⠍⠀⠀⠀⣨⣴
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡃⠁⠀⠧⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⣃⠀⠒⣠⣴⣶
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣦⡀⠀⠀⠹⡟⣿⣿⣿⣿⣿⣿⡏⢰⣉⠰⡰⠉⢻
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⣜⡤⠀⡇⢻⣿⣿⣿⣿⣿⣧⡆⠉⡑⠀⢀⣾⡟
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡙⣷⣒⣁⣷⣾⣿⣛⠿⡿⢛⡻⠟⠂⠵⠾
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢙⣿⡿⣿⢯⣽⡁⣿⣿⡄⣿⣿⠘⡀⠀⢀⢸
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢟⢃⣮⢸⣿⠇⠿⣿⡇⢉⡁⠀⣧⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡸⠟⠃⠀⠀⠠⠌⠀⠋⠀⣶⡿⠀⡐⣹
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠁⠾⠟⠳⠒⠃⠚⠀⡟⠏⢿⡺⢾⡻
 '@
 # Print Ascii
 function Write-Ascii {
@@ -1264,6 +1337,14 @@ $script:HelpSections = @(
             [pscustomobject]@{ Key = 'st |'; Desc = "$([char]0x1b)[95mInstall Stereo$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mTheme > Cursor$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mTheme > VS Code$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'smp •'; Desc = "$([char]0x1b)[95mStereoMIN.py$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sip •'; Desc = "$([char]0x1b)[95mStereoInstaller.ps1$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sib •'; Desc = "$([char]0x1b)[95mStereoInstaller.bat$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sfg •'; Desc = "$([char]0x1b)[95mStereoFinderGUI.py$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'spp •'; Desc = "$([char]0x1b)[95mStereoPatcher.ps1$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'spb •'; Desc = "$([char]0x1b)[95mStereoPatcher.bat$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
         )
     }
 )
@@ -1282,6 +1363,14 @@ $script:CompactSections = @(
             [pscustomobject]@{ Key = 'st •'; Desc = "$([char]0x1b)[95mInstall Stereo$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'ct •'; Desc = "$([char]0x1b)[95mMove Theme to Cursor$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'vt •'; Desc = "$([char]0x1b)[95mMove Theme to VS Code$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'smp •'; Desc = "$([char]0x1b)[95mStereoMIN.py$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sip •'; Desc = "$([char]0x1b)[95mStereoInstaller.ps1$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sib •'; Desc = "$([char]0x1b)[95mStereoInstaller.bat$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sfg •'; Desc = "$([char]0x1b)[95mStereoFinderGUI.py$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'spp •'; Desc = "$([char]0x1b)[95mStereoPatcher.ps1$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'spb •'; Desc = "$([char]0x1b)[95mStereoPatcher.bat$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
         )
     }
 )
@@ -1305,7 +1394,7 @@ function hs {
     #Write-Ascii                                    # Uncomment > Ascii
     #Write-FrameTitle 'o9'                          # Uncomment > Title
     foreach ($section in $script:CompactSections) {
-        Write-Host "$C$($section.Name)$R"         # Uncomment > Section
+        Write-Host "$C$($section.Name)$R"          # Uncomment > Section
         #Write-Host "$Y$('─' * 16)$R"              # Uncomment > Separator
         Write-Host ""
         foreach ($item in $section.Items) {
@@ -1326,7 +1415,7 @@ function hs {
 
 
 # View
-hs
+#hs
 
 
 # Custom Script
@@ -1339,3 +1428,23 @@ hs
 #Install-PSResource -Name Microsoft.WinGet.CommandNotFound
 # load WinGet CommandNotFound module
 Import-Module -Name Microsoft.WinGet.CommandNotFound
+
+<#
+function prompt {
+	Write-Host -ForegroundColor DarkRed -NoNewLine "["
+	Write-Host -ForegroundColor Yellow -NoNewLine "$env:USERNAME "
+	Write-Host -ForegroundColor DarkMagenta -NoNewLine "$(Get-Location)"
+
+	$branch = git branch --show-current
+	if ($?) {
+		Write-Host -ForegroundColor DarkGray -NoNewLine " $([char]0xe725) $branch"
+		if (git status --porcelain) {
+			Write-Host -ForegroundColor DarkGray -NoNewLine "*"
+		}
+	}
+	
+	Write-Host -ForegroundColor DarkRed -NoNewLine "]$"
+	
+	return " "
+}
+#>
