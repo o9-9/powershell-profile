@@ -371,6 +371,12 @@ function o9 {
 }
 
 
+# Renamer
+function re {
+    & 'C:\Users\o9\Documents\Githubb\renamer\renamer.ps1'
+}
+
+
 # o9 Utility pre-release
 function 9o {
 	  # If function "o99_Override" is defined in profile.ps1 file. then call it instead.
@@ -925,6 +931,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     }
 }
 
+
 # YT-DLP
 function Get-YouTubeVideo {
     <#
@@ -1094,7 +1101,7 @@ function dd {
 
 
 # Install SVG
-function ss {
+function ws {
     Push-Location "C:\Program Files\SVG"
     & regsvr32 win_svg_thumbs.dll
     Pop-Location
@@ -1102,20 +1109,10 @@ function ss {
 
 
 # Install Website Source
-function ws { 
+function sa { 
     $urlSrc = Read-Host 'Enter URL'
     Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
 }
-
-
-$Stereo = "$Env:USERPROFILE\Documents\Githubb\stereo"
-
-function sip { & "$Stereo\StereoInstaller.ps1" }
-function sib { & "$Stereo\StereoInstaller.bat" }
-function spp { & "$Stereo\StereoPatcher.ps1" }
-function spb { & "$Stereo\StereoPatcher.bat" }
-function smp { python "$Stereo\StereoMIN.py" }
-function sfg { python "$Stereo\StereoFinderGUI.py" }
 
 
 # Color
@@ -1146,15 +1143,15 @@ function cf {
 
 # Ascii
 $Ascii = @'
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⡰⠦⢤⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⡞⢿⣾⣿⣷⣤⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⡀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⡰⠦⢤⣀⣀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⡞⢿⣾⣿⣷⣤⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠻⣻⣽⢈⣿⡸⣹⠀⡠
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣮⡻⣿⣸⣿⣳⣌⣷⠃
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣿⣿⣿⣿⣿⡏⠀⡹⣿⣿⡏⢠
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣗⣾⣿⣿⣿⣿⡿⣣⣿⣨⠊⡙⠡⣟
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⣿⣮⣫⣻⣼⠆⣡⣾
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⡆⠀⢨⠾⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⡆⠀⢨⠾
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣷⢛⣿⣛⡻⠭⠽⠿⣿⣶⣬⡻⠻⣿⣿⣿⣿⣿⣿⡃⣿⣿⣳⢳⢀⡼
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⠟⠛⠀⠀⠀⠀⠀⠈⢿⣿⣷⡀⠀⠀⠈⠈⠻⢿⠇⡻⢿⣿⡄⠁⠀⢨
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣱⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣧⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⠁⡄⠀⠸
@@ -1238,6 +1235,20 @@ function Write-ModeFooter {
     Write-Host "HH - Full Help • HS - Compact Help"
 }
 
+
+# Install Stereo
+$Stereo = "$Env:USERPROFILE\Documents\Githubb\stereo"
+
+function sip { & "$Stereo\StereoInstaller.ps1" }
+function sib { & "$Stereo\StereoInstaller.bat" }
+function spp { & "$Stereo\StereoPatcher.ps1" }
+function spb { & "$Stereo\StereoPatcher.bat" }
+function smp { python "$Stereo\StereoMIN.py" }
+function sfg { python "$Stereo\StereoFinderGUI.py" }
+
+#function st {
+#    python "C:\Users\o9\Documents\Github\discord-stereo-windows-macos-linux\STEREO HUB\discord_stereo_hub.py"
+#}
 
 # Help Full
 $script:HelpSections = @(
@@ -1335,15 +1346,16 @@ $script:HelpSections = @(
             [pscustomobject]@{ Key = 'ss |'; Desc = "$([char]0x1b)[95mSVG Setup$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'sa |'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'st |'; Desc = "$([char]0x1b)[95mInstall Stereo$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mTheme > Cursor$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mTheme > VS Code$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'smp •'; Desc = "$([char]0x1b)[95mStereoMIN.py$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'sip •'; Desc = "$([char]0x1b)[95mStereoInstaller.ps1$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'sib •'; Desc = "$([char]0x1b)[95mStereoInstaller.bat$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'sfg •'; Desc = "$([char]0x1b)[95mStereoFinderGUI.py$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'spp •'; Desc = "$([char]0x1b)[95mStereoPatcher.ps1$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'spb •'; Desc = "$([char]0x1b)[95mStereoPatcher.bat$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mCursor Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mVS Code Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'smp •'; Desc = "$([char]0x1b)[95mStereo MIN PY$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sip •'; Desc = "$([char]0x1b)[95mStereo Installer PS$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sib •'; Desc = "$([char]0x1b)[95mStereo Installer BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sfg •'; Desc = "$([char]0x1b)[95mStereo Finder GUI PY$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'spp •'; Desc = "$([char]0x1b)[95mStereo Patcher PS$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'spb •'; Desc = "$([char]0x1b)[95mStereo Patcher BAT$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cf •'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
             #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
         )
     }
@@ -1370,6 +1382,7 @@ $script:CompactSections = @(
             [pscustomobject]@{ Key = 'spp •'; Desc = "$([char]0x1b)[95mStereoPatcher.ps1$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'spb •'; Desc = "$([char]0x1b)[95mStereoPatcher.bat$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cf •'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
             #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
         )
     }
@@ -1379,23 +1392,23 @@ $script:CompactSections = @(
 # Help Full
 function hh {
     #Clear-Host
-    #Write-FrameTitle 'o9'                          # Uncomment > Title
+    #Write-FrameTitle 'o9' # Uncomment > Title
     foreach ($section in $script:HelpSections) {
         Write-HelpSection -Name $section.Name -Items $section.Items
     }
     Write-Host "$Y$('─' * 16)$R"
-    #Write-ModeFooter                               # Uncomment > Footer
+    #Write-ModeFooter # Uncomment > Footer
 }
 
 
 # Help Compact
 function hs {
     Clear-Host
-    #Write-Ascii                                    # Uncomment > Ascii
-    #Write-FrameTitle 'o9'                          # Uncomment > Title
+    #Write-Ascii # Uncomment > Ascii
+    #Write-FrameTitle 'o9' # Uncomment > Title
     foreach ($section in $script:CompactSections) {
-        Write-Host "$C$($section.Name)$R"          # Uncomment > Section
-        #Write-Host "$Y$('─' * 16)$R"              # Uncomment > Separator
+        Write-Host "$C$($section.Name)$R" # Uncomment > Section
+        #Write-Host "$Y$('─' * 16)$R" # Uncomment > Separator
         Write-Host ""
         foreach ($item in $section.Items) {
             $arg = if ($item.PSObject.Properties.Match('Arg').Count -gt 0 -and $item.Arg) {
@@ -1410,7 +1423,7 @@ function hs {
     }
     #Write-Host "$Y$('─' * 16)$R"
     Write-Host ""
-    #Write-ModeFooter                               # Uncomment > Footer
+    #Write-ModeFooter # Uncomment > Footer
 }
 
 
@@ -1428,6 +1441,7 @@ function hs {
 #Install-PSResource -Name Microsoft.WinGet.CommandNotFound
 # load WinGet CommandNotFound module
 Import-Module -Name Microsoft.WinGet.CommandNotFound
+
 
 <#
 function prompt {
