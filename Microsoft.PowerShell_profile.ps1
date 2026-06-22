@@ -1,1406 +1,1472 @@
 <#
 .SYNOPSIS
-    Renamer files, folder and content
+    PowerShell Profile Refactor
+    Version 9.00
+    https://github.com/o9-9/powershell-profile
+
 .DESCRIPTION
-    Renamer Features:
-      1. Folder rename
-      2. Files rename
-      3. Files content rename
-      4. Clone repo and rename
-		  5. Local repo rename
-.NOTES
-    Author         : o9 @o9ll
-    GitHub         : https://github.com/o9ll/renamer
-.NOTES
-    Requires: PowerShell 5.1+
+                        !!!   WARNING:   !!!
+    DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.
+        ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO
+                https://github.com/o9-9/powershell-profile.git.
+
+    TO ADD YOUR OWN CODE OR IF YOU WANT TO OVERRIDE ANY OF THESE VARIABLES
+    OR FUNCTIONS. USE ed FUNCTION TO CREATE YOUR OWN profile.ps1 FILE.
+    TO OVERRIDE IN YOUR NEW profile.ps1 FILE, REWRITE VARIABLE
+    OR FUNCTION, ADDING "_Override" TO NAME.
+
+    FOLLOWING VARIABLES RESPECT _Override:
+    $EDITOR_Override
+    $debug_Override
+    $repo_root_Override  [To point to fork, for example]
+    $timeFilePath_Override
+    $updateInterval_Override
+
+    FOLLOWING FUNCTIONS RESPECT _Override:
+    Debug-Message_Override
+    Update-Profile_Override
+    Update-PowerShell_Override
+    Clear-Cache_Override
+    Get-Theme_Override
+    o99_Override [To call fork, for example]
+    Set-PredictionSource
 #>
 
-param(
-	[string]$RepoUrl,
-	[string]$TargetPath,
-	[string]$LocalPath,
-	[string]$LatestReleaseUrl,
-	[switch]$SkipReleaseDownload
-)
 
-if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') {
-    Write-Host "Renamer is unable to run on your system, powershell execution is restricted by security policies" -ForegroundColor Red
-    return
+# Handle PowerShell 7.4+ UTF-8 encoding issues
+$previousOutputEncoding = [Console]::OutputEncoding
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+
+
+# Debug mode
+$debug = $false
+
+if ($debug_Override){
+    # If variable debug_Override is defined in profile.ps1 file. then use it instead.
+    $debug = $debug_Override
+} else {
+    $debug = $false
 }
 
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Output "Renamer needs to be run as Administrator. Attempting to relaunch."
-    $argList = @()
 
-    $PSBoundParameters.GetEnumerator() | ForEach-Object {
-        $argList += if ($_.Value -is [switch] -and $_.Value) {
-            "-$($_.Key)"
-        } elseif ($_.Value -is [array]) {
-            "-$($_.Key) $($_.Value -join ',')"
-        } elseif ($_.Value) {
-            "-$($_.Key) '$($_.Value)'"
+# Define path to file that stores last execution time
+if ($repo_root_Override){
+    # If variable $repo_root_Override is defined in profile.ps1 file. then use it instead.
+    $repo_root = $repo_root_Override
+} else {
+    $repo_root = "https://raw.githubusercontent.com/o9-9"
+}
+
+
+# Helper function for cross-edition compatibility
+function Get-ProfileDir {
+    if ($PSVersionTable.PSEdition -eq "Core") {
+        return [Environment]::GetFolderPath("MyDocuments") + "\PowerShell"
+    } elseif ($PSVersionTable.PSEdition -eq "Desktop") {
+        return [Environment]::GetFolderPath("MyDocuments") + "\WindowsPowerShell"
+    } else {
+        Write-Error "Unsupported PowerShell edition: $($PSVersionTable.PSEdition)"
+        return $null
+    }
+}
+
+
+# Define path to file that stores last execution time
+if ($timeFilePath_Override){
+    # If variable $timeFilePath_Override is defined in profile.ps1 file. then use it instead.
+    $timeFilePath = $timeFilePath_Override
+} else {
+    $profileDir = Get-ProfileDir
+    $timeFilePath = "$profileDir\LastExecutionTime.txt"
+}
+
+
+# Define update interval in days, set to -1 to always check
+if ($updateInterval_Override){
+    # If variable $updateInterval_Override is defined in profile.ps1 file. then use it instead.
+    $updateInterval = $updateInterval_Override
+} else {
+    $updateInterval = 7
+}
+
+
+# Debug mode message
+function Debug-Message{
+    # If function "Debug-Message_Override" is defined in profile.ps1 file. then call it instead.
+    if (Get-Command -Name "Debug-Message_Override" -ErrorAction SilentlyContinue) {
+        Debug-Message_Override
+    } else {
+        Write-Host "#######################################" -ForegroundColor Red
+        Write-Host "#           Debug mode enabled        #" -ForegroundColor Red
+        Write-Host "#          ONLY FOR DEVELOPMENT       #" -ForegroundColor Red
+        Write-Host "#                                     #" -ForegroundColor Red
+        Write-Host "#       IF YOU ARE NOT DEVELOPING     #" -ForegroundColor Red
+        Write-Host "#       JUST RUN \`Update-Profile\`     #" -ForegroundColor Red
+        Write-Host "#        to discard all changes       #" -ForegroundColor Red
+        Write-Host "#   and update to latest profile  #" -ForegroundColor Red
+        Write-Host "#               version               #" -ForegroundColor Red
+        Write-Host "#######################################" -ForegroundColor Red
+    }
+}
+
+
+# Check Debug mode
+if ($debug) {
+    Debug-Message
+}
+
+
+# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
+if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
+    [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
+}
+
+
+# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
+if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
+    [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
+}
+
+
+# Initial GitHub.com connectivity check
+function Test-GitHubConnection {
+    if ($PSVersionTable.PSEdition -eq "Core") {
+        # If PowerShell Core, use 1 second timeout
+        return Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds 1
+    } else {
+        # For PowerShell Desktop, use .NET Ping class with timeout
+        $ping = New-Object System.Net.NetworkInformation.Ping
+        $result = $ping.Send("github.com", 1000)  # 1 second timeout
+        return ($result.Status -eq "Success")
+    }
+}
+$global:canConnectToGitHub = Test-GitHubConnection
+
+
+# Ensure Terminal-Icons module is installed before importing
+if (-not (Get-Module -ListAvailable -Name Terminal-Icons)) {
+    Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
+}
+Import-Module -Name Terminal-Icons
+$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+if (Test-Path($ChocolateyProfile)) {
+    Import-Module "$ChocolateyProfile"
+}
+
+
+# Safely read and parse last execution date once to avoid exceptions when file is missing or empty
+$lastExecRaw = if (Test-Path $timeFilePath) { (Get-Content -Path $timeFilePath -Raw).Trim() } else { $null }
+$lastExec = $null
+if (-not [string]::IsNullOrWhiteSpace($lastExecRaw)) {
+    [datetime]$parsed = [datetime]::MinValue
+    if ([datetime]::TryParseExact($lastExecRaw, 'dd-MM-yyyy', $null, [System.Globalization.DateTimeStyles]::None, [ref]$parsed)) {
+        $lastExec = $parsed
+    }
+}
+
+
+# Check for Profile Updates
+function Update-Profile {
+    # If function "Update-Profile_Override" is defined in profile.ps1 file. then call it instead.
+    if (Get-Command -Name "Update-Profile_Override" -ErrorAction SilentlyContinue) {
+        Update-Profile_Override
+    }
+    else {
+        if (Test-Path -LiteralPath $PROFILE) {
+            $profileDir = Split-Path -Path $PROFILE -Parent
+            $backupName = "profile-backup-$(Get-Date -Format 'd-M-yyyy_HHmmss').ps1"
+            Copy-Item -LiteralPath $PROFILE -Destination (Join-Path $profileDir $backupName) -Force
+        }
+        try {
+            $url = "$repo_root/powershell-profile/main/Microsoft.PowerShell_profile.ps1"
+            $oldhash = Get-FileHash $PROFILE
+            Invoke-RestMethod $url -OutFile "$env:temp/Microsoft.PowerShell_profile.ps1"
+            $newhash = Get-FileHash "$env:temp/Microsoft.PowerShell_profile.ps1"
+            if ($newhash.Hash -ne $oldhash.Hash) {
+                Copy-Item -Path "$env:temp/Microsoft.PowerShell_profile.ps1" -Destination $PROFILE -Force
+                Write-Host "✔ o9 Profile has been updated. Restart shell to reflect changes" -ForegroundColor DarkMagenta
+            }
+            else {
+                Write-Host "✔ o9 Profile is up to date." -ForegroundColor DarkBlue
+            }
+        }
+        catch {
+            Write-Error "Unable to check for `$o9 profile updates: $_"
+        }
+        finally {
+            Remove-Item "$env:temp/Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue
         }
     }
+}
+Set-Alias -Name u1 -Value Update-Profile
 
-    $script = "& { & `'$($PSCommandPath)`' $($argList -join ' ') }"
 
-    $powershellCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
-    $processCmd = if (Get-Command wt.exe -ErrorAction SilentlyContinue) { "wt.exe" } else { "$powershellCmd" }
+# Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than update interval)
+if (-not $debug -and `
+    ($updateInterval -eq -1 -or `
+            -not (Test-Path $timeFilePath) -or `
+            $null -eq $lastExec -or `
+        ((Get-Date).Date - $lastExec.Date).TotalDays -gt $updateInterval)) {
+    Update-Profile
+    $currentTime = Get-Date -Format 'dd-MM-yyyy'
+    $currentTime | Out-File -FilePath $timeFilePath
+} elseif ($debug) {
+    Write-Warning "Skipping o9 profile update check in debug mode"
+}
 
-    if ($processCmd -eq "wt.exe") {
-        Start-Process $processCmd -ArgumentList "$powershellCmd -ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+
+# Update PowerShell
+function Update-PowerShell {
+    # If function "Update-PowerShell_Override" is defined in profile.ps1 file. then call it instead.
+    if (Get-Command -Name "Update-PowerShell_Override" -ErrorAction SilentlyContinue) {
+        Update-PowerShell_Override
     } else {
-        Start-Process $processCmd -ArgumentList "-ExecutionPolicy Bypass -NoProfile -Command `"$script`"" -Verb RunAs
+        try {
+            Write-Host "Checking for o9 PowerShell updates..." -ForegroundColor DarkCyan
+            $updateNeeded = $false
+            $currentVersion = $PSVersionTable.PSVersion.ToString()
+            $gitHubApiUrl = "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
+            $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+            $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+            if ($currentVersion -lt $latestVersion) {
+                $updateNeeded = $true
+            }
+            if ($updateNeeded) {
+                Write-Host "Updating o9 PowerShell..." -ForegroundColor DarkYellow
+                Start-Process powershell.exe -ArgumentList "-NoProfile -Command winget upgrade Microsoft.PowerShell --accept-source-agreements --accept-package-agreements" -Wait -NoNewWindow
+                Write-Host "✔ o9 PowerShell has been updated. Restart shell to reflect changes" -ForegroundColor DarkMagenta
+            } else {
+                Write-Host "✔ o9 PowerShell is up to date." -ForegroundColor DarkBlue
+            }
+        } catch {
+            Write-Error "Failed to update o9 PowerShell. Error: $_"
+        }
+    }
+}
+Set-Alias -Name u2 -Value Update-PowerShell
+
+
+# Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than update interval)
+if (-not $debug -and `
+    ($updateInterval -eq -1 -or `
+            -not (Test-Path $timeFilePath) -or `
+            $null -eq $lastExec -or `
+        ((Get-Date).Date - $lastExec.Date).TotalDays -gt $updateInterval)) {
+    Update-PowerShell
+    $currentTime = Get-Date -Format 'dd-MM-yyyy'
+    $currentTime | Out-File -FilePath $timeFilePath
+} elseif ($debug) {
+    Write-Warning "Skipping o9 PowerShell update in debug mode"
+}
+
+# Clear
+Set-Alias -Name c -Value clear
+
+# Clear Cache
+function cc {
+    if (Get-Command -Name "Clear-Cache_Override" -ErrorAction SilentlyContinue) {
+        Clear-Cache_Override
+    } else {
+        Remove-Item -Path "$env:SystemRoot\Prefetch\*" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\INetCache\*" -Recurse -Force -ErrorAction SilentlyContinue
+        cleanmgr.exe /d C: /VERYLOWDISK
+        Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+        Stop-Process -Name explorer -Force
+        Remove-Item -Path "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache*" -Force -ErrorAction SilentlyContinue
+        Start-Process explorer.exe
+        Write-Host "Completed" -ForegroundColor Green
+    }
+}
+
+
+# Restart Explorer
+function rr {
+        Stop-Process -Name explorer -Force
+        Start-Process explorer.exe
+}
+
+
+# Admin Check and Prompt Customization
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+function prompt {
+    if ($isAdmin) { "[" + (Get-Location) + "] # " } else { "[" + (Get-Location) + "] $ " }
+}
+$adminSuffix = if ($isAdmin) { " [ADMIN]" } else { "" }
+$Host.UI.RawUI.WindowTitle = "PowerShell {0}$adminSuffix" -f $PSVersionTable.PSVersion.ToString()
+
+
+# Force Cursor as default
+$EDITOR_Override = 'cursor'
+
+
+# Test if command exists
+function Test-CommandExists {
+    param($command)
+    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+    return $exists
+}
+
+
+# Set editor
+if ($EDITOR_Override){
+    $EDITOR = $EDITOR_Override
+} else {
+    $EDITOR = if (Test-CommandExists cursor) { 'cursor' }
+    elseif (Test-CommandExists code) { 'code' }
+    elseif (Test-CommandExists codium) { 'codium' }
+    elseif (Test-CommandExists notepad++) { 'notepad++' }
+    elseif (Test-CommandExists sublime_text) { 'sublime_text' }
+    else { 'notepad' }
+    Set-Alias -Name e -Value $EDITOR -Force
+}
+
+
+# Cursor editor
+function cu { param($file) cursor $file }
+
+
+# Edit profile.ps1
+function ee {
+    cursor $PROFILE.CurrentUserAllHosts
+}
+
+
+# Edit Microsoft.PowerShell_profile.ps1
+function pp {
+    cursor $PROFILE
+}
+
+
+# Run Profile
+function Invoke-Profile {
+    if ($PSVersionTable.PSEdition -eq "Desktop") {
+        Write-Host "Note: Some Oh My Posh/PSReadLine errors are expected in PowerShell 5. profile still works fine." -ForegroundColor Yellow
+    }
+    & $PROFILE
+}
+
+
+# Create Empty File
+function ne($file) { "" | Out-File $file -Encoding ASCII }
+
+
+# Find File Recursively
+function ff($name) {
+    Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
+        Write-Output "$($_.FullName)"
+    }
+}
+
+
+# Public IP
+function pi { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+
+
+# o9 Utility release
+function o9 {
+    Invoke-Expression (Invoke-RestMethod https://o9ll.com/o9)
+}
+
+
+# o9 Utility pre-release
+function 9o {
+	  # If function "o99_Override" is defined in profile.ps1 file. then call it instead.
+    if (Get-Command -Name "o99_Override" -ErrorAction SilentlyContinue) {
+        o99_Override
+    } else {
+        Invoke-Expression (Invoke-RestMethod https://o9ll.com/o9Utility)
+    }
+}
+
+
+# VS Code setup
+function vs {
+	irm https://raw.githubusercontent.com/o9-9/vscode-setup/main/setup.ps1 | iex
+}
+
+
+# Cursor setup
+function cs {
+	irm https://raw.githubusercontent.com/o9-9/cursor-setup/main/setup.ps1 | iex
+}
+
+
+# PowerShell Profile Setup
+function pr {
+	irm https://raw.githubusercontent.com/o9-9/powershell-profile/main/setup.ps1 | iex
+}
+
+
+# System Utilities
+function admin {
+    $cwd = (Get-Location).ProviderPath
+    if ($args.Count -gt 0) {
+        $argList = $args -join ' '
+        Start-Process wt -Verb runAs -ArgumentList @('-d', $cwd, 'pwsh.exe', '-NoExit', '-Command', $argList)
+    } else {
+        Start-Process wt -Verb runAs -ArgumentList @('-d', $cwd, 'pwsh.exe', '-NoExit')
+    }
+}
+Set-Alias -Name su -Value admin
+
+
+# System Uptime
+function ut {
+    try {
+        # find date/time format
+        $dateFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.ShortDatePattern
+        $timeFormat = [System.Globalization.CultureInfo]::CurrentCulture.DateTimeFormat.LongTimePattern
+        # check powershell version
+        if ($PSVersionTable.PSVersion.Major -eq 5) {
+            $lastBoot = (Get-WmiObject win32_operatingsystem).LastBootUpTime
+            $bootTime = [System.Management.ManagementDateTimeConverter]::ToDateTime($lastBoot)
+            # reformat lastBoot
+            $lastBoot = $bootTime.ToString("$dateFormat $timeFormat")
+        } else {
+            # Get-ti cmdlet was introduced in PowerShell 6.0
+            $lastBoot = (Get-ti -Since).ToString("$dateFormat $timeFormat")
+            $bootTime = [System.DateTime]::ParseExact($lastBoot, "$dateFormat $timeFormat", [System.Globalization.CultureInfo]::InvariantCulture)
+        }
+        # Format start time
+        $formattedBootTime = $bootTime.ToString("dddd, MMMM dd, yyyy HH:mm:ss", [System.Globalization.CultureInfo]::InvariantCulture) + " [$lastBoot]"
+        Write-Host "System started on: $formattedBootTime" -ForegroundColor DarkGray
+        # calculate ti
+        $ti = (Get-Date) - $bootTime
+        # ti in days, hours, minutes, and seconds
+        $days = $ti.Days
+        $hours = $ti.Hours
+        $minutes = $ti.Minutes
+        $seconds = $ti.Seconds
+        # ti output
+        Write-Host ("ti: {0} days, {1} hours, {2} minutes, {3} seconds" -f $days, $hours, $minutes, $seconds) -ForegroundColor Blue
+    } catch {
+        Write-Error "An error occurred while retrieving system ti."
+    }
+}
+
+
+# Extract Archive
+function uz ($file) {
+    Write-Output("Extracting", $file, "to", $pwd)
+    $fullFile = Get-ChildItem -Path $pwd -Filter $file | ForEach-Object { $_.FullName }
+    Expand-Archive -Path $fullFile -DestinationPath $pwd
+}
+
+
+# Upload File to Hastebin
+function hb {
+    if ($args.Length -eq 0) {
+        Write-Error "No File Path specified."
+        return
+    }
+    $FilePath = $args[0]
+    if (Test-Path $FilePath) {
+        $Content = Get-Content $FilePath -Raw
+    } else {
+        Write-Error "File path does not exist."
+        return
+    }
+    $uri = "http://bin.christitus.com/documents"
+    try {
+        $response = Invoke-RestMethod -Uri $uri -Method Post -Body $Content -ErrorAction Stop
+        $hasteKey = $response.key
+        $url = "http://bin.christitus.com/$hasteKey"
+        Set-Clipboard $url
+        Write-Output "$url copied to clipboard."
+    } catch {
+        Write-Error "Failed to upload Document. Error: $_"
+    }
+}
+
+
+# Search Text by Regex
+function gr($regex, $dir) {
+    if ( $dir ) {
+        Get-ChildItem $dir | select-string $regex
+        return
+    }
+    $input | select-string $regex
+}
+
+
+# Disk Volumes
+function df {
+    get-volume
+}
+
+
+# Replace Text in File
+function sd($file, $find, $replace) {
+    (Get-Content $file).replace("$find", $replace) | Set-Content $file
+}
+
+
+# Show Command Definition
+function wh($name) {
+    Get-Command $name | Select-Object -ExpandProperty Definition
+}
+
+
+# Set Environment Variable
+function ex($name, $value) {
+    set-item -force -path "env:$name" -value $value;
+}
+
+
+# Simplified Process Management
+function k9 { Stop-Process -Name $args[0] }
+
+
+# Kill Processes
+function pk($name) {
+    Get-Process $name -ErrorAction SilentlyContinue | Stop-Process
+}
+
+
+# List Processes
+function pg($name) {
+    Get-Process $name
+}
+
+
+# Show First Lines of File
+function hd {
+    param($Path, $n = 10)
+    Get-Content $Path -Head $n
+}
+
+
+# Show File
+function tl {
+    param($Path, $n = 10, [switch]$f = $false)
+    Get-Content $Path -Tail $n -Wait:$f
+}
+
+
+# Quick File Creation
+function nf { param($name) New-Item -ItemType "file" -Path . -Name $name }
+
+
+# Directory Management
+function md { param($dir) mkdir $dir -Force; Set-Location $dir }
+
+
+# Move files or directories to Recycle Bin
+function trash($path) {
+    $fullPath = (Resolve-Path -Path $path).Path
+    if (Test-Path $fullPath) {
+        $item = Get-Item $fullPath
+        if ($item.PSIsContainer) {
+            # Handle directory
+            $parentPath = $item.Parent.FullName
+        } else {
+            # Handle file
+            $parentPath = $item.DirectoryName
+        }
+        $shell = New-Object -ComObject 'Shell.Application'
+        $shellItem = $shell.NameSpace($parentPath).ParseName($item.Name)
+
+        if ($item) {
+            $shellItem.InvokeVerb('delete')
+            Write-Host "Item '$fullPath' Moved= to Recycle Bin."
+        } else {
+            Write-Host "Error: Not Find Item '$fullPath' to Trash."
+        }
+    } else {
+        Write-Host "Error: Item '$fullPath' Does Not Exist."
+    }
+}
+
+
+# Documents
+function dc {
+    $dc = if(([Environment]::GetFolderPath("MyDocuments"))) {([Environment]::GetFolderPath("MyDocuments"))} else {$HOME + "\Documents"}
+    Set-Location -Path $dc
+}
+
+
+# Desktop
+function dt {
+    $dt = if ([Environment]::GetFolderPath("Desktop")) {[Environment]::GetFolderPath("Desktop")} else {$HOME + "\Desktop"}
+    Set-Location -Path $dt
+}
+
+
+# Downloads
+function dw {
+    $dw = if(([Environment]::GetFolderPath("Downloads"))) {([Environment]::GetFolderPath("Downloads"))} else {$HOME + "\Downloads"}
+    Set-Location -Path $dw
+}
+
+
+# o9 Folder
+function of {
+    $of = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local\o9"}
+    Set-Location -Path $of
+}
+
+
+# Local
+function lo {
+    $lo = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local"}
+    Set-Location -Path $lo
+}
+
+
+# Roaming
+function ro {
+    $ro = if(([Environment]::GetFolderPath("ApplicationData"))) {([Environment]::GetFolderPath("ApplicationData"))} else {$HOME + "\AppData\Roaming"}
+    Set-Location -Path $ro
+}
+
+
+# Temp
+function tm {
+    $tm = if(([Environment]::GetFolderPath("LocalApplicationData"))) {([Environment]::GetFolderPath("LocalApplicationData"))} else {$HOME + "\AppData\Local\Temp"}
+    Set-Location -Path $tm
+}
+
+
+# Program Files
+function pf {
+    $pf = 'C:\Program Files'
+    Set-Location $pf
+}
+
+
+# Github C
+function g { __zoxide_z github }
+
+
+# Github D
+function gf {
+    $gf = 'D:\10-Github'
+    Set-Location -Path $gf
+}
+
+
+# Show status
+function gs { git status }
+
+
+# Add changes
+function gd { git add . }
+
+
+# Add commit
+function gc { param($m) git commit -m "$m" }
+
+
+# Push changes
+function gp { git push }
+
+
+# Pull changes
+function gu { git pull }
+
+
+# Git Add + commit
+function gm {
+    git add .
+    git commit -m "$args"
+}
+
+
+# Git Add + commit + push
+function ga {
+    git add .
+    git commit -m "$args"
+    git push
+}
+
+# Clone repo
+function gg { git clone "$args" }
+
+
+# Clone repo
+function cl {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [ValidatePattern('^https?://github\.com/[\w.-]+/[\w.-]+(?:\.git)?$')]
+        [string]$Url,
+        [Parameter(Position = 1)]
+        [ValidateScript({
+            if (Test-Path $_ -PathType Container) { $true }
+            else { throw "The path '$_' does not exist or is not directory." }
+        })]
+        [string]$Destination
+    )
+    process {
+        if (-not $Url) {
+            $Url = Read-Host "Enter Repo URL"
+            if ($Url -notmatch '^https?://github\.com/[\w.-]+/[\w.-]+(?:\.git)?$') {
+                throw "Invalid GitHub URL format."
+            }
+        }
+        if ($Url -notmatch '\.git$') {
+            $Url += '.git'
+        }
+        $repoName = ([IO.Path]::GetFileNameWithoutExtension($Url))
+        $basePath = if ($Destination) { $Destination } else { Get-Location }
+        $targetPath = Join-Path $basePath $repoName
+        if (Test-Path $targetPath) {
+            $i = 1
+            do {
+                $targetPath = Join-Path $basePath "$repoName-$i"
+                $i++
+            } while (Test-Path $targetPath)
+        }
+        Write-Host "`nCloning repo from: $Url" -ForegroundColor Green
+        Write-Host "Target folder: $targetPath" -ForegroundColor Cyan
+        try {
+            git clone $Url $targetPath
+            if ($LASTEXITCODE -ne 0) {
+                throw "git clone failed"
+                git clone $Url
+            }
+            Write-Host "`n✔ Repo cloned successfully to: $targetPath" -ForegroundColor Green
+        }
+        catch {
+            Write-Error "Failed to clone repo: $_"
+        }
+    }
+}
+
+
+# List files in table format
+function la { Get-ChildItem | Format-Table -AutoSize }
+
+
+# List all files including hidden in table format
+function ll { Get-ChildItem -Force | Format-Table -AutoSize }
+
+
+# Quick Access to System Information
+function sy { Get-ComputerInfo }
+
+
+# Networking Utilities
+function fd {
+    Clear-DnsClientCache
+    Write-Host "DNS has been flushed"
+}
+
+
+# Copy to clipboard
+function cy { Set-Clipboard $args[0] }
+
+
+# Paste from clipboard
+function pt { Get-Clipboard }
+
+
+# Set-PSReadLineOption Compatibility for PowerShell Desktop
+function Set-PSReadLineOptionsCompat {
+    param([hashtable]$Options)
+    if ($PSVersionTable.PSEdition -eq "Core") {
+        Set-PSReadLineOption @Options
+    } else {
+        # Remove unsupported keys for Desktop and silence errors
+        $SafeOptions = $Options.Clone()
+        $SafeOptions.Remove('PredictionSource')
+        $SafeOptions.Remove('PredictionViewStyle')
+        Set-PSReadLineOption @SafeOptions
+    }
+}
+# Enhanced PSReadLine Configuration
+$PSReadLineOptions = @{
+    EditMode = 'Windows'
+    HistoryNoDuplicates = $true
+    HistorySearchCursorMovesToEnd = $true
+    Colors = @{
+        Command = '#87CEEB'
+        Parameter = '#98FB98'
+        Operator = '#FFB6C1'
+        Variable = '#DDA0DD'
+        String = '#FFDAB9'
+        Number = '#B0E0E6'
+        Type = '#F0E68C'
+        Comment = '#D3D3D3'
+        Keyword = '#8367c7'
+        Error = '#FF6347'
+    }
+    PredictionSource = 'History'
+    PredictionViewStyle = 'ListView'
+    BellStyle = 'None'
+}
+Set-PSReadLineOptionsCompat -Options $PSReadLineOptions
+# Custom key handlers
+Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+Set-PSReadLineKeyHandler -Chord 'Ctrl+d' -Function DeleteChar
+Set-PSReadLineKeyHandler -Chord 'Ctrl+w' -Function BackwardDeleteWord
+Set-PSReadLineKeyHandler -Chord 'Alt+d' -Function DeleteWord
+Set-PSReadLineKeyHandler -Chord 'Ctrl+LeftArrow' -Function BackwardWord
+Set-PSReadLineKeyHandler -Chord 'Ctrl+RightArrow' -Function ForwardWord
+Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function Undo
+Set-PSReadLineKeyHandler -Chord 'Ctrl+y' -Function Redo
+# Custom functions for PSReadLine
+Set-PSReadLineOption -AddToHistoryHandler {
+    param($line)
+    $sensitive = @('password', 'secret', 'token', 'apikey', 'connectionstring')
+    $hasSensitive = $sensitive | Where-Object { $line -match $_ }
+    return ($null -eq $hasSensitive)
+}
+# Fix Set-PredictionSource for Desktop
+function Set-PredictionSource {
+    # If "Set-PredictionSource_Override" is defined in profile.ps1 file. then call it instead.
+    if (Get-Command -Name "Set-PredictionSource_Override" -ErrorAction SilentlyContinue) {
+        Set-PredictionSource_Override
+    } elseif ($PSVersionTable.PSEdition -eq "Core") {
+        # Improved prediction settings
+        Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+        Set-PSReadLineOption -MaximumHistoryCount 10000
+    } else {
+        # Desktop version - use History only
+        Set-PSReadLineOption -MaximumHistoryCount 10000
+    }
+}
+Set-PredictionSource
+
+
+# Custom completion for common commands
+$scriptblock = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $customCompletions = @{
+        'git' = @('status', 'add', 'commit', 'push', 'pull', 'clone', 'checkout')
+        'npm' = @('install', 'start', 'run', 'test', 'build')
+        'deno' = @('run', 'compile', 'bundle', 'test', 'lint', 'fmt', 'cache', 'info', 'doc', 'upgrade')
+    }
+    $command = $commandAst.CommandElements[0].Value
+    if ($customCompletions.ContainsKey($command)) {
+        $customCompletions[$command] | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+    }
+}
+Register-ArgumentCompleter -Native -CommandName git, npm, deno -ScriptBlock $scriptblock
+$scriptblock = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    dotnet complete --position $cursorPosition $commandAst.ToString() |
+    ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
+Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
+
+
+# Oh My Posh
+<#
+clean.json
+cloud.json
+cobalt.json
+emodipt.json
+hul.json
+jblab.json
+jonnychipz.json
+kushal.json
+montys.json
+night.json
+shell.json
+sitecorian.json
+smoothie.json
+tea.json
+tokyo.json
+wholespace.json
+diamonds.yaml
+zen.toml
+#>
+oh-my-posh init pwsh --config 'C:\Users\o9\.config\ohmyposh\mocha.omp.yaml' | Invoke-Expression
+
+
+# Zoxide
+if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+    Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
+
+    function z {
+        $result = zoxide query -l @args | fzf `
+            --height 40% `
+            --layout reverse `
+            --border `
+            --info inline
+
+        if ($result) {
+            Set-Location $result
+        }
+    }
+} else {
+    Write-Host "zoxide command not found. Attempting to install via winget..."
+
+    try {
+        winget install -e --id ajeetdsouza.zoxide
+
+        Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
+
+        function z {
+            $result = zoxide query -l @args | fzf `
+                --height 40% `
+                --layout reverse `
+                --border `
+                --info inline
+
+            if ($result) {
+                Set-Location $result
+            }
+        }
+
+        Write-Host "✔ zoxide installed and configured"
+    } catch {
+        Write-Error "Failed to install zoxide. Error: $_"
+    }
+}
+
+
+# YT-DLP
+function Get-YouTubeVideo {
+    <#
+    .SYNOPSIS
+        # YT-DLP Command
+    .DESCRIPTION
+        # Audio and Video Downloader
+    .EXAMPLE
+        # dv -Url "https://www.youtube.com/watch?v=657474"
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$Url
+    )
+    if (-not (Get-Command yt-dlp -ErrorAction SilentlyContinue)) {
+        Write-Error "Run: winget install yt-dlp"
+        Write-Error "Set: Path Environment Variable"
+        return
+    }
+    if ([string]::IsNullOrWhiteSpace($Url)) {
+        $Url = Read-Host "Enter URL"
+    }
+    if ([string]::IsNullOrWhiteSpace($Url)) {
+        Write-Warning "No URL Provided"
+        return
+    }
+    $DownloadPath = "$env:userprofile\Downloads"
+    if (-not (Test-Path -Path $DownloadPath)) {
+        New-Item -Path $DownloadPath -ItemType Directory | Out-Null
+    }
+    Write-Host "Downloading video to:  $DownloadPath" -ForegroundColor Cyan
+    Write-Host "URL: $Url" -ForegroundColor Cyan
+    try {
+        yt-dlp -P $DownloadPath $Url
+        Write-Host "`n✔ $DownloadPath" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Download Failed: $_"
+    }
+}
+Set-Alias -Name dv -Value Get-YouTubeVideo
+
+
+# Install Theme
+function Install-Theme {
+    [CmdletBinding()]
+    param ()
+    $zipUrl  = 'https://github.com/o9-9/o9-theme/archive/refs/heads/main.zip'
+    $tempZip = Join-Path -Path $env:TEMP -ChildPath 'o9-theme.zip'
+    $tempDir = Join-Path -Path $env:TEMP -ChildPath 'o9-theme'
+    try {
+        if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force }
+        if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force }
+        Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip -UseBasicParsing
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force
+        $extractedRoot = Get-ChildItem -Path $tempDir -Directory | Select-Object -First 1
+        if (-not $extractedRoot) {
+            throw "Extraction Failed: $tempDir"
+        }
+        $themeFolder = Join-Path -Path $tempDir -ChildPath $extractedRoot.Name
+        Write-Host ""
+        Write-Host "Install Theme"
+        Write-Host ""
+        Write-Host "1. Cursor"
+        Write-Host "2. VSCode"
+        Write-Host ""
+        do {
+            $choice = Read-Host "Enter:"
+        } until ($choice -in '1','2')
+
+        switch ($choice) {
+            '1' {
+                $dest = Join-Path -Path $env:SystemDrive -ChildPath 'Program Files\cursor\resources\app\extensions\o9-theme'
+            }
+            '2' {
+                $dest = Join-Path -Path $env:SystemDrive -ChildPath 'Program Files\Microsoft VS Code\resources\app\extensions\o9-theme'
+            }
+        }
+        $parent = Split-Path -Path $dest -Parent
+        if (-not (Test-Path $parent)) {
+            New-Item -Path $parent -ItemType Directory -Force | Out-Null
+        }
+        if (Test-Path $dest) {
+            Remove-Item -Path $dest -Recurse -Force
+        }
+        Move-Item -Path $themeFolder -Destination $dest
+        Write-Host "Installation Completed Successfully." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+    }
+    finally {
+        if (Test-Path $tempZip) { Remove-Item -Path $tempZip -Force }
+        if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force }
+    }
+}
+Set-Alias -Name th -Value Install-Theme
+
+
+# Move Cursor
+function ct {
+    $srcCT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
+    $pointCT = "$env:PROGRAMFILES\Cursor\resources\app\extensions"
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile -Command `"Copy-Item -Path '$srcCT' -Destination '$pointCT' -Recurse -Force`""
+        return
+    }
+    Copy-Item -Path $srcCT -Destination $pointCT -Recurse -Force
+}
+
+
+# Install VS Code Theme
+function vt {
+    $srcVT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
+    $pointVT = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\034f571df5\resources\app\extensions"
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile -Command `"Copy-Item -Path '$srcVT' -Destination '$pointVT' -Recurse -Force`""
+        return
+    }
+    Copy-Item -Path $srcVT -Destination $pointVT -Recurse -Force
+}
+
+
+# Remove Discord Krisp and SpellCheck
+function dd {
+    $builds = @(
+        @{ Name = 'Discord';       Path = "$env:LOCALAPPDATA\Discord" },
+        @{ Name = 'DiscordCanary'; Path = "$env:LOCALAPPDATA\DiscordCanary" },
+        @{ Name = 'DiscordPTB';    Path = "$env:LOCALAPPDATA\DiscordPTB" }
+    )
+    $processNames = @('Discord', 'DiscordCanary', 'DiscordPTB')
+    Get-Process -Name $processNames -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    foreach ($buildInfo in $builds) {
+        $basePath = $buildInfo.Path
+        if (-not (Test-Path $basePath)) {
+            Write-Warning "Base Path Not Found: $basePath"
+            continue
+        }
+        $versionFolder = Get-ChildItem -Path $basePath -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'app-*' } |
+            Sort-Object Name -Descending |
+            Select-Object -First 1
+        if (-not $versionFolder) {
+            Write-Warning "No Version Folder Found Under $basePath"
+            continue
+        }
+        $modulesPath = Join-Path $versionFolder.FullName 'modules'
+        if (-not (Test-Path $modulesPath)) {
+            Write-Warning "Modules Folder Not Found: $modulesPath"
+            continue
+        }
+        foreach ($target in @('discord_krisp-1', 'discord_spellcheck-1')) {
+            $fullPath = Join-Path $modulesPath $target
+            if (Test-Path $fullPath) {
+                try {
+                    Remove-Item -Path $fullPath -Recurse -Force -ErrorAction Stop
+                    Write-Host "Deleted: $fullPath"
+                } catch {
+                    Write-Warning "Failed to Delete $fullPath - $($_.Exception.Message)"
+                }
+            }
+        }
+        Write-Host "Done $($buildInfo.Name)"
+    }
+}
+
+
+# Install SVG
+function ws {
+    Push-Location "C:\Program Files\SVG"
+    & regsvr32 win_svg_thumbs.dll
+    Pop-Location
+}
+
+
+# Install Website Source
+function sa { 
+    $urlSrc = Read-Host 'Enter URL'
+    Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
+}
+
+
+# Install Stereo
+$StereoPatcher = "$Env:USERPROFILE\Documents\Githubb\Discord-Stereo-Windows-MacOS-Linux\Updates\Windows"
+$StereoFinder = "$Env:USERPROFILE\Documents\Githubb\Discord-Stereo-Windows-MacOS-Linux\Updates\Offset Finder"
+$StereoHUB = "$Env:USERPROFILE\Documents\Githubb\Discord-Stereo-Windows-MacOS-Linux\STEREO HUB"
+
+function s1 { python "$StereoHUB\discord_stereo_hub.py" }
+
+function s2 { & "$StereoPatcher\DiscordVoiceFixer.ps1" }
+function s3 { & "$StereoPatcher\Stereo Installer.bat" }
+function s4 { & "$StereoPatcher\Discord_voice_node_patcher.ps1" }
+function s5 { & "$StereoPatcher\Stereo-Node-Patcher-Windows.BAT" }
+
+function s6 { python "$StereoFinder\discord_voice_node_offset_finder_v5.py" }
+function s7{ python "$StereoFinder\offset_finder_gui.py" }
+
+#function st {
+#    python "C:\Users\o9\Documents\Github\discord-stereo-windows-macos-linux\STEREO HUB\discord_stereo_hub.py"
+#}
+
+
+# Renamer
+function re {
+    & 'C:\Users\o9\Documents\Githubb\renamer\renamer.ps1'
+}
+
+
+# Color
+$C = $PSStyle.Foreground.Cyan
+$Y = $PSStyle.Foreground.Yellow
+$G = $PSStyle.Foreground.Green
+$M = $PSStyle.Foreground.Magenta
+$D = $PSStyle.Foreground.DarkCyan
+$R = $PSStyle.Reset
+
+
+# Check Empty Folder
+function cf {
+    $Path = Read-Host 'Enter folder path'
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        Write-Error 'Folder does not exist.'
+        return
     }
 
-    break
-}
-Clear-Host
-
-$RenamerLogDateStamp = Get-Date -Format "dd-MM-yyyy"
-
-# Set the path to where the script is running
-$RenamerRootPath = $PSScriptRoot
-
-$RenamerLogPath = Join-Path $RenamerRootPath "logs"
-if (-not (Test-Path $RenamerLogPath)) {
-    New-Item -Path $RenamerLogPath -ItemType Directory -Force | Out-Null
-}
-$RenamerHistoryPath = Join-Path $RenamerRootPath "history"
-Start-Transcript -Path (Join-Path $RenamerLogPath "renamer_$(Get-Random -Minimum 0 -Maximum 1000)_$RenamerLogDateStamp.log") -Append -NoClobber | Out-Null
-
-# Set PowerShell window title
-$Host.UI.RawUI.WindowTitle = "o9 Renamer"
-Clear-Host
-
-$script:RenamerReplacementPairs = @()
-
-$script:RenamerLogAction = {
-	param([string]$Message, [ConsoleColor]$Color = [ConsoleColor]::White)
-	Write-Host $Message -ForegroundColor $Color
+    Get-ChildItem -LiteralPath $Path -Directory -Recurse |
+        Where-Object {
+            -not (Get-ChildItem -LiteralPath $_.FullName -Force)
+        } |
+        Select-Object -ExpandProperty FullName
 }
 
-function Show-RenamerBanner
-{
-	$asciiArt = @"
-⠀⠀⠀⠀⣀⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠀
-⠀⠀⠀⣿⡏⡏⡏⡏⡏⡏⡏⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷
-⠀⠀⠀⣿⢸⡇⡇⡇⡇⢸⡇⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟
-⠀⠀⠀⠉⠙⣿⣿⣿⣿⣿⣿⣿⣿⡿⢿⡿⠿⢿⣿⡿⠿⠿⠿⠿⠿⠛⠛⠛⠃
-⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⠲⡸⣄⠀⠀⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⠀⡿⠛⠿⠿⠻⠶⠿⠿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⢸⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠻⡯⣭⣭⣭⣭⣥⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠛⠛⠓⠛⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-"@
-	Write-Host $asciiArt
-}
 
-function New-RenamerLogo
-{
-	param(
-		[ValidateSet('logo')]
-		[string]$Type = 'logo',
-		[double]$Size = 25,
-		[switch]$Render,
-		[System.Windows.Media.Brush]$Fill
-	)
-
-	$logoViewbox = New-Object Windows.Controls.Viewbox
-	$logoViewbox.Width = $Size
-	$logoViewbox.Height = $Size
-
-	$canvas = New-Object Windows.Controls.Canvas
-	$canvas.Width = 125
-	$canvas.Height = 125
-
-	$scaleTransform = New-Object Windows.Media.ScaleTransform(($Size / 100), ($Size / 100))
-	$canvas.LayoutTransform = $scaleTransform
-
-	$logoPathData = @"
-M118.5 44.7a69 69 0 0 1-11 35.4L83 119.8H69.8l26-40.2a18 18 0 0 1-11.1 3.8 27 27 0 0 1-19.5-8l.1 3c0 25.2-11.9 43.3-30.3 43.3-19 0-30.5-18.1-30.5-43.2 0-25.3 11.6-43.2 30.5-43.2q12.3.2 20 9.2c.2-23 13-40.2 32-40.2 19.9 0 31.5 17.5 31.5 40.4M54 78.5c0-18.4-6.1-31.8-19-31.8S15.8 60.1 15.8 78.5c0 18.6 6.2 31.8 19.2 31.8S54 97 54 78.5m53.6-33.8c0-15.6-7.2-29-20.5-29-13.1 0-20.8 13.4-20.8 29.4 0 15.8 7.3 28.6 20.5 28.6 13 0 20.8-13.8 20.8-29
-"@
-	$logoPath = New-Object Windows.Shapes.Path
-	$logoPath.Data = [Windows.Media.Geometry]::Parse($logoPathData)
-	$logoPath.Fill = if ($Fill) { $Fill } else { [System.Windows.Media.Brushes]::White }
-	[void]$canvas.Children.Add($logoPath)
-
-	$logoViewbox.Child = $canvas
-	$logoViewbox.Tag = $logoPath
-
-	if ($Render)
-	{
-		$canvas.Measure([Windows.Size]::new($canvas.Width, $canvas.Height))
-		$canvas.Arrange([Windows.Rect]::new(0, 0, $canvas.Width, $canvas.Height))
-		$canvas.UpdateLayout()
-
-		$renderTargetBitmap = New-Object Windows.Media.Imaging.RenderTargetBitmap($canvas.Width, $canvas.Height, 96, 96, [Windows.Media.PixelFormats]::Pbgra32)
-		$renderTargetBitmap.Render($canvas)
-
-		$bitmapFrame = [Windows.Media.Imaging.BitmapFrame]::Create($renderTargetBitmap)
-		$bitmapEncoder = [Windows.Media.Imaging.PngBitmapEncoder]::new()
-		$bitmapEncoder.Frames.Add($bitmapFrame)
-
-		$imageStream = New-Object System.IO.MemoryStream
-		$bitmapEncoder.Save($imageStream)
-		$imageStream.Position = 0
-
-		$bitmapImage = [Windows.Media.Imaging.BitmapImage]::new()
-		$bitmapImage.BeginInit()
-		$bitmapImage.StreamSource = $imageStream
-		$bitmapImage.CacheOption = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-		$bitmapImage.EndInit()
-		return $bitmapImage
-	}
-
-	return $logoViewbox
-}
-
-Show-RenamerBanner
-
-$global:RenamerStatusTracker = @{
-	Cloning = 'Not Started'
-	ReplaceContents = 'Not Started'
-	RenameFiles = 'Not Started'
-	RenameDirectories = 'Not Started'
-	DownloadLatestRelease = 'Not Started'
-	FailedOperations = @()
-	SuccessfulOperations = @()
-}
-
-function Write-RenamerLog
-{
-	param([string]$Message, [ConsoleColor]$Color = [ConsoleColor]::White)
-	& $script:RenamerLogAction $Message $Color
-}
-
-function Apply-Replacements
-{
-	param([string]$Text)
-	foreach ($pair in $script:RenamerReplacementPairs)
-	{
-		if ($pair[0]) { $Text = $Text.Replace($pair[0], $pair[1]) }
-	}
-	$Text
-}
-
-function Update-RenamerStatus
-{
-	param([string]$Operation, [string]$Status, [string]$Details = '')
-	$global:RenamerStatusTracker[$Operation] = $Status
-	if ($Status -eq 'Success') { $global:RenamerStatusTracker.SuccessfulOperations += $Operation }
-	elseif ($Status -in 'Failed', 'Partial Success') { $global:RenamerStatusTracker.FailedOperations += "$Operation - $Details" }
-	if ($Operation -eq 'Cloning') { return }
-	Write-RenamerLog "`n=== ${Operation}: $Status ===" ([ConsoleColor]::Yellow)
-	if ($Details) { Write-RenamerLog $Details ([ConsoleColor]::Cyan) }
-}
-
-function Show-RenamerSummary
-{
-	Write-RenamerLog "`n=== OPERATION SUMMARY ===" ([ConsoleColor]::Green)
-	foreach ($operationName in @('ReplaceContents', 'RenameFiles', 'RenameDirectories', 'DownloadLatestRelease'))
-	{
-		$color = switch ($global:RenamerStatusTracker[$operationName])
-		{
-			'Success' { [ConsoleColor]::Green }
-			{ $_ -in 'Skipped', 'Not Started' } { [ConsoleColor]::Yellow }
-			default { [ConsoleColor]::Red }
-		}
-		Write-RenamerLog "${operationName}: $($global:RenamerStatusTracker[$operationName])" $color
-	}
-	if ($global:RenamerStatusTracker.FailedOperations.Count -gt 0)
-	{
-		Write-RenamerLog "`nFailed Operations:" ([ConsoleColor]::Red)
-		foreach ($failedOperation in $global:RenamerStatusTracker.FailedOperations) { Write-RenamerLog " - $failedOperation" ([ConsoleColor]::Red) }
-	}
-	Write-RenamerLog "`nCurrent Date and Time (UTC): $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss'))" ([ConsoleColor]::White)
-	Write-RenamerLog "Current User: $env:USERNAME" ([ConsoleColor]::White)
-}
-
-function Test-IsBinaryFile
-{
-	param([string]$FilePath)
-	try
-	{
-		$bytes = [System.IO.File]::ReadAllBytes($FilePath)
-		for ($i = 0; $i -lt [Math]::Min($bytes.Length, 1024); $i++)
-		{
-			if ($bytes[$i] -eq 0) { return $true }
-		}
-		return $false
-	}
-	catch { return $true }
-}
-
-function Clone-Repository
-{
-	param([string]$RepoUrl, [string]$TargetPath)
-	try
-	{
-		if (Test-Path $TargetPath)
-		{
-			Remove-Item -Path $TargetPath -Force -Recurse -ErrorAction Stop
-		}
-		$parentDir = Split-Path -Parent $TargetPath
-		if ($parentDir -and -not (Test-Path $parentDir))
-		{
-			New-Item -Path $parentDir -ItemType Directory -Force | Out-Null
-		}
-		git clone $RepoUrl $TargetPath
-		if ($LASTEXITCODE -ne 0) { throw "Git clone failed with exit code $LASTEXITCODE" }
-		Update-RenamerStatus -Operation 'Cloning' -Status 'Success' -Details "Repository cloned to $TargetPath"
-		return $true
-	}
-	catch
-	{
-		Update-RenamerStatus -Operation 'Cloning' -Status 'Failed' -Details "Error: $($_.Exception.Message)`nSolution: Make sure git is installed, you have internet access, and the repository URL is correct."
-		return $false
-	}
-}
-
-function Replace-FileContents
-{
-	param([string]$TargetPath)
-	try
-	{
-		Write-RenamerLog 'Starting content replacement in all files...' ([ConsoleColor]::Yellow)
-		$files = @(Get-ChildItem -Path $TargetPath -File -Recurse -Force -ErrorAction SilentlyContinue)
-		$processedFiles = 0
-		$failedFiles = @()
-		foreach ($file in $files)
-		{
-			$processedFiles++
-			if ($files.Count -gt 0)
-			{
-				Write-Progress -Activity 'Replacing content in files' -Status "Processing file $processedFiles of $($files.Count)" -PercentComplete (($processedFiles / $files.Count) * 100)
-			}
-			if (Test-IsBinaryFile -FilePath $file.FullName) { continue }
-			try
-			{
-				$content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
-				$updated = Apply-Replacements $content
-				if ($updated -ne $content)
-				{
-					Set-Content -Path $file.FullName -Value $updated -Force -ErrorAction Stop
-				}
-			}
-			catch
-			{
-				$failedFiles += "$($file.FullName): $($_.Exception.Message)"
-				Write-RenamerLog "Failed to process file: $($file.FullName)" ([ConsoleColor]::Red)
-			}
-		}
-		Write-Progress -Activity 'Replacing content in files' -Completed
-		if ($failedFiles.Count -eq 0)
-		{
-			Update-RenamerStatus -Operation 'ReplaceContents' -Status 'Success' -Details "Content replaced in $processedFiles files"
-			return $true
-		}
-		Update-RenamerStatus -Operation 'ReplaceContents' -Status 'Partial Success' -Details "Failed to process $($failedFiles.Count) files.`n$($failedFiles -join ', ')"
-		return $false
-	}
-	catch
-	{
-		Update-RenamerStatus -Operation 'ReplaceContents' -Status 'Failed' -Details "Error: $($_.Exception.Message)`nSolution: Check file permissions and make sure files are not locked."
-		return $false
-	}
-}
-
-function Get-FoldersByDepth
-{
-	param([string]$RootPath)
-	Get-ChildItem -Path $RootPath -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object FullName, @{
-		Name = 'Depth'; Expression = { ($_.FullName -split '\\').Count }
-	} | Sort-Object -Property Depth -Descending
-}
-
-function Rename-Directories
-{
-	param([string]$TargetPath)
-	try
-	{
-		$folders = @(Get-FoldersByDepth -RootPath $TargetPath)
-		$processedFolders = 0
-		$failedFolders = @()
-		Write-RenamerLog 'Starting directory renaming (deepest first)...' ([ConsoleColor]::Yellow)
-		foreach ($folder in $folders)
-		{
-			$processedFolders++
-			if ($folders.Count -gt 0)
-			{
-				Write-Progress -Activity 'Renaming directories' -Status "Processing folder $processedFolders of $($folders.Count)" -PercentComplete (($processedFolders / $folders.Count) * 100)
-			}
-			$folderName = Split-Path -Leaf $folder.FullName
-			$newFolderName = Apply-Replacements $folderName
-			if ($newFolderName -eq $folderName) { continue }
-			$newFolderPath = Join-Path (Split-Path -Parent $folder.FullName) $newFolderName
-			try
-			{
-				if (Test-Path $newFolderPath) { throw "Target folder already exists: $newFolderPath" }
-				Rename-Item -Path $folder.FullName -NewName $newFolderName -ErrorAction Stop
-			}
-			catch
-			{
-				$failedFolders += "$($folder.FullName): $($_.Exception.Message)"
-				Write-RenamerLog "Failed to rename folder: $($folder.FullName)" ([ConsoleColor]::Red)
-			}
-		}
-		Write-Progress -Activity 'Renaming directories' -Completed
-		if ($failedFolders.Count -eq 0)
-		{
-			Update-RenamerStatus -Operation 'RenameDirectories' -Status 'Success' -Details "Successfully renamed directories"
-			return $true
-		}
-		Update-RenamerStatus -Operation 'RenameDirectories' -Status 'Partial Success' -Details "Failed to rename $($failedFolders.Count) directories.`n$($failedFolders -join ', ')"
-		return $false
-	}
-	catch
-	{
-		Update-RenamerStatus -Operation 'RenameDirectories' -Status 'Failed' -Details "Error: $($_.Exception.Message)`nSolution: Check folder permissions and make sure folders are not in use."
-		return $false
-	}
-}
-
-function Rename-Files
-{
-	param([string]$TargetPath)
-	try
-	{
-		$files = @(Get-ChildItem -Path $TargetPath -File -Recurse -Force -ErrorAction SilentlyContinue)
-		$processedFiles = 0
-		$failedFiles = @()
-		Write-RenamerLog 'Starting file renaming...' ([ConsoleColor]::Yellow)
-		foreach ($file in $files)
-		{
-			$processedFiles++
-			if ($files.Count -gt 0)
-			{
-				Write-Progress -Activity 'Renaming files' -Status "Processing file $processedFiles of $($files.Count)" -PercentComplete (($processedFiles / $files.Count) * 100)
-			}
-			$newFileName = Apply-Replacements $file.Name
-			if ($newFileName -eq $file.Name) { continue }
-			$newFilePath = Join-Path $file.DirectoryName $newFileName
-			try
-			{
-				if (Test-Path $newFilePath) { throw "Target file already exists: $newFilePath" }
-				Rename-Item -Path $file.FullName -NewName $newFileName -ErrorAction Stop
-			}
-			catch
-			{
-				$failedFiles += "$($file.FullName): $($_.Exception.Message)"
-				Write-RenamerLog "Failed to rename file: $($file.FullName)" ([ConsoleColor]::Red)
-			}
-		}
-		Write-Progress -Activity 'Renaming files' -Completed
-		if ($failedFiles.Count -eq 0)
-		{
-			Update-RenamerStatus -Operation 'RenameFiles' -Status 'Success' -Details 'Successfully renamed files'
-			return $true
-		}
-		Update-RenamerStatus -Operation 'RenameFiles' -Status 'Partial Success' -Details "Failed to rename $($failedFiles.Count) files.`n$($failedFiles -join ', ')"
-		return $false
-	}
-	catch
-	{
-		Update-RenamerStatus -Operation 'RenameFiles' -Status 'Failed' -Details "Error: $($_.Exception.Message)`nSolution: Check file permissions and make sure files are not locked."
-		return $false
-	}
-}
-
-function Get-LatestReleaseFile
-{
-	param([string]$ReleaseUrl, [string]$TargetPath)
-	try
-	{
-		if (-not $ReleaseUrl)
-		{
-			Update-RenamerStatus -Operation 'DownloadLatestRelease' -Status 'Skipped' -Details 'No release URL provided'
-			return $true
-		}
-		Write-RenamerLog "Downloading latest release from $ReleaseUrl..." ([ConsoleColor]::Yellow)
-		if (-not (Test-Path $TargetPath)) { throw "Target path does not exist: $TargetPath" }
-		$originalFileName = Split-Path -Leaf $ReleaseUrl
-		$newFileName = Apply-Replacements $originalFileName
-		$tempFilePath = Join-Path $env:TEMP $originalFileName
-		$finalFilePath = Join-Path $TargetPath $newFileName
-		Invoke-WebRequest -Uri $ReleaseUrl -OutFile $tempFilePath -UseBasicParsing
-		if (-not (Test-Path $tempFilePath)) { throw "Failed to download file: $ReleaseUrl" }
-		if (Test-IsBinaryFile $tempFilePath)
-		{
-			Move-Item -Path $tempFilePath -Destination $finalFilePath -Force
-		}
-		else
-		{
-			$content = Apply-Replacements (Get-Content -Path $tempFilePath -Raw)
-			Set-Content -Path $finalFilePath -Value $content -Force
-			Remove-Item -Path $tempFilePath -Force
-		}
-		Write-RenamerLog "Latest release saved as: $finalFilePath" ([ConsoleColor]::Green)
-		Update-RenamerStatus -Operation 'DownloadLatestRelease' -Status 'Success' -Details "Release file saved to $finalFilePath"
-		return $true
-	}
-	catch
-	{
-		Update-RenamerStatus -Operation 'DownloadLatestRelease' -Status 'Failed' -Details "Error: $($_.Exception.Message)`nSolution: Check internet connectivity and if the release URL is valid."
-		return $false
-	}
-}
-
-function Invoke-Renamer
-{
-	param(
-		[string]$RepoUrl,
-		[string]$TargetPath,
-		[string]$LocalPath,
-		[string]$LatestReleaseUrl,
-		[array]$ReplacementPairs = @(),
-		[switch]$SkipReleaseDownload
-	)
-
-	$script:RenamerReplacementPairs = @($ReplacementPairs | Where-Object { $_ -and $_[0] })
-
-	$global:RenamerStatusTracker = @{
-		Cloning = 'Not Started'
-		ReplaceContents = 'Not Started'
-		RenameFiles = 'Not Started'
-		RenameDirectories = 'Not Started'
-		DownloadLatestRelease = 'Not Started'
-		FailedOperations = @()
-		SuccessfulOperations = @()
-	}
-
-	$workingPath = $null
-	if ($LocalPath)
-	{
-		$workingPath = [System.IO.Path]::GetFullPath($LocalPath)
-		if (-not (Test-Path -LiteralPath $workingPath -PathType Container))
-		{
-			Update-RenamerStatus -Operation 'Cloning' -Status 'Failed' -Details "Local path does not exist: $workingPath"
-			Show-RenamerSummary
-			return
-		}
-		Update-RenamerStatus -Operation 'Cloning' -Status 'Skipped' -Details "Using local folder: $workingPath"
-	}
-	else
-	{
-		if (-not $RepoUrl)
-		{
-			Update-RenamerStatus -Operation 'Cloning' -Status 'Failed' -Details 'Repository URL is required.'
-			Show-RenamerSummary
-			return
-		}
-		if (-not $TargetPath)
-		{
-			Update-RenamerStatus -Operation 'Cloning' -Status 'Failed' -Details 'Target path is required.'
-			Show-RenamerSummary
-			return
-		}
-		$workingPath = [System.IO.Path]::GetFullPath($TargetPath)
-		if (-not (Clone-Repository -RepoUrl $RepoUrl -TargetPath $workingPath))
-		{
-			Show-RenamerSummary
-			return
-		}
-	}
-
-	Replace-FileContents -TargetPath $workingPath | Out-Null
-	Rename-Files -TargetPath $workingPath | Out-Null
-	Rename-Directories -TargetPath $workingPath | Out-Null
-	if (-not $SkipReleaseDownload)
-	{
-		Get-LatestReleaseFile -ReleaseUrl $LatestReleaseUrl -TargetPath $workingPath | Out-Null
-	}
-	else
-	{
-		Update-RenamerStatus -Operation 'DownloadLatestRelease' -Status 'Skipped' -Details 'Release download skipped'
-	}
-	Show-RenamerSummary
-}
-
-function Show-FolderDialog
-{
-	param([string]$Description = 'Select a folder', [string]$InitialPath = '')
-	Add-Type -AssemblyName System.Windows.Forms
-	$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-	$dialog.Description = $Description
-	if ($InitialPath -and (Test-Path $InitialPath)) { $dialog.SelectedPath = $InitialPath }
-	if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { return $dialog.SelectedPath }
-	return $null
-}
-
-function Get-RenamerHistoryPath
-{
-	if (-not (Test-Path $RenamerHistoryPath)) {
-		New-Item -Path $RenamerHistoryPath -ItemType Directory -Force | Out-Null
-	}
-	$RenamerHistoryPath
-}
-
-function Get-LatestRenamerHistorySession
-{
-	Get-ChildItem -Path (Get-RenamerHistoryPath) -Directory -ErrorAction SilentlyContinue |
-		Where-Object { Test-Path (Join-Path $_.FullName 'session.json') } |
-		Sort-Object LastWriteTime -Descending |
-		Select-Object -First 1
-}
-
-function Save-RenamerSession
-{
-	param(
-		[string]$WorkingPath,
-		[string]$RepoUrl,
-		[string]$TargetPath,
-		[bool]$IsLocalMode,
-		[string]$LatestReleaseUrl,
-		[bool]$SkipReleaseDownload,
-		[array]$ReplacementPairs
-	)
-	if (-not $WorkingPath -or -not (Test-Path -LiteralPath $WorkingPath -PathType Container)) { return $null }
-
-	$sessionDir = Join-Path (Get-RenamerHistoryPath) (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')
-	$renamerContentsDir = Join-Path $sessionDir 'renamer_contents'
-	New-Item -Path $renamerContentsDir -ItemType Directory -Force | Out-Null
-	& robocopy $WorkingPath $renamerContentsDir /E /COPY:DAT /NFL /NDL /NJH /NJS /nc /ns /np 2>$null | Out-Null
-	if ($LASTEXITCODE -gt 7) { Remove-Item -Path $sessionDir -Recurse -Force -ErrorAction SilentlyContinue; return $null }
-
-	@{
-		LastModified = (Get-Date).ToString('dd-MM-yyyy HH:mm')
-		RenamerWorkDir = $sessionDir
-		RenamerContentsDir = $renamerContentsDir
-		RepoUrl = $RepoUrl
-		TargetPath = $TargetPath
-		IsLocalMode = $IsLocalMode
-		LatestReleaseUrl = $LatestReleaseUrl
-		SkipReleaseDownload = $SkipReleaseDownload
-		ReplacementPairs = @($ReplacementPairs)
-	} | ConvertTo-Json -Depth 6 | Set-Content -Path (Join-Path $sessionDir 'session.json') -Encoding UTF8
-
-	$sessionDir
-}
-
-function Get-RenamerRunspaceScript
-{
-	(
-		@(
-			'Apply-Replacements', 'Write-RenamerLog', 'Update-RenamerStatus', 'Show-RenamerSummary', 'Test-IsBinaryFile',
-			'Get-FoldersByDepth', 'Clone-Repository', 'Replace-FileContents', 'Rename-Files',
-			'Rename-Directories', 'Get-LatestReleaseFile', 'Invoke-Renamer'
-		) | ForEach-Object {
-			$cmd = Get-Command $_ -CommandType Function
-			"function $($cmd.Name) {`n$($cmd.ScriptBlock.ToString())`n}"
-		}
-	) -join "`n"
-}
-
-function Show-RenamerWindow
-{
-	Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
-
-	[xml]$xaml = @'
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Renamer"
-        Width="1400" Height="1150" MinWidth="1100" MinHeight="850"
-        WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
-        ResizeMode="CanResize" WindowStyle="None"
-        Background="Transparent" AllowsTransparency="True">
-    <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="0" CornerRadius="10" ResizeBorderThickness="8"
-                      GlassFrameThickness="0"/>
-    </WindowChrome.WindowChrome>
-    <Window.Resources>
-        <Style x:Key="ScrollThumbs" TargetType="{x:Type Thumb}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Grid>
-                            <Rectangle Fill="Transparent"/>
-                            <Border x:Name="ThumbBorder" CornerRadius="5"
-                                    Background="{TemplateBinding Background}"/>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Tag" Value="Horizontal">
-                                <Setter TargetName="ThumbBorder" Property="Height" Value="7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="{x:Type ScrollBar}">
-            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
-            <Setter Property="Foreground" Value="{DynamicResource ScrollBarBackgroundColor}"/>
-            <Setter Property="Background" Value="{DynamicResource MainBackgroundColor}"/>
-            <Setter Property="Width" Value="6"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ScrollBar}">
-                        <Grid x:Name="GridRoot" Width="7" Background="{TemplateBinding Background}">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True" Focusable="False">
-                                <Track.Thumb>
-                                    <Thumb x:Name="Thumb" Background="{TemplateBinding Foreground}"
-                                           Style="{DynamicResource ScrollThumbs}"/>
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
-                                </Track.IncreaseRepeatButton>
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
-                                </Track.DecreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger SourceName="Thumb" Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Thumb" Property="Background" Value="{DynamicResource ScrollBarHoverColor}"/>
-                            </Trigger>
-                            <Trigger SourceName="Thumb" Property="IsDragging" Value="True">
-                                <Setter TargetName="Thumb" Property="Background" Value="{DynamicResource ScrollBarDraggingColor}"/>
-                            </Trigger>
-                            <Trigger Property="Orientation" Value="Horizontal">
-                                <Setter TargetName="GridRoot" Property="LayoutTransform">
-                                    <Setter.Value><RotateTransform Angle="-90"/></Setter.Value>
-                                </Setter>
-                                <Setter Property="Width" Value="Auto"/>
-                                <Setter Property="Height" Value="8"/>
-                                <Setter TargetName="Thumb" Property="Tag" Value="Horizontal"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="TitleBarButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="{DynamicResource MainForegroundColor}"/>
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                CornerRadius="4" Padding="0">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonBackgroundMouseoverColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonBackgroundSelectedColor}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="RunButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="120"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Background" Value="{DynamicResource ToggleButtonOnColor}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ToggleButtonOnColor}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RunButtonHoverColor}"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource RunButtonHoverColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RunButtonPressedColor}"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource RunButtonPressedColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="Background" Value="{DynamicResource ComboBoxBackgroundColor}"/>
-            <Setter Property="Foreground" Value="{DynamicResource MainForegroundColor}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-            <Setter Property="CaretBrush" Value="{DynamicResource MainForegroundColor}"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundColor}"/>
-            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundColor}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonBackgroundMouseoverColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ButtonBackgroundSelectedColor}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{DynamicResource MainForegroundColor}"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource MainForegroundColor}"/>
-        </Style>
-        <Style x:Key="SectionCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource SectionBackgroundColor}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="5"/>
-            <Setter Property="Padding" Value="14"/>
-            <Setter Property="Margin" Value="0,0,0,16"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#000000" Opacity="0.18" BlurRadius="10" ShadowDepth="2" Direction="270"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource LabelboxForegroundColor}"/>
-            <Setter Property="Margin" Value="0,0,0,12"/>
-        </Style>
-        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="{DynamicResource MainForegroundColor}"/>
-            <Setter Property="Opacity" Value="0.85"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
-        </Style>
-    </Window.Resources>
-    <Border CornerRadius="10" BorderThickness="1" ClipToBounds="True"
-            Background="{DynamicResource MainBackgroundColor}"
-            BorderBrush="{DynamicResource BorderColor}">
-        <Grid ClipToBounds="True">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="44"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <Border Grid.Row="0" x:Name="TitleBar"
-                    Background="{DynamicResource MainBackgroundColor}"
-                    CornerRadius="10,10,0,0" Padding="12,8,10,4">
-                <Grid>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
-                        <StackPanel x:Name="NavLogoPanel" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Renamer" VerticalAlignment="Center"
-                                   FontSize="14" FontWeight="Bold" Foreground="{DynamicResource MainForegroundColor}"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button x:Name="ThemeButton" Style="{StaticResource TitleBarButtonStyle}"
-                                FontSize="11" ToolTip="Toggle theme" Content="&#xE793;"/>
-                        <Button x:Name="SettingsButton" Style="{StaticResource TitleBarButtonStyle}"
-                                FontSize="11" ToolTip="Settings" Content="&#xE713;"/>
-                        <Popup x:Name="SettingsPopup" IsOpen="False" StaysOpen="False"
-                               PlacementTarget="{Binding ElementName=SettingsButton}" Placement="Bottom"
-                               VerticalOffset="4">
-                            <Border Background="{DynamicResource MainBackgroundColor}"
-                                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
-                                <StackPanel MinWidth="160">
-                                    <MenuItem x:Name="ResetMenuItem" Header="Reset"
-                                              Foreground="{DynamicResource MainForegroundColor}"
-                                              Background="{DynamicResource MainBackgroundColor}"/>
-                                    <MenuItem x:Name="AboutMenuItem" Header="About"
-                                              Foreground="{DynamicResource MainForegroundColor}"
-                                              Background="{DynamicResource MainBackgroundColor}"/>
-                                    <MenuItem x:Name="GitHubMenuItem" Header="GitHub"
-                                              Foreground="{DynamicResource MainForegroundColor}"
-                                              Background="{DynamicResource MainBackgroundColor}"/>
-                                </StackPanel>
-                            </Border>
-                        </Popup>
-                        <Button x:Name="CloseButton" Style="{StaticResource TitleBarButtonStyle}"
-                                Margin="4,0,0,0" FontSize="10" Content="&#xE8BB;"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <ScrollViewer x:Name="MainScroll" Grid.Row="1" Margin="12,0,12,8"
-                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="4,0,4,4">
-
-                    <Border x:Name="RepositorySection" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Repository" Style="{StaticResource SectionHeaderStyle}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                <RadioButton x:Name="CloneRepositoryRadio" Content="Clone repository" IsChecked="True" Margin="0,0,24,0"/>
-                                <RadioButton x:Name="LocalFolderRadio" Content="Use local folder"/>
-                            </StackPanel>
-                            <StackPanel x:Name="RepoPanel" Margin="0,0,0,14">
-                                <TextBlock Text="Repository URL" Style="{StaticResource FieldLabelStyle}"/>
-                                <TextBox x:Name="RepoUrlBox"/>
-                            </StackPanel>
-                            <StackPanel Margin="0,0,0,14">
-                                <TextBlock x:Name="TargetLabel" Text="Target path" Style="{StaticResource FieldLabelStyle}"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="TargetPathBox" Grid.Column="0"/>
-                                    <Button x:Name="BrowseButton" Grid.Column="1" Content="Browse" Margin="8,0,0,0" Width="88"/>
-                                </Grid>
-                            </StackPanel>
-                            <StackPanel Margin="0,0,0,14">
-                                <TextBlock Text="Latest release URL (optional)" Style="{StaticResource FieldLabelStyle}"/>
-                                <TextBox x:Name="LatestReleaseUrlBox"/>
-                            </StackPanel>
-                            <CheckBox x:Name="SkipReleaseDownloadBox" Content="Skip release download"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="ReplacementSection" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Find &amp; Replace" Style="{StaticResource SectionHeaderStyle}"/>
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="32"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Find" FontWeight="SemiBold" Foreground="{DynamicResource MainForegroundColor}"/>
-                                <TextBlock Grid.Column="2" Text="Replace" FontWeight="SemiBold" Foreground="{DynamicResource MainForegroundColor}"/>
-                            </Grid>
-                            <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
-                                    CornerRadius="4" Padding="8" Margin="0,0,0,8"
-                                    Background="{DynamicResource ComboBoxBackgroundColor}">
-                                <StackPanel x:Name="PairsPanel"/>
-                            </Border>
-                            <Button x:Name="AddReplacementPairButton" Content="+ Add pair" Width="110" HorizontalAlignment="Left"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="OutputSection" Style="{StaticResource SectionCardStyle}" Margin="0">
-                        <Grid MinHeight="220">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="Status Log"
-                                       FontSize="14" FontWeight="Bold"
-                                       Foreground="{DynamicResource MainForegroundColor}"
-                                       Margin="0,0,0,4"/>
-                            <Border Grid.Row="1" MinHeight="200"
-                                    Background="{DynamicResource ComboBoxBackgroundColor}"
-                                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="1">
-                                <Grid>
-                                    <TextBlock x:Name="StatusLogPlaceholder"
-                                               Text="Ready."
-                                               TextWrapping="Wrap" TextAlignment="Center"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource MainForegroundColor}"
-                                               Opacity="0.65" Margin="12"/>
-                                    <ScrollViewer x:Name="StatusLogScroll" Visibility="Collapsed"
-                                                  VerticalScrollBarVisibility="Auto"
-                                                  HorizontalScrollBarVisibility="Disabled"
-                                                  VerticalAlignment="Stretch" Padding="6">
-                                        <TextBlock x:Name="StatusLog" TextWrapping="Wrap"
-                                                   HorizontalAlignment="Stretch" VerticalAlignment="Top"
-                                                   TextAlignment="Left"
-                                                   Foreground="{DynamicResource MainForegroundColor}"/>
-                                    </ScrollViewer>
-                                </Grid>
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                </StackPanel>
-            </ScrollViewer>
-
-            <Border Grid.Row="2" BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,1,0,0"
-                    Background="{DynamicResource MainBackgroundColor}" Padding="12,10"
-                    CornerRadius="0,0,10,10">
-                <Button x:Name="RunButton" Style="{StaticResource RunButtonStyle}" Content="Run"
-                        HorizontalAlignment="Right"/>
-            </Border>
-        </Grid>
-    </Border>
-</Window>
+# Ascii
+$Ascii = @'
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⡀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⡰⠦⢤⣀⣀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⡞⢿⣾⣿⣷⣤⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠻⣻⣽⢈⣿⡸⣹⠀⡠
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣮⡻⣿⣸⣿⣳⣌⣷⠃
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣿⣿⣿⣿⣿⡏⠀⡹⣿⣿⡏⢠
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣗⣾⣿⣿⣿⣿⡿⣣⣿⣨⠊⡙⠡⣟
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⣿⣮⣫⣻⣼⠆⣡⣾
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⡆⠀⢨⠾
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣷⢛⣿⣛⡻⠭⠽⠿⣿⣶⣬⡻⠻⣿⣿⣿⣿⣿⣿⡃⣿⣿⣳⢳⢀⡼
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⠟⠛⠀⠀⠀⠀⠀⠈⢿⣿⣷⡀⠀⠀⠈⠈⠻⢿⠇⡻⢿⣿⡄⠁⠀⢨
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣱⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣧⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⠁⡄⠀⠸
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⡡⣄⢀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⣿⣿⣄⣦⣤⣤⣤⣶⣶⣮⣭⣛⠠⠿⣂⣄
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠛⠛⢿⣿⡿⣿⣦⠀⠀⠀⠀⠀⠀⠀⣠⠟⡜⢻⣿⣿⣿⣿⣿⣿⡿⣛⣛⠻⢏⠘⠋⠫
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⢸⣿⣇⢻⣿⠀⠀⢀⣀⣠⣤⡾⣫⣾⣿⣾⣿⣿⣿⣿⣿⢟⣬⠾⢛⣡
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⡀⠀⣸⣿⣿⣦⣿⣿⣞⣫⣭⣭⣥⣬⣷⣿⣿⣿⣿⣿⣿⡿⡘⢈⣵
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠧⢸⠿⠻⢻⣿⣿⣿⣿⣟⢸⣿⣿⣿⣿⣿⣭⠍⠀⠀⠀⣨⣴
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡃⠁⠀⠧⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⣃⠀⠒⣠⣴⣶
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣦⡀⠀⠀⠹⡟⣿⣿⣿⣿⣿⣿⡏⢰⣉⠰⡰⠉⢻
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⣜⡤⠀⡇⢻⣿⣿⣿⣿⣿⣧⡆⠉⡑⠀⢀⣾⡟
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡙⣷⣒⣁⣷⣾⣿⣛⠿⡿⢛⡻⠟⠂⠵⠾
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢙⣿⡿⣿⢯⣽⡁⣿⣿⡄⣿⣿⠘⡀⠀⢀⢸
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢟⢃⣮⢸⣿⠇⠿⣿⡇⢉⡁⠀⣧⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡸⠟⠃⠀⠀⠠⠌⠀⠋⠀⣶⡿⠀⡐⣹
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠁⠾⠟⠳⠒⠃⠚⠀⡟⠏⢿⡺⢾⡻
 '@
-
-	$reader = New-Object System.Xml.XmlNodeReader $xaml
-	$window = [Windows.Markup.XamlReader]::Load($reader)
-
-	$renamerThemes = @{
-		Dark = @{
-			MainBackgroundColor = '#232629'; MainForegroundColor = '#ECEFF4'; BorderColor = '#434C5E'
-			SectionBackgroundColor = '#2E3440'; LabelboxForegroundColor = '#5BDCFF'
-			ComboBoxBackgroundColor = '#1E2124'
-			ButtonBackgroundColor = '#3B4252'; ButtonForegroundColor = '#ECEFF4'
-			ButtonBackgroundMouseoverColor = '#4C566A'; ButtonBackgroundSelectedColor = '#5E81AC'
-			ScrollBarBackgroundColor = '#2E3135'; ScrollBarHoverColor = '#3B4252'; ScrollBarDraggingColor = '#5E81AC'
-			ToggleButtonOnColor = '#4C7FD4'; RunButtonHoverColor = '#3D6FB8'; RunButtonPressedColor = '#2F5F9E'
-		}
-		Light = @{
-			MainBackgroundColor = '#F7F7F7'; MainForegroundColor = '#232629'; BorderColor = '#232629'
-			SectionBackgroundColor = '#FFFFFF'; LabelboxForegroundColor = '#232629'
-			ComboBoxBackgroundColor = '#F7F7F7'
-			ButtonBackgroundColor = '#F5F5F5'; ButtonForegroundColor = '#232629'
-			ButtonBackgroundMouseoverColor = '#C2C2C2'; ButtonBackgroundSelectedColor = '#F0F0F0'
-			ScrollBarBackgroundColor = '#4A4D52'; ScrollBarHoverColor = '#5A5D62'; ScrollBarDraggingColor = '#6A6D72'
-			ToggleButtonOnColor = '#5E81AC'; RunButtonHoverColor = '#4C6F96'; RunButtonPressedColor = '#3D5F86'
-		}
-	}
-
-	function Set-RenamerTheme
-	{
-		param([bool]$Dark)
-		$activeThemePalette = if ($Dark) { $renamerThemes.Dark } else { $renamerThemes.Light }
-		foreach ($key in $activeThemePalette.Keys)
-		{
-			$window.Resources[$key] = [System.Windows.Media.SolidColorBrush]::new(
-				[System.Windows.Media.ColorConverter]::ConvertFromString($activeThemePalette[$key]))
-		}
-		if ($themeButton) { $themeButton.Content = if ($Dark) { [char]0xE793 } else { [char]0xE708 } }
-		if ($renamerLogoPath) { $renamerLogoPath.Fill = $window.Resources['MainForegroundColor'] }
-	}
-
-	$titleBar = $window.FindName('TitleBar')
-	$navLogoPanel = $window.FindName('NavLogoPanel')
-	$themeButton = $window.FindName('ThemeButton')
-	$settingsButton = $window.FindName('SettingsButton')
-	$settingsPopup = $window.FindName('SettingsPopup')
-	$resetMenuItem = $window.FindName('ResetMenuItem')
-	$aboutMenuItem = $window.FindName('AboutMenuItem')
-	$githubMenuItem = $window.FindName('GitHubMenuItem')
-	$closeButton = $window.FindName('CloseButton')
-	$mainScroll = $window.FindName('MainScroll')
-	$outputSection = $window.FindName('OutputSection')
-	$cloneRepositoryRadio = $window.FindName('CloneRepositoryRadio')
-	$localFolderRadio = $window.FindName('LocalFolderRadio')
-	$repoPanel = $window.FindName('RepoPanel')
-	$targetLabel = $window.FindName('TargetLabel')
-	$repoUrlBox = $window.FindName('RepoUrlBox')
-	$targetPathBox = $window.FindName('TargetPathBox')
-	$latestReleaseUrlBox = $window.FindName('LatestReleaseUrlBox')
-	$skipReleaseDownloadBox = $window.FindName('SkipReleaseDownloadBox')
-	$browseButton = $window.FindName('BrowseButton')
-	$replacementPairsPanel = $window.FindName('PairsPanel')
-	$addReplacementPairButton = $window.FindName('AddReplacementPairButton')
-	$statusLog = $window.FindName('StatusLog')
-	$statusLogScroll = $window.FindName('StatusLogScroll')
-	$statusLogPlaceholder = $window.FindName('StatusLogPlaceholder')
-	$runButton = $window.FindName('RunButton')
-	$repositorySection = $window.FindName('RepositorySection')
-	$replacementSection = $window.FindName('ReplacementSection')
-	$renamerSync = @{
-		RenamerWorkDir = $null
-		RenamerContentsDir = $null
-		RenamerModifying = $false
-		RepositorySection = $repositorySection
-		ReplacementSection = $replacementSection
-		OutputSection = $outputSection
-	}
-
-	$renamerStatusLogState = @{ HasContent = $false }
-
-	$renamerReplacementPairRows = [System.Collections.Generic.List[object]]::new()
-	$renamerThemeState = @{ IsDark = $true }
-	$renamerLogoPath = $null
-
-	Set-RenamerTheme -Dark $renamerThemeState.IsDark
-	$logoViewbox = New-RenamerLogo -Type logo -Size 25 -Fill $window.Resources['MainForegroundColor']
-	$renamerLogoPath = $logoViewbox.Tag
-	[void]$navLogoPanel.Children.Add($logoViewbox)
-
-	function Add-RenamerStatusLogLines
-	{
-		param([string[]]$Lines)
-		$pendingLines = @($Lines | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-		if ($pendingLines.Count -eq 0) { return }
-		if ($statusLogPlaceholder.Visibility -eq 'Visible') {
-			$statusLogPlaceholder.Visibility = 'Collapsed'
-			$statusLogScroll.Visibility = 'Visible'
-		}
-		$renamerStatusLogState.HasContent = $true
-		$block = $pendingLines -join "`n"
-		if ([string]::IsNullOrEmpty($statusLog.Text)) { $statusLog.Text = $block }
-		else { $statusLog.Text += "`n$block" }
-		$statusLogScroll.ScrollToVerticalOffset($statusLogScroll.ExtentHeight)
-	}
-
-	function Clear-RenamerStatusLog
-	{
-		$renamerStatusLogState.HasContent = $false
-		$statusLog.Text = ''
-		$statusLogScroll.Visibility = 'Collapsed'
-		$statusLogScroll.ScrollToVerticalOffset(0)
-		$statusLogPlaceholder.Visibility = 'Visible'
-	}
-
-	function Write-RenamerStatusLog
-	{
-		param([string]$Message)
-		$ts = (Get-Date).ToString('HH:mm:ss')
-		$lines = @($Message -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { "[$ts] $_" })
-		if ($lines.Count -eq 0) { return }
-		$batch = $lines
-		$statusLog.Dispatcher.BeginInvoke([action]{ Add-RenamerStatusLogLines $batch }) | Out-Null
-	}
-
-	function Set-RenamerOutputInView
-	{
-		$outputSection.BringIntoView()
-		$mainScroll.ScrollToEnd()
-	}
-
-	function Add-RenamerReplacementPairRow
-	{
-		$rowGrid = New-Object System.Windows.Controls.Grid
-		$rowGrid.Margin = [System.Windows.Thickness]::new(0, 0, 0, 4)
-		$rowGrid.HorizontalAlignment = 'Stretch'
-		foreach ($columnWidth in '1 Star', 'Auto', '1 Star')
-		{
-			$col = New-Object System.Windows.Controls.ColumnDefinition
-			if ($columnWidth -like '*Star*') { $col.Width = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Star) }
-			else { $col.Width = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Auto) }
-			[void]$rowGrid.ColumnDefinitions.Add($col)
-		}
-		$findTextBox = New-Object System.Windows.Controls.TextBox
-		$findTextBox.Height = 28; $findTextBox.HorizontalAlignment = 'Stretch'
-		$findTextBox.Padding = [System.Windows.Thickness]::new(8, 0, 8, 0)
-		$findTextBox.VerticalContentAlignment = 'Center'
-		[Windows.Controls.Grid]::SetColumn($findTextBox, 0)
-		$arrow = New-Object System.Windows.Controls.TextBlock
-		$arrow.Text = [char]0x2192; $arrow.VerticalAlignment = 'Center'; $arrow.HorizontalAlignment = 'Center'
-		$arrow.Margin = [System.Windows.Thickness]::new(8, 0, 8, 0)
-		$arrow.SetResourceReference([Windows.Controls.TextBlock]::ForegroundProperty, 'MainForegroundColor')
-		[Windows.Controls.Grid]::SetColumn($arrow, 1)
-		$replaceTextBox = New-Object System.Windows.Controls.TextBox
-		$replaceTextBox.Height = 28; $replaceTextBox.HorizontalAlignment = 'Stretch'
-		$replaceTextBox.Padding = [System.Windows.Thickness]::new(8, 0, 8, 0)
-		$replaceTextBox.VerticalContentAlignment = 'Center'
-		[Windows.Controls.Grid]::SetColumn($replaceTextBox, 2)
-		[void]$rowGrid.Children.Add($findTextBox)
-		[void]$rowGrid.Children.Add($arrow)
-		[void]$rowGrid.Children.Add($replaceTextBox)
-		[void]$replacementPairsPanel.Children.Add($rowGrid)
-		[void]$renamerReplacementPairRows.Add([PSCustomObject]@{ RowGrid = $rowGrid; FindTextBox = $findTextBox; ReplaceTextBox = $replaceTextBox })
-	}
-
-	function Set-RenamerReplacementPairs
-	{
-		param([array]$Pairs)
-		$pairs = @($Pairs | Where-Object { $_ -and $_[0] })
-		while ($renamerReplacementPairRows.Count -lt [Math]::Max(10, $pairs.Count)) { Add-RenamerReplacementPairRow }
-		for ($i = 0; $i -lt $renamerReplacementPairRows.Count; $i++)
-		{
-			if ($i -lt $pairs.Count)
-			{
-				$renamerReplacementPairRows[$i].FindTextBox.Text = [string]$pairs[$i][0]
-				$renamerReplacementPairRows[$i].ReplaceTextBox.Text = [string]$pairs[$i][1]
-			}
-			else
-			{
-				$renamerReplacementPairRows[$i].FindTextBox.Text = ''
-				$renamerReplacementPairRows[$i].ReplaceTextBox.Text = ''
-			}
-		}
-	}
-
-	function Invoke-RenamerCheckExistingWork
-	{
-		if ($renamerSync['RenamerContentsDir'] -and (Test-Path $renamerSync['RenamerContentsDir'])) { return }
-		if ($renamerSync['RenamerModifying']) { return }
-
-		$sessionDir = Get-LatestRenamerHistorySession
-		if (-not $sessionDir) { return }
-
-		$session = Get-Content -Path (Join-Path $sessionDir.FullName 'session.json') -Raw | ConvertFrom-Json
-		$renamerContentsDir = if ($session.RenamerContentsDir) { $session.RenamerContentsDir } else { Join-Path $sessionDir.FullName 'renamer_contents' }
-		if (-not (Test-Path -LiteralPath $renamerContentsDir -PathType Container)) { return }
-
-		$renamerSync['RenamerWorkDir'] = if ($session.RenamerWorkDir) { $session.RenamerWorkDir } else { $sessionDir.FullName }
-		$renamerSync['RenamerContentsDir'] = $renamerContentsDir
-
-		if ($session.IsLocalMode) { $localFolderRadio.IsChecked = $true } else { $cloneRepositoryRadio.IsChecked = $true }
-		$repoUrlBox.Text = [string]$session.RepoUrl
-		$targetPathBox.Text = $renamerContentsDir
-		$latestReleaseUrlBox.Text = [string]$session.LatestReleaseUrl
-		$skipReleaseDownloadBox.IsChecked = [bool]$session.SkipReleaseDownload
-		Set-RenamerReplacementPairs @($session.ReplacementPairs)
-
-		$renamerSync['RepositorySection'].Visibility = 'Collapsed'
-		$renamerSync['ReplacementSection'].Visibility = 'Collapsed'
-		$renamerSync['OutputSection'].Visibility = 'Visible'
-
-		$modified = if ($session.LastModified) { $session.LastModified } else { $sessionDir.LastWriteTime.ToString('dd-MM-yyyy HH:mm') }
-		Write-RenamerStatusLog "Existing working directory found: $($renamerSync['RenamerWorkDir'])"
-		Write-RenamerStatusLog "Last modified: $modified"
-		Write-RenamerStatusLog "Click 'Reset' if you want to start over."
-
-		[void][System.Windows.MessageBox]::Show(
-			"A previous Renamer working directory was found:`n`n$($renamerSync['RenamerWorkDir'])`n`n(Last modified: $modified)`n`nThe previous state has been restored so you can continue from where you left off.`n`nClick 'Reset' if you want to start over.",
-			'Renamer', 'OK', 'Information')
-		Set-RenamerOutputInView
-	}
-
-	function Reset-RenamerSession
-	{
-		if ($renamerSync['RenamerWorkDir'] -and (Test-Path $renamerSync['RenamerWorkDir'])) {
-			$confirm = [System.Windows.MessageBox]::Show(
-				"This will clear the restored session and reset the interface.`n`nContinue?",
-				'Reset', 'YesNo', 'Warning')
-			if ($confirm -ne 'Yes') { return }
-		}
-
-		$renamerSync['RenamerWorkDir'] = $null
-		$renamerSync['RenamerContentsDir'] = $null
-		$renamerSync['RepositorySection'].Visibility = 'Visible'
-		$renamerSync['ReplacementSection'].Visibility = 'Visible'
-		$cloneRepositoryRadio.IsChecked = $true
-		$repoUrlBox.Text = ''
-		$targetPathBox.Text = ''
-		$latestReleaseUrlBox.Text = ''
-		$skipReleaseDownloadBox.IsChecked = $false
-		Set-RenamerReplacementPairs @()
-		Clear-RenamerStatusLog
-	}
-
-	1..10 | ForEach-Object { Add-RenamerReplacementPairRow }
-
-	$syncRepositoryModePanel = {
-		if ($localFolderRadio.IsChecked)
-		{
-			$repoPanel.Visibility = 'Collapsed'
-			$targetLabel.Text = 'Local folder path'
-		}
-		else
-		{
-			$repoPanel.Visibility = 'Visible'
-			$targetLabel.Text = 'Target path'
-		}
-	}
-	$cloneRepositoryRadio.Add_Checked($syncRepositoryModePanel)
-	$localFolderRadio.Add_Checked($syncRepositoryModePanel)
-	& $syncRepositoryModePanel
-
-	$titleBar.Add_MouseLeftButtonDown({ if ($_.ChangedButton -eq 'Left') { $window.DragMove() } })
-	$themeButton.Add_Click({
-		$renamerThemeState.IsDark = -not $renamerThemeState.IsDark
-		Set-RenamerTheme -Dark $renamerThemeState.IsDark
-	})
-	$settingsButton.Add_Click({ $settingsPopup.IsOpen = -not $settingsPopup.IsOpen })
-	$resetMenuItem.Add_Click({
-		$settingsPopup.IsOpen = $false
-		Reset-RenamerSession
-	})
-	$aboutMenuItem.Add_Click({
-		$settingsPopup.IsOpen = $false
-		[void][System.Windows.MessageBox]::Show(
-			"Renamer`n`nAuthor: o9`nGitHub: https://github.com/o9ll/renamer",
-			'About', 'OK', 'Information')
-	})
-	$githubMenuItem.Add_Click({
-		$settingsPopup.IsOpen = $false
-		Start-Process 'https://github.com/o9ll/renamer'
-	})
-	$closeButton.Add_Click({ $window.Close() })
-	$addReplacementPairButton.Add_Click({ Add-RenamerReplacementPairRow })
-
-	$browseButton.Add_Click({
-		$selectedFolderPath = Show-FolderDialog -Description 'Select folder' -InitialPath $targetPathBox.Text
-		if ($selectedFolderPath) { $targetPathBox.Text = $selectedFolderPath }
-	})
-
-	$runButton.Add_Click({
-		if (-not $runButton.IsEnabled) { return }
-		$runButton.IsEnabled = $false
-		$renamerSync['RenamerModifying'] = $true
-		Clear-RenamerStatusLog
-		Set-RenamerOutputInView
-
-		$renamerReplacementPairs = @($renamerReplacementPairRows | ForEach-Object {
-			$findText = $_.FindTextBox.Text.Trim()
-			if ($findText) { , @($findText, $_.ReplaceTextBox.Text) }
-		} | Where-Object { $_ })
-
-		if ($renamerReplacementPairs.Count -eq 0)
-		{
-			Write-RenamerStatusLog 'No Find & Replace pairs configured.'
-			$renamerSync['RenamerModifying'] = $false
-			$runButton.IsEnabled = $true
-			return
-		}
-
-		Write-RenamerStatusLog 'Replacement mappings:'
-		foreach ($replacementPair in $renamerReplacementPairs) { Write-RenamerStatusLog "  $($replacementPair[0]) -> $($replacementPair[1])" }
-		Write-RenamerStatusLog 'Starting operations...'
-
-		$latestReleaseUrlText = $latestReleaseUrlBox.Text.Trim()
-		$renamerInvokeParams = if ($localFolderRadio.IsChecked) {
-			@{
-				LocalPath = $targetPathBox.Text.Trim()
-				LatestReleaseUrl = $latestReleaseUrlText
-				ReplacementPairs = @($renamerReplacementPairs | ForEach-Object { ,@([string]$_[0], [string]$_[1]) })
-				SkipReleaseDownload = [bool]$skipReleaseDownloadBox.IsChecked
-			}
-		} else {
-			@{
-				RepoUrl = $repoUrlBox.Text.Trim()
-				TargetPath = $targetPathBox.Text.Trim()
-				LatestReleaseUrl = $latestReleaseUrlText
-				ReplacementPairs = @($renamerReplacementPairs | ForEach-Object { ,@([string]$_[0], [string]$_[1]) })
-				SkipReleaseDownload = [bool]$skipReleaseDownloadBox.IsChecked
-			}
-		}
-
-		$runspace = [Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
-		$runspace.ApartmentState = 'STA'
-		$runspace.ThreadOptions = 'ReuseThread'
-		$runspace.Open()
-		$renamerPowerShell = [Management.Automation.PowerShell]::Create()
-		$renamerPowerShell.Runspace = $runspace
-		[void]$renamerPowerShell.AddScript((Get-RenamerRunspaceScript))
-		[void]$renamerPowerShell.AddScript({
-			param($StatusLogControl, $StatusLogScroll, $StatusLogPlaceholder, $StatusLogState, $UiWindow, $InvokeParams)
-			$ProgressPreference = 'SilentlyContinue'
-			$script:RenamerLogAction = {
-				param([string]$Message, [ConsoleColor]$Color)
-				$ts = (Get-Date).ToString('HH:mm:ss')
-				$lines = @($Message -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { "[$ts] $_" })
-				if ($lines.Count -eq 0) { return }
-				$batch = $lines
-				$UiWindow.Dispatcher.BeginInvoke([action]{
-					try {
-						if ($StatusLogPlaceholder.Visibility -eq 'Visible') {
-							$StatusLogPlaceholder.Visibility = 'Collapsed'
-							$StatusLogScroll.Visibility = 'Visible'
-						}
-						$StatusLogState.HasContent = $true
-						$block = $batch -join "`n"
-						if ([string]::IsNullOrEmpty($StatusLogControl.Text)) { $StatusLogControl.Text = $block }
-						else { $StatusLogControl.Text += "`n$block" }
-						$StatusLogScroll.ScrollToVerticalOffset($StatusLogScroll.ExtentHeight)
-					} catch {}
-				}) | Out-Null
-			}
-			try { Invoke-Renamer @InvokeParams }
-			catch {
-				& $script:RenamerLogAction "Error: $($_.Exception.Message)" ([ConsoleColor]::Red)
-				throw
-			}
-		}).AddArgument($statusLog).AddArgument($statusLogScroll).AddArgument($statusLogPlaceholder).AddArgument($renamerStatusLogState).AddArgument($window).AddArgument($renamerInvokeParams)
-
-		$asyncInvokeHandle = $renamerPowerShell.BeginInvoke()
-		$timer = New-Object System.Windows.Threading.DispatcherTimer
-		$timer.Interval = [TimeSpan]::FromMilliseconds(200)
-		$timer.Add_Tick({
-			if (-not $asyncInvokeHandle.IsCompleted) { return }
-			$timer.Stop()
-			$runSucceeded = $true
-			try {
-				[void]$renamerPowerShell.EndInvoke($asyncInvokeHandle)
-				foreach ($runspaceError in $renamerPowerShell.Streams.Error) {
-					Write-RenamerStatusLog "Error: $($runspaceError.Exception.Message)"
-					$runSucceeded = $false
-				}
-			}
-			catch {
-				$runSucceeded = $false
-				Write-RenamerStatusLog "Error: $($_.Exception.Message)"
-			}
-			if ($runSucceeded)
-			{
-				$workingPath = if ($renamerInvokeParams.LocalPath) { $renamerInvokeParams.LocalPath } else { $renamerInvokeParams.TargetPath }
-				$savedSessionDir = Save-RenamerSession -WorkingPath $workingPath `
-					-RepoUrl ([string]$renamerInvokeParams.RepoUrl) `
-					-TargetPath ([string]$renamerInvokeParams.TargetPath) `
-					-IsLocalMode $renamerInvokeParams.ContainsKey('LocalPath') `
-					-LatestReleaseUrl ([string]$renamerInvokeParams.LatestReleaseUrl) `
-					-SkipReleaseDownload ([bool]$renamerInvokeParams.SkipReleaseDownload) `
-					-ReplacementPairs $renamerInvokeParams.ReplacementPairs
-				if ($savedSessionDir)
-				{
-					$renamerSync['RenamerWorkDir'] = $savedSessionDir
-					$renamerSync['RenamerContentsDir'] = Join-Path $savedSessionDir 'renamer_contents'
-					Write-RenamerStatusLog "Session saved to: $savedSessionDir"
-				}
-			}
-			$renamerSync['RenamerModifying'] = $false
-			$renamerPowerShell.Dispose()
-			$runspace.Close()
-			$runButton.IsEnabled = $true
-			Set-RenamerOutputInView
-		})
-		$timer.Start()
-	})
-
-	Invoke-RenamerCheckExistingWork
-
-	if (-not [System.Windows.Application]::Current) { $null = New-Object System.Windows.Application }
-	[System.Windows.Application]::Current.DispatcherUnhandledException += {
-		param($sender, $e)
-		try { Write-RenamerStatusLog "UI error: $($e.Exception.Message)" } catch {}
-		$e.Handled = $true
-	}
-
-	[void]$window.ShowDialog()
+# Print Ascii
+function Write-Ascii {
+    Write-Host $Ascii
 }
 
-# --- Entry point ---
 
-$isRenamerHeadlessRun = $PSBoundParameters.ContainsKey('RepoUrl') -or $PSBoundParameters.ContainsKey('LocalPath')
-
-if (-not $isRenamerHeadlessRun)
-{
-	Show-RenamerWindow
-	return
+# Size Width
+function Get-PrintableWidth {
+    param([string]$Text)
+    ($Text -replace "\e\[[0-9;]*m", '').Length
 }
 
-Write-RenamerLog '=== Renamer ===' ([ConsoleColor]::Cyan)
-if ($LocalPath) { Write-RenamerLog "Local Path: $LocalPath" ([ConsoleColor]::White) }
-else
-{
-	Write-RenamerLog "Repository URL: $RepoUrl" ([ConsoleColor]::White)
-	Write-RenamerLog "Target Path: $TargetPath" ([ConsoleColor]::White)
+
+# Title
+function Write-FrameTitle {
+    param(
+        [string]$Text,
+        [int]$Width = 72
+    )
+
+    $Width = [Math]::Max(20, $Width)
+    $inner = $Width - 2
+    $textWidth = Get-PrintableWidth $Text
+    $padLeft = [Math]::Floor(($inner - $textWidth) / 2)
+    $padRight = $inner - $padLeft - $textWidth
+
+    if ($padRight -lt 0) { $padRight = 0 }
+    Write-Host ("$Y╭" + ('─' * $inner) + "╮$R")
+    Write-Host ("$Y│$R" + (' ' * $padLeft) + $Text + (' ' * $padRight) + "$Y│$R")
+    Write-Host ("$Y╰" + ('─' * $inner) + "╯$R")
 }
 
-Invoke-Renamer -RepoUrl $RepoUrl -TargetPath $TargetPath -LocalPath $LocalPath `
-	-LatestReleaseUrl $LatestReleaseUrl -SkipReleaseDownload:$SkipReleaseDownload
 
-Stop-Transcript
+# Help Panel Design
+function Write-HelpSection {
+    param(
+        [string]$Name,
+        [array]$Items,
+        [int]$KeyWidth = 4,
+        [int]$DescWidth = 32
+    )
+
+    Write-Host ""
+    Write-Host "$C$Name$R"
+    Write-Host "$Y$('─' * ($KeyWidth + $DescWidth + 6))$R"
+
+    foreach ($item in $Items) {
+        $key  = $item.Key.PadRight($KeyWidth)
+        $desc = $item.Desc.PadRight($DescWidth)
+        $arg  = if ($item.PSObject.Properties.Match('Arg').Count -gt 0 -and $item.Arg) {
+            "  $D$($item.Arg)$R"
+        } else {
+            ""
+        }
+        Write-Host "$G$key$R  $desc$arg"
+    }
+}
+
+
+# Footer
+function Write-ModeFooter {
+    Write-Host ""
+    Write-Host "$Y$('─' * 72)$R"
+    Write-Host "HH - Full Help • HS - Compact Help"
+}
+
+
+# Help Full
+$script:HelpSections = @(
+    @{
+        Name  = 'Main'
+        Items = @(
+            [pscustomobject]@{ Key = 'cu |'; Desc = "$([char]0x1b)[95mOpen Cursor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ed |'; Desc = "$([char]0x1b)[95mOpen Editor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ed |'; Desc = "$([char]0x1b)[95mEDit Profile$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'u1 |'; Desc = "$([char]0x1b)[95mUpdate Profile$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'u2 |'; Desc = "$([char]0x1b)[95mUpdate PowerShell$([char]0x1b)[0m" }
+        )
+    }
+    @{
+        Name  = 'Git'
+        Items = @(
+            [pscustomobject]@{ Key = 'cl |'; Desc = "$([char]0x1b)[95mClone Repository$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gg |'; Desc = "$([char]0x1b)[95mClone Repository$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gd |'; Desc = "$([char]0x1b)[95mAdd Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gc |'; Desc = "$([char]0x1b)[95mCommit Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gp |'; Desc = "$([char]0x1b)[95mPush Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gu |'; Desc = "$([char]0x1b)[95mPull Changes$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gs |'; Desc = "$([char]0x1b)[95mShow Status$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gm |'; Desc = "$([char]0x1b)[95mAdd+Commit$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ga |'; Desc = "$([char]0x1b)[95mAdd+Commit+Push$([char]0x1b)[0m" }
+        )
+    }
+    @{
+        Name  = 'Go'
+        Items = @(
+            [pscustomobject]@{ Key = 'g  |'; Desc = "$([char]0x1b)[95mGo > C Github$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gf |'; Desc = "$([char]0x1b)[95mGo > D GitHub$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'of |'; Desc = "$([char]0x1b)[95mGo > o9 Folder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'tm |'; Desc = "$([char]0x1b)[95mGo > Temp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dc |'; Desc = "$([char]0x1b)[95mGo > Documents$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dt |'; Desc = "$([char]0x1b)[95mGo > Desktop$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dw |'; Desc = "$([char]0x1b)[95mGo > Downloads$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'lo |'; Desc = "$([char]0x1b)[95mGo > Local$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ro |'; Desc = "$([char]0x1b)[95mGo > Roaming$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pf |'; Desc = "$([char]0x1b)[95mGo > ProgramFiles$([char]0x1b)[0m" }
+        )
+    }
+    @{
+        Name  = 'System'
+        Items = @(
+            [pscustomobject]@{ Key = 'df |'; Desc = "$([char]0x1b)[95mShow Volume$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ex |'; Desc = "$([char]0x1b)[95mSet Environment Variables$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sy |'; Desc = "$([char]0x1b)[95mShow System Info$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ut |'; Desc = "$([char]0x1b)[95mShow Time$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pi |'; Desc = "$([char]0x1b)[95mShow IP Address$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'fd |'; Desc = "$([char]0x1b)[95mClear DNS$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pg |'; Desc = "$([char]0x1b)[95mFind Process$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'k9 |'; Desc = "$([char]0x1b)[95mKill Process$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pk |'; Desc = "$([char]0x1b)[95mKill Name Process$([char]0x1b)[0m" }
+        )
+    }
+    @{
+        Name  = 'Files'
+        Items = @(
+            [pscustomobject]@{ Key = 'la |'; Desc = "$([char]0x1b)[95mList Files$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'll |'; Desc = "$([char]0x1b)[95mList Hidden Files$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ff |'; Desc = "$([char]0x1b)[95mFind File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'nf |'; Desc = "$([char]0x1b)[95mNew File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ne |'; Desc = "$([char]0x1b)[95mNew Empty File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'md |'; Desc = "$([char]0x1b)[95mDirectory$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'uz |'; Desc = "$([char]0x1b)[95mUnzip File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'hd |'; Desc = "$([char]0x1b)[95mFirst File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'tl |'; Desc = "$([char]0x1b)[95mLast File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'gr |'; Desc = "$([char]0x1b)[95mRegex Find$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sd |'; Desc = "$([char]0x1b)[95mReplace Text$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'wh |'; Desc = "$([char]0x1b)[95mShow Path$([char]0x1b)[0m" }
+        )
+    }
+    @{
+        Name  = 'Clipboard'
+        Items = @(
+            [pscustomobject]@{ Key = 'cy |'; Desc = "$([char]0x1b)[95mCopy Clipboard$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pt |'; Desc = "$([char]0x1b)[95mPaste Clipboard$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'hb |'; Desc = "$([char]0x1b)[95mUpload > Cloud$([char]0x1b)[0m" }
+        )
+    }
+    @{
+        Name  = 'Scripts'
+        Items = @(
+            [pscustomobject]@{ Key = 'o9 |'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = '9o |'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'pr |'; Desc = "$([char]0x1b)[95mProfile$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct •'; Desc = "$([char]0x1b)[95mMove Cursor Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cs |'; Desc = "$([char]0x1b)[95mInstall Cursor$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vt •'; Desc = "$([char]0x1b)[95mMove VSCode Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vs |'; Desc = "$([char]0x1b)[95mInstall VSCode$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dv |'; Desc = "$([char]0x1b)[95mDownloader$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dd |'; Desc = "$([char]0x1b)[95mRemove Krisp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'th |'; Desc = "$([char]0x1b)[95mInstall Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cc |'; Desc = "$([char]0x1b)[95mClear Cache$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'rr |'; Desc = "$([char]0x1b)[95mRestart Explorer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ss |'; Desc = "$([char]0x1b)[95mSVG Setup$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'sa |'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mCursor Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mVS Code Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's1 •'; Desc = "$([char]0x1b)[95mStereo HUB$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's2 •'; Desc = "$([char]0x1b)[95mStereo Installer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's3 •'; Desc = "$([char]0x1b)[95mStereo Installer BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's4 •'; Desc = "$([char]0x1b)[95mStereo Patcher$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's5 •'; Desc = "$([char]0x1b)[95mStereo Patcher BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's6 •'; Desc = "$([char]0x1b)[95mStereo Finder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's7 •'; Desc = "$([char]0x1b)[95mStereo Finder GUI$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cf •'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 're •'; Desc = "$([char]0x1b)[95mRenamer$([char]0x1b)[0m" }
+            #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
+        )
+    }
+)
+
+# Help Compact
+$script:CompactSections = @(
+    @{
+        Name  = "Use $([char]0x1b)[95mHH$([char]0x1b)[0m/$([char]0x1b)[95mHS$([char]0x1b)[0m"
+        Items = @(
+            [pscustomobject]@{ Key = 'o9 •'; Desc = "$([char]0x1b)[95mUtility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 're •'; Desc = "$([char]0x1b)[95mRenamer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cc •'; Desc = "$([char]0x1b)[95mClean$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dv •'; Desc = "$([char]0x1b)[95mDownload$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dd •'; Desc = "$([char]0x1b)[95mRemove Krisp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'rr •'; Desc = "$([char]0x1b)[95mRestart Explorer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cf •'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct •'; Desc = "$([char]0x1b)[95mMove Cursor Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's1 •'; Desc = "$([char]0x1b)[95mStereo HUB$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's2 •'; Desc = "$([char]0x1b)[95mStereo Installer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's3 •'; Desc = "$([char]0x1b)[95mStereo Installer BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's4 •'; Desc = "$([char]0x1b)[95mStereo Patcher$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's5 •'; Desc = "$([char]0x1b)[95mStereo Patcher BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's6 •'; Desc = "$([char]0x1b)[95mStereo Finder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's7 •'; Desc = "$([char]0x1b)[95mStereo Finder GUI$([char]0x1b)[0m" }
+            #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
+        )
+    }
+)
+
+
+# Help Full
+function hh {
+    #Clear-Host
+    #Write-FrameTitle 'o9' # Uncomment > Title
+    foreach ($section in $script:HelpSections) {
+        Write-HelpSection -Name $section.Name -Items $section.Items
+    }
+    Write-Host "$Y$('─' * 16)$R"
+    #Write-ModeFooter # Uncomment > Footer
+}
+
+
+# Help Compact
+function hs {
+    Clear-Host
+    #Write-Ascii # Uncomment > Ascii
+    #Write-FrameTitle 'o9' # Uncomment > Title
+    foreach ($section in $script:CompactSections) {
+        Write-Host "$C$($section.Name)$R" # Uncomment > Section
+        #Write-Host "$Y$('─' * 16)$R" # Uncomment > Separator
+        Write-Host ""
+        foreach ($item in $section.Items) {
+            $arg = if ($item.PSObject.Properties.Match('Arg').Count -gt 0 -and $item.Arg) {
+                " $D$($item.Arg)$R"
+            } else {
+                ""
+            }
+            $keyColor  = "$([char]27)[1;96m$($item.Key)$([char]27)[0m"
+            $descColor = "$([char]27)[1;92m$($item.Desc)$([char]27)[0m"
+            Write-Host ("{0,-4} {1}{2}" -f $keyColor, $descColor, $arg)
+        }
+    }
+    #Write-Host "$Y$('─' * 16)$R"
+    Write-Host ""
+    #Write-ModeFooter # Uncomment > Footer
+}
+
+
+# View
+#hs
+
+
+# Custom Script
+#if (Test-Path "$PSScriptRoot\custom.ps1") {
+    #. "$PSScriptRoot\custom.ps1"
+#}
+
+
+# Install WinGet CommandNotFound module
+#Install-PSResource -Name Microsoft.WinGet.CommandNotFound
+# load WinGet CommandNotFound module
+Import-Module -Name Microsoft.WinGet.CommandNotFound
+
+
+<#
+function prompt {
+	Write-Host -ForegroundColor DarkRed -NoNewLine "["
+	Write-Host -ForegroundColor Yellow -NoNewLine "$env:USERNAME "
+	Write-Host -ForegroundColor DarkMagenta -NoNewLine "$(Get-Location)"
+
+	$branch = git branch --show-current
+	if ($?) {
+		Write-Host -ForegroundColor DarkGray -NoNewLine " $([char]0xe725) $branch"
+		if (git status --porcelain) {
+			Write-Host -ForegroundColor DarkGray -NoNewLine "*"
+		}
+	}
+	
+	Write-Host -ForegroundColor DarkRed -NoNewLine "]$"
+	
+	return " "
+}
+#>
