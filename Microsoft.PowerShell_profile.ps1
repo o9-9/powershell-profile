@@ -354,7 +354,7 @@ function ne($file) { "" | Out-File $file -Encoding ASCII }
 
 
 # Find File Recursively
-function ff($name) {
+function fi($name) {
     Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output "$($_.FullName)"
     }
@@ -1095,7 +1095,7 @@ function dd {
 
 
 # Install SVG
-function ws {
+function svg {
     Push-Location "C:\Program Files\SVG"
     & regsvr32 win_svg_thumbs.dll
     Pop-Location
@@ -1103,7 +1103,7 @@ function ws {
 
 
 # Install Website Source
-function sa { 
+function ws { 
     $urlSrc = Read-Host 'Enter URL'
     Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
 }
@@ -1132,6 +1132,12 @@ function s7{ python "$StereoFinder\offset_finder_gui.py" }
 # Renamer
 function re {
     & 'C:\Users\o9\Documents\Githubb\renamer\renamer.ps1'
+}
+
+
+# Thorium
+function tb {
+    & 'D:\08-Program\1Thorium\Thorium Shell.lnk'
 }
 
 
@@ -1252,7 +1258,7 @@ function Write-HelpSection {
 function Write-ModeFooter {
     Write-Host ""
     Write-Host "$Y$('─' * 72)$R"
-    Write-Host "HH - Full Help • HS - Compact Help"
+    Write-Host "HH - Full Help • HHH - Compact Help"
 }
 
 
@@ -1316,7 +1322,7 @@ $script:HelpSections = @(
         Items = @(
             [pscustomobject]@{ Key = 'la |'; Desc = "$([char]0x1b)[95mList Files$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'll |'; Desc = "$([char]0x1b)[95mList Hidden Files$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'ff |'; Desc = "$([char]0x1b)[95mFind File$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'fi |'; Desc = "$([char]0x1b)[95mFind File$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'nf |'; Desc = "$([char]0x1b)[95mNew File$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'ne |'; Desc = "$([char]0x1b)[95mNew Empty File$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'md |'; Desc = "$([char]0x1b)[95mDirectory$([char]0x1b)[0m" }
@@ -1342,9 +1348,9 @@ $script:HelpSections = @(
             [pscustomobject]@{ Key = 'o9 |'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = '9o |'; Desc = "$([char]0x1b)[95mRun Utility$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'pr |'; Desc = "$([char]0x1b)[95mProfile$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'ct •'; Desc = "$([char]0x1b)[95mMove Cursor Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mMove Cursor Theme$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'cs |'; Desc = "$([char]0x1b)[95mInstall Cursor$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'vt •'; Desc = "$([char]0x1b)[95mMove VSCode Theme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mMove VSCode Theme$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'vs |'; Desc = "$([char]0x1b)[95mInstall VSCode$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'dv |'; Desc = "$([char]0x1b)[95mDownloader$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'dd |'; Desc = "$([char]0x1b)[95mRemove Krisp$([char]0x1b)[0m" }
@@ -1355,17 +1361,18 @@ $script:HelpSections = @(
             [pscustomobject]@{ Key = 'sa |'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mCursor Theme$([char]0x1b)[0m" }
             [pscustomobject]@{ Key = 'vt |'; Desc = "$([char]0x1b)[95mVS Code Theme$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's1 •'; Desc = "$([char]0x1b)[95mStereo HUB$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's2 •'; Desc = "$([char]0x1b)[95mStereo Installer$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's3 •'; Desc = "$([char]0x1b)[95mStereo Installer BAT$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's4 •'; Desc = "$([char]0x1b)[95mStereo Patcher$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's5 •'; Desc = "$([char]0x1b)[95mStereo Patcher BAT$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's6 •'; Desc = "$([char]0x1b)[95mStereo Finder$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's7 •'; Desc = "$([char]0x1b)[95mStereo Finder GUI$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'cf •'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 're •'; Desc = "$([char]0x1b)[95mRenamer$([char]0x1b)[0m" }
-            #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's1 |'; Desc = "$([char]0x1b)[95mSterHUB$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's2 |'; Desc = "$([char]0x1b)[95mSterInstaller$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's3 |'; Desc = "$([char]0x1b)[95mSterInstaller BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's4 |'; Desc = "$([char]0x1b)[95mSterPatcher$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's5 |'; Desc = "$([char]0x1b)[95mSterPatcher BAT$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's6 |'; Desc = "$([char]0x1b)[95mSterFinder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's7 |'; Desc = "$([char]0x1b)[95mSterFinder GUI$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ws |'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cf |'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 're |'; Desc = "$([char]0x1b)[95mRenamer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'tb |'; Desc = "$([char]0x1b)[95mThorium$([char]0x1b)[0m" }
+            #[pscustomobject]@{ Key = ' |'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
         )
     }
 )
@@ -1375,23 +1382,24 @@ $script:CompactSections = @(
     @{
         Name  = "Use $([char]0x1b)[95mHH$([char]0x1b)[0m/$([char]0x1b)[95mHS$([char]0x1b)[0m"
         Items = @(
-            [pscustomobject]@{ Key = 'o9 •'; Desc = "$([char]0x1b)[95mUtility$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 're •'; Desc = "$([char]0x1b)[95mRenamer$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'cc •'; Desc = "$([char]0x1b)[95mClean$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'dv •'; Desc = "$([char]0x1b)[95mDownload$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'dd •'; Desc = "$([char]0x1b)[95mRemove Krisp$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'rr •'; Desc = "$([char]0x1b)[95mRestart Explorer$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'cf •'; Desc = "$([char]0x1b)[95mCheck Empty Folder$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'ct •'; Desc = "$([char]0x1b)[95mMove Cursor Theme$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 'ws •'; Desc = "$([char]0x1b)[95mWebsite Source$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's1 •'; Desc = "$([char]0x1b)[95mStereo HUB$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's2 •'; Desc = "$([char]0x1b)[95mStereo Installer$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's3 •'; Desc = "$([char]0x1b)[95mStereo Installer BAT$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's4 •'; Desc = "$([char]0x1b)[95mStereo Patcher$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's5 •'; Desc = "$([char]0x1b)[95mStereo Patcher BAT$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's6 •'; Desc = "$([char]0x1b)[95mStereo Finder$([char]0x1b)[0m" }
-            [pscustomobject]@{ Key = 's7 •'; Desc = "$([char]0x1b)[95mStereo Finder GUI$([char]0x1b)[0m" }
-            #[pscustomobject]@{ Key = ' •'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'o9 |'; Desc = "$([char]0x1b)[95mUtility$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 're |'; Desc = "$([char]0x1b)[95mRenamer$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cc |'; Desc = "$([char]0x1b)[95mClean$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dv |'; Desc = "$([char]0x1b)[95mDownload$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'dd |'; Desc = "$([char]0x1b)[95mKrisp$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'rr |'; Desc = "$([char]0x1b)[95mRestart$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'cf |'; Desc = "$([char]0x1b)[95mCheck$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ct |'; Desc = "$([char]0x1b)[95mTheme$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'ws |'; Desc = "$([char]0x1b)[95mWebsite$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's1 |'; Desc = "$([char]0x1b)[95mHUB$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's2 |'; Desc = "$([char]0x1b)[95mInstaller$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's3 |'; Desc = "$([char]0x1b)[95mInstallerB$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's4 |'; Desc = "$([char]0x1b)[95mPatcher$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's5 |'; Desc = "$([char]0x1b)[95mPatcherB$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's6 |'; Desc = "$([char]0x1b)[95mFinder$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 's7 |'; Desc = "$([char]0x1b)[95mFinderGUI$([char]0x1b)[0m" }
+            [pscustomobject]@{ Key = 'tb |'; Desc = "$([char]0x1b)[95mThorium$([char]0x1b)[0m" }
+            #[pscustomobject]@{ Key = ' |'; Desc = "$([char]0x1b)[95m$([char]0x1b)[0m" }
         )
     }
 )
@@ -1410,7 +1418,7 @@ function hh {
 
 
 # Help Compact
-function hs {
+function hhh {
     Clear-Host
     #Write-Ascii # Uncomment > Ascii
     #Write-FrameTitle 'o9' # Uncomment > Title
@@ -1436,7 +1444,7 @@ function hs {
 
 
 # View
-#hs
+hhh
 
 
 # Custom Script
