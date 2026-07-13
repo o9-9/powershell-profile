@@ -49,6 +49,7 @@ if ($debug_Override){
 }
 
 
+<#
 # Define path to file that stores last execution time
 if ($repo_root_Override){
     # If variable $repo_root_Override is defined in profile.ps1 file. then use it instead.
@@ -56,6 +57,7 @@ if ($repo_root_Override){
 } else {
     $repo_root = "https://raw.githubusercontent.com/o9-9"
 }
+#>
 
 
 # Helper function for cross-edition compatibility
@@ -71,6 +73,7 @@ function Get-ProfileDir {
 }
 
 
+<#
 # Define path to file that stores last execution time
 if ($timeFilePath_Override){
     # If variable $timeFilePath_Override is defined in profile.ps1 file. then use it instead.
@@ -79,6 +82,7 @@ if ($timeFilePath_Override){
     $profileDir = Get-ProfileDir
     $timeFilePath = "$profileDir\LastExecutionTime.txt"
 }
+#>
 
 
 # Define update interval in days, set to -1 to always check
@@ -122,12 +126,7 @@ if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) 
 }
 
 
-# Opt-out of telemetry before doing anything, only if PowerShell is run as admin
-if ([bool]([System.Security.Principal.WindowsIdentity]::GetCurrent()).IsSystem) {
-    [System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
-}
-
-
+<#
 # Initial GitHub.com connectivity check
 function Test-GitHubConnection {
     if ($PSVersionTable.PSEdition -eq "Core") {
@@ -141,6 +140,7 @@ function Test-GitHubConnection {
     }
 }
 $global:canConnectToGitHub = Test-GitHubConnection
+#>
 
 
 # Ensure Terminal-Icons module is installed before importing
@@ -152,8 +152,10 @@ $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
     Import-Module "$ChocolateyProfile"
 }
+Import-Module -Name Microsoft.WinGet.CommandNotFound
 
 
+<#
 # Safely read and parse last execution date once to avoid exceptions when file is missing or empty
 $lastExecRaw = if (Test-Path $timeFilePath) { (Get-Content -Path $timeFilePath -Raw).Trim() } else { $null }
 $lastExec = $null
@@ -163,6 +165,7 @@ if (-not [string]::IsNullOrWhiteSpace($lastExecRaw)) {
         $lastExec = $parsed
     }
 }
+#>
 
 
 # Check for Profile Updates
@@ -201,6 +204,7 @@ function Update-Profile {
 Set-Alias -Name u1 -Value Update-Profile
 
 
+<#
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than update interval)
 if (-not $debug -and `
     ($updateInterval -eq -1 -or `
@@ -213,6 +217,7 @@ if (-not $debug -and `
 } elseif ($debug) {
     Write-Warning "Skipping o9 profile update check in debug mode"
 }
+#>
 
 
 # Update PowerShell
@@ -246,6 +251,7 @@ function Update-PowerShell {
 Set-Alias -Name u2 -Value Update-PowerShell
 
 
+<#
 # Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than update interval)
 if (-not $debug -and `
     ($updateInterval -eq -1 -or `
@@ -258,6 +264,8 @@ if (-not $debug -and `
 } elseif ($debug) {
     Write-Warning "Skipping o9 PowerShell update in debug mode"
 }
+#>
+
 
 # Clear
 Set-Alias -Name c -Value clear
@@ -637,54 +645,27 @@ function pf {
 }
 
 
-# Github C
-function g { __zoxide_z github }
-
-
-# Github D
-function gf {
-    $gf = 'D:\10-Github'
-    Set-Location -Path $gf
-}
-
-
-# Show status
+# Git Shortcuts
 function gs { git status }
-
-
-# Add changes
 function gd { git add . }
-
-
-# Add commit
 function gc { param($m) git commit -m "$m" }
-
-
-# Push changes
 function gp { git push }
-
-
-# Pull changes
 function gu { git pull }
-
-
-# Git Add + commit
 function gm {
     git add .
     git commit -m "$args"
 }
-
-
-# Git Add + commit + push
 function ga {
     git add .
     git commit -m "$args"
     git push
 }
-
-# Clone repo
+function g { __zoxide_z github }
+function gf {
+    $gf = 'D:\10-Github'
+    Set-Location -Path $gf
+}
 function gg { git clone "$args" }
-
 
 # Clone repo
 function cl {
@@ -860,72 +841,6 @@ $scriptblock = {
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock $scriptblock
 
 
-# Oh My Posh
-<#
-clean.json
-cloud.json
-cobalt.json
-emodipt.json
-hul.json
-jblab.json
-jonnychipz.json
-kushal.json
-montys.json
-night.json
-shell.json
-sitecorian.json
-smoothie.json
-tea.json
-tokyo.json
-wholespace.json
-diamonds.yaml
-zen.toml
-#>
-oh-my-posh init pwsh --config 'C:\Users\o9\.config\ohmyposh\mocha.omp.yaml' | Invoke-Expression
-
-
-# Zoxide
-if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
-
-    function z {
-        $result = zoxide query -l @args | fzf `
-            --height 40% `
-            --layout reverse `
-            --border `
-            --info inline
-
-        if ($result) {
-            Set-Location $result
-        }
-    }
-} else {
-    Write-Host "zoxide command not found. Attempting to install via winget..."
-
-    try {
-        winget install -e --id ajeetdsouza.zoxide
-
-        Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
-
-        function z {
-            $result = zoxide query -l @args | fzf `
-                --height 40% `
-                --layout reverse `
-                --border `
-                --info inline
-
-            if ($result) {
-                Set-Location $result
-            }
-        }
-
-        Write-Host "✔ zoxide installed and configured"
-    } catch {
-        Write-Error "Failed to install zoxide. Error: $_"
-    }
-}
-
-
 # YT-DLP
 function Get-YouTubeVideo {
     <#
@@ -953,7 +868,7 @@ function Get-YouTubeVideo {
         Write-Warning "No URL Provided"
         return
     }
-    $DownloadPath = "$env:userprofile\Downloads"
+    $DownloadPath = "$env:USERPROFILE\Downloads"
     if (-not (Test-Path -Path $DownloadPath)) {
         New-Item -Path $DownloadPath -ItemType Directory | Out-Null
     }
@@ -1028,7 +943,7 @@ Set-Alias -Name th -Value Install-Theme
 
 # Move Cursor
 function ct {
-    $srcCT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
+    $srcCT = "$env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
     $pointCT = "$env:PROGRAMFILES\Cursor\resources\app\extensions"
     if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile -Command `"Copy-Item -Path '$srcCT' -Destination '$pointCT' -Recurse -Force`""
@@ -1040,7 +955,7 @@ function ct {
 
 # Install VS Code Theme
 function vt {
-    $srcVT = "$Env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
+    $srcVT = "$env:USERPROFILE\Documents\Github\o9-theme\o9-theme"
     $pointVT = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\034f571df5\resources\app\extensions"
     if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile -Command `"Copy-Item -Path '$srcVT' -Destination '$pointVT' -Recurse -Force`""
@@ -1103,9 +1018,12 @@ function svg {
 
 
 # Install Website Source
-function ws { 
+function ws {
+    if (-not (Get-Command wget.exe -ErrorAction SilentlyContinue)) {
+        winget install -e --id JernejSimoncic.Wget
+    }
     $urlSrc = Read-Host 'Enter URL'
-    Start-Process wget --mirror --convert-links --adjust-extension --page-requisites --no-parent $urlSrc
+    & wget --mirror --convert-links --adjust-extension --page-requisites --no-parent -- $urlSrc
 }
 
 
@@ -1141,15 +1059,6 @@ function tb {
 }
 
 
-# Color
-$C = $PSStyle.Foreground.Cyan
-$Y = $PSStyle.Foreground.Yellow
-$G = $PSStyle.Foreground.Green
-$M = $PSStyle.Foreground.Magenta
-$D = $PSStyle.Foreground.DarkCyan
-$R = $PSStyle.Reset
-
-
 # Check Empty Folder
 function cf {
     $Path = Read-Host 'Enter folder path'
@@ -1165,6 +1074,245 @@ function cf {
         } |
         Select-Object -ExpandProperty FullName
 }
+
+
+# Convert image to Base64
+function co {
+    Add-Type -AssemblyName System.Windows.Forms
+    $dialog = [System.Windows.Forms.OpenFileDialog]@{
+        Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.webp;*.tif;*.tiff;*.ico;*.heic;*.svg"
+    }
+    if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+    $out = Join-Path (Get-Location) "$([IO.Path]::GetFileNameWithoutExtension($dialog.FileName)).b64"
+    [Convert]::ToBase64String([IO.File]::ReadAllBytes($dialog.FileName)) | Set-Content $out
+    $out
+}
+
+
+# Run Ultimate
+function ul {
+    if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")) {
+        Start-Process PowerShell.exe -ArgumentList '-NoExit','-Command',"& { $(Get-Command Ultimate).Definition; Ultimate }" -Verb RunAs
+        return
+    }
+
+    $progresspreference = 'silentlycontinue'
+    iwr "https://github.com/o9ll/Ultimate/archive/refs/heads/main.zip" -OutFile "$env:SystemRoot\Temp\Ultimate.zip"
+    Expand-Archive -Path "$env:SystemRoot\Temp\Ultimate.zip" -DestinationPath "$env:SystemRoot\Temp\Ultimate" -Force
+    Rename-Item -Path "$env:SystemRoot\Temp\Ultimate\Ultimate-main" -NewName "Ultimate" -Force
+    $Desktop = (New-Object -ComObject Shell.Application).Namespace('shell:Desktop').Self.Path
+    Move-Item -Path "$env:SystemRoot\Temp\Ultimate\Ultimate" -Destination "$Desktop" -Force
+    cmd /c "reg add `"HKCR\Applications\powershell.exe\shell\open\command`" /ve /t REG_SZ /d `"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -ExecutionPolicy unrestricted -File \`"`"%1\`"`"`" /f >nul 2>&1"
+    cmd /c "reg add `"HKCU\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell`" /v `"ExecutionPolicy`" /t REG_SZ /d `"Unrestricted`" /f >nul 2>&1"
+    cmd /c "reg add `"HKLM\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell`" /v `"ExecutionPolicy`" /t REG_SZ /d `"Unrestricted`" /f >nul 2>&1"
+    Get-ChildItem -Path "$Desktop\Ultimate" -Recurse | Unblock-File
+    Start-Process "$Desktop\Ultimate"
+}
+
+
+# Help Function
+function HH {
+    $title    = $PSStyle.Foreground.BrightMagenta
+    $section  = $PSStyle.Foreground.BrightBlue
+    $command  = $PSStyle.Foreground.BrightGreen
+    $desc     = $PSStyle.Foreground.BrightWhite
+    $accent   = $PSStyle.Foreground.BrightYellow
+    $dim      = $PSStyle.Foreground.BrightBlack
+    $reset    = $PSStyle.Reset
+
+    Write-Host @"
+${title}󰘳 PowerShell Profile Help${reset}
+${dim}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}
+
+${section}󰋜 Main${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}cu${reset}  ${accent}→${reset} ${desc}Open Cursor${reset}
+  ${command}ed${reset}  ${accent}→${reset} ${desc}Open Editor${reset}
+  ${command}ed${reset}  ${accent}→${reset} ${desc}EDit Profile${reset}
+  ${command}u1${reset}  ${accent}→${reset} ${desc}Update Profile${reset}
+  ${command}u2${reset}  ${accent}→${reset} ${desc}Update PowerShell${reset}
+
+${section}󰊢 Git${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}cl${reset}  ${accent}→${reset} ${desc}Clone Repository${reset}
+  ${command}gg${reset}  ${accent}→${reset} ${desc}Clone Repository${reset}
+  ${command}gd${reset}  ${accent}→${reset} ${desc}Add Changes${reset}
+  ${command}gc${reset}  ${accent}→${reset} ${desc}Commit Changes${reset}
+  ${command}gp${reset}  ${accent}→${reset} ${desc}Push Changes${reset}
+  ${command}gu${reset}  ${accent}→${reset} ${desc}Pull Changes${reset}
+  ${command}gs${reset}  ${accent}→${reset} ${desc}Show Status${reset}
+  ${command}gm${reset}  ${accent}→${reset} ${desc}Add+Commit${reset}
+  ${command}ga${reset}  ${accent}→${reset} ${desc}Add+Commit+Push${reset}
+
+${section}󰜴 Go${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}g ${reset}  ${accent}→${reset} ${desc}Go > C Github${reset}
+  ${command}gf${reset}  ${accent}→${reset} ${desc}Go > D GitHub${reset}
+  ${command}of${reset}  ${accent}→${reset} ${desc}Go > o9 Folder${reset}
+  ${command}tm${reset}  ${accent}→${reset} ${desc}Go > Temp${reset}
+  ${command}dc${reset}  ${accent}→${reset} ${desc}Go > Documents${reset}
+  ${command}dt${reset}  ${accent}→${reset} ${desc}Go > Desktop${reset}
+  ${command}dw${reset}  ${accent}→${reset} ${desc}Go > Downloads${reset}
+  ${command}lo${reset}  ${accent}→${reset} ${desc}Go > Local${reset}
+  ${command}ro${reset}  ${accent}→${reset} ${desc}Go > Roaming${reset}
+  ${command}pf${reset}  ${accent}→${reset} ${desc}Go > ProgramFiles${reset}
+
+${section}󰘴 System${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}df${reset}  ${accent}→${reset} ${desc}Show Volume${reset}
+  ${command}ex${reset}  ${accent}→${reset} ${desc}Set Environment Variables${reset}
+  ${command}sy${reset}  ${accent}→${reset} ${desc}Show System Info${reset}
+  ${command}ut${reset}  ${accent}→${reset} ${desc}Show Time${reset}
+  ${command}pi${reset}  ${accent}→${reset} ${desc}Show IP Address${reset}
+  ${command}fd${reset}  ${accent}→${reset} ${desc}Clear DNS${reset}
+  ${command}pg${reset}  ${accent}→${reset} ${desc}Find Process${reset}
+  ${command}k9${reset}  ${accent}→${reset} ${desc}Kill Process${reset}
+  ${command}pk${reset}  ${accent}→${reset} ${desc}Kill Name Process${reset}
+
+${section}󰉋 Files${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}la${reset}  ${accent}→${reset} ${desc}List Files${reset}
+  ${command}ll${reset}  ${accent}→${reset} ${desc}List Hidden Files${reset}
+  ${command}fi${reset}  ${accent}→${reset} ${desc}Find File${reset}
+  ${command}nf${reset}  ${accent}→${reset} ${desc}New File${reset}
+  ${command}ne${reset}  ${accent}→${reset} ${desc}New Empty File${reset}
+  ${command}md${reset}  ${accent}→${reset} ${desc}Directory${reset}
+  ${command}uz${reset}  ${accent}→${reset} ${desc}Unzip File${reset}
+  ${command}hd${reset}  ${accent}→${reset} ${desc}First File${reset}
+  ${command}tl${reset}  ${accent}→${reset} ${desc}Last File${reset}
+  ${command}gr${reset}  ${accent}→${reset} ${desc}Regex Find${reset}
+  ${command}sd${reset}  ${accent}→${reset} ${desc}Replace Text${reset}
+  ${command}wh${reset}  ${accent}→${reset} ${desc}Show Path${reset}
+
+${section}󰅍 Clipboard${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}cy${reset}  ${accent}→${reset} ${desc}Copy Clipboard${reset}
+  ${command}pt${reset}  ${accent}→${reset} ${desc}Paste Clipboard${reset}
+  ${command}hb${reset}  ${accent}→${reset} ${desc}Upload > Cloud${reset}
+
+${section}󰆧 Scripts${reset}
+${dim}────────────────────────────────────────────────────${reset}
+  ${command}o9${reset}  ${accent}→${reset} ${desc}Run Utility${reset}
+  ${command}9o${reset}  ${accent}→${reset} ${desc}Run Utility${reset}
+  ${command}pr${reset}  ${accent}→${reset} ${desc}Profile${reset}
+  ${command}ct${reset}  ${accent}→${reset} ${desc}Move Cursor Theme${reset}
+  ${command}cs${reset}  ${accent}→${reset} ${desc}Install Cursor${reset}
+  ${command}vt${reset}  ${accent}→${reset} ${desc}Move VSCode Theme${reset}
+  ${command}vs${reset}  ${accent}→${reset} ${desc}Install VSCode${reset}
+  ${command}dv${reset}  ${accent}→${reset} ${desc}Downloader${reset}
+  ${command}dd${reset}  ${accent}→${reset} ${desc}Remove Krisp${reset}
+  ${command}th${reset}  ${accent}→${reset} ${desc}Install Theme${reset}
+  ${command}cc${reset}  ${accent}→${reset} ${desc}Clear Cache${reset}
+  ${command}rr${reset}  ${accent}→${reset} ${desc}Restart Explorer${reset}
+  ${command}ss${reset}  ${accent}→${reset} ${desc}SVG Setup${reset}
+  ${command}ct${reset}  ${accent}→${reset} ${desc}Cursor Theme${reset}
+  ${command}vt${reset}  ${accent}→${reset} ${desc}VS Code Theme${reset}
+  ${command}s1${reset}  ${accent}→${reset} ${desc}SterHUB${reset}
+  ${command}s2${reset}  ${accent}→${reset} ${desc}SterInstaller${reset}
+  ${command}s3${reset}  ${accent}→${reset} ${desc}SterInstaller BAT${reset}
+  ${command}s4${reset}  ${accent}→${reset} ${desc}SterPatcher${reset}
+  ${command}s5${reset}  ${accent}→${reset} ${desc}SterPatcher BAT${reset}
+  ${command}s6${reset}  ${accent}→${reset} ${desc}SterFinder${reset}
+  ${command}s7${reset}  ${accent}→${reset} ${desc}SterFinder GUI${reset}
+  ${command}ws${reset}  ${accent}→${reset} ${desc}Website Source${reset}
+  ${command}cf${reset}  ${accent}→${reset} ${desc}Check Empty Folder${reset}
+  ${command}re${reset}  ${accent}→${reset} ${desc}Renamer${reset}
+  ${command}tb${reset}  ${accent}→${reset} ${desc}Thorium${reset}
+  ${command}ul${reset}  ${accent}→${reset} ${desc}Ultimate${reset}
+
+${dim}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}
+"@
+}
+
+
+$poshTheme = 'C:\Users\o9\.config\ohmyposh\mocha.omp.yaml'
+
+$shouldInitPosh = $false
+if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
+    if (Test-Path $poshTheme) {
+        $shouldInitPosh = $true
+    } else {
+        Write-Warning "oh-my-posh theme not found at $poshTheme."
+    }
+} else {
+    Write-Warning "oh-my-posh is not installed."
+}
+
+$shouldInitZoxide = $false
+if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+    $shouldInitZoxide = $true
+} else {
+    Write-Warning "zoxide is not installed."
+}
+
+# init commands should be at the end of the profile
+if ($shouldInitPosh) {
+    Invoke-Expression (& { (oh-my-posh init pwsh --config $poshTheme | Out-String) })
+}
+if ($shouldInitZoxide) {
+    Invoke-Expression (& { (zoxide init --cmd z powershell | Out-String) })
+}
+
+
+<#
+# Oh My Posh
+# clean.json | cloud.json | cobalt.json | emodipt.json | hul.json | jblab.json | jonnychipz.json | kushal.json | montys.json
+# night.json | shell.json | sitecorian.json | smoothie.json | tea.json | tokyo.json | wholespace.json | diamonds.yaml | zen.toml
+
+oh-my-posh init pwsh --config 'C:\Users\o9\.config\ohmyposh\mocha.omp.yaml' | Invoke-Expression
+
+
+# Zoxide
+if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+    Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
+
+    # Interactive z function using fzf
+    function z {
+        $result = zoxide query -l @args | fzf `
+            --height 40% `
+            --layout reverse `
+            --border `
+            --info inline
+
+        if ($result) {
+            Set-Location $result
+        }
+    }
+}
+else {
+    Write-Host "zoxide command not found. Attempting to install via winget..."
+
+    try {
+        winget install -e --id ajeetdsouza.zoxide
+
+        Invoke-Expression (& { (zoxide init --no-cmd powershell | Out-String) })
+
+        function z {
+            $result = zoxide query -l @args | fzf `
+                --height 40% `
+                --layout reverse `
+                --border `
+                --info inline
+
+            if ($result) {
+                Set-Location $result
+            }
+        }
+
+        Write-Host "✔ zoxide installed and configured"
+    } catch {
+        Write-Error "Failed to install zoxide. Error: $_"
+    }
+}
+
+
+# Color
+$C = $PSStyle.Foreground.Cyan
+$Y = $PSStyle.Foreground.Yellow
+$G = $PSStyle.Foreground.Green
+$M = $PSStyle.Foreground.Magenta
+$D = $PSStyle.Foreground.DarkCyan
+$R = $PSStyle.Reset
 
 
 # Ascii
@@ -1456,10 +1604,8 @@ hhh
 # Install WinGet CommandNotFound module
 #Install-PSResource -Name Microsoft.WinGet.CommandNotFound
 # load WinGet CommandNotFound module
-Import-Module -Name Microsoft.WinGet.CommandNotFound
 
 
-<#
 function prompt {
 	Write-Host -ForegroundColor DarkRed -NoNewLine "["
 	Write-Host -ForegroundColor Yellow -NoNewLine "$env:USERNAME "
