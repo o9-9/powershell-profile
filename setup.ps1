@@ -1,10 +1,16 @@
-if (-Not ($Env:WT_SESSION)) {
-    Write-Host "Use Windows Terminal to Install" -ForegroundColor Red
+if (-not (Get-Command wt.exe -ErrorAction SilentlyContinue)) {
+    winget install --id Microsoft.WindowsTerminal --exact --source winget --accept-package-agreements --accept-source-agreements --silent
+}
+if (-not ($Env:WT_SESSION)) {
+    Start-Process wt.exe "pwsh -NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
     return
 }
 
 if ($PSVersionTable.PSVersion.Major -ne 7) {
-    Write-Host "Use PowerShell 7 to Install" -ForegroundColor Red
+    if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
+        winget install --id Microsoft.PowerShell --source winget --accept-package-agreements --accept-source-agreements --silent
+    }
+    Start-Process pwsh -Verb RunAs -ArgumentList "-NoProfile","-ExecutionPolicy","Bypass","-File","`"$PSCommandPath`""
     return
 }
 
