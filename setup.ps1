@@ -1,86 +1,63 @@
-$Script = Join-Path $env:TEMP setup.ps1
-
-if (-not (Test-Path $Script)) {
-    Invoke-WebRequest https://github.com/o9-9/powershell-profile/raw/main/setup.ps1 -OutFile $Script
-}
-
-if (-not (Get-Command wt.exe -ErrorAction SilentlyContinue)) {
-    winget source reset --force *> $null
-    winget source update *> $null
-    winget install --id Microsoft.WindowsTerminal --exact --source winget --accept-package-agreements --accept-source-agreements --silent
-}
-
-if (-not $Env:WT_SESSION) {
-    Start-Process wt.exe "pwsh -NoProfile -ExecutionPolicy Bypass -File `"$Script`""
+if (-Not ($Env:WT_SESSION)) {
+    Write-Host "Use Windows Terminal to Install" -ForegroundColor Red
     return
-}
-
-if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
-    winget source reset --force *> $null
-    winget source update *> $null
-    winget install --id Microsoft.PowerShell --exact --source winget --accept-package-agreements --accept-source-agreements --silent
-    if (-not (Get-Command pwsh.exe -ErrorAction SilentlyContinue)) {
-        Write-Host "Install PowerShell 7 manually" -ForegroundColor Red
-        return
-    }
 }
 
 if ($PSVersionTable.PSVersion.Major -ne 7) {
-    Start-Process (Get-Command pwsh.exe).Source -Verb RunAs -ArgumentList "-NoProfile","-ExecutionPolicy","Bypass","-File","`"$Script`""
+    Write-Host "Use PowerShell 7 to Install" -ForegroundColor Red
     return
 }
 
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Run Script as Administrator" -ForegroundColor Red
     return
 }
 
-if (-not (Test-Connection 8.8.8.8 -Count 1 -TimeoutSeconds 1 -Quiet)) {
+if (-Not (Test-Connection 8.8.8.8 -Count 1 -TimeoutSeconds 1 -Quiet)) { 
     Write-Host "Activate internet connection" -ForegroundColor Red
     return
 }
 
 if (Test-Path $Profile) {
-    Move-Item $Profile "$Profile.bak" -Force
+    Move-Item -Path $Profile -Destination ($Profile + ".bak")
 } else {
-    New-Item -ItemType File -Path $Profile -Force | Out-Null
+    New-Item -Path $Profile -Force | Out-Null
 }
 
 Write-Host "Profile..." -ForegroundColor Cyan
-Invoke-WebRequest https://github.com/o9-9/powershell-profile/raw/main/Microsoft.PowerShell_profile.ps1 -OutFile $Profile
+Invoke-WebRequest -Uri https://github.com/o9-9/powershell-profile/raw/main/Microsoft.PowerShell_profile.ps1 -OutFile $Profile
 Write-Host "✔ Profile" -ForegroundColor Green
 
 Write-Host "Theme..." -ForegroundColor Cyan
-$ThemeDir = "$env:USERPROFILE\.config\ohmyposh"
-$ThemeFile = Join-Path $ThemeDir mocha.omp.yaml
-if (-not (Test-Path $ThemeFile)) {
-    New-Item -ItemType Directory -Path $ThemeDir -Force | Out-Null
-    Invoke-WebRequest https://github.com/o9-9/powershell-profile/raw/main/ohmyposh/mocha.omp.yaml -OutFile $ThemeFile
+$themeDir = "$env:USERPROFILE\.config\ohmyposh"
+$themeFile = Join-Path $themeDir "mocha.omp.yaml"
+if (-not (Test-Path $themeFile)) {
+    New-Item -ItemType Directory -Path $themeDir -Force | Out-Null
+    Invoke-WebRequest -Uri "https://github.com/o9-9/powershell-profile/raw/main/ohmyposh/mocha.omp.yaml" -OutFile $themeFile
 }
 Write-Host "✔ Theme" -ForegroundColor Green
 
 Write-Host "Fonts..." -ForegroundColor Cyan
-$Zip = Join-Path $env:TEMP fonts.zip
-$Dir = Join-Path $env:TEMP fonts
-Invoke-WebRequest https://raw.githubusercontent.com/o9-9/powershell-profile/main/stuff/fonts.zip -OutFile $Zip
-Expand-Archive $Zip $Dir -Force
-Get-ChildItem $Dir -Filter *.ttf | ForEach-Object {
-    (New-Object -ComObject Shell.Application).Namespace(0x14).CopyHere($_.FullName)
-    Write-Host "✔ Font $($_.Name)" -ForegroundColor Green
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/o9-9/powershell-profile/main/stuff/fonts.zip" -OutFile "$env:TEMP\fonts.zip"
+Expand-Archive -Path fonts.zip
+Get-ChildItem fonts -Filter *.ttf | ForEach-Object {
+    ((New-Object -ComObject Shell.Application).Namespace(0x14)).CopyHere($_.FullName)
+    Write-Host -ForegroundColor Green "✔ Font $(Split-Path $_ -Leaf)"
 }
-Remove-Item $Zip,$Dir -Recurse -Force
+Remove-Item -Path fonts.zip
+Remove-Item -Path fonts -Recurse
 
 Write-Host "Dependencies..." -ForegroundColor Cyan
-Install-PackageProvider NuGet -Force -ErrorAction SilentlyContinue | Out-Null
-Install-Module Terminal-Icons -Force
+Install-PackageProvider -Name NuGet -Force -ErrorAction SilentlyContinue | Out-Null
+Install-Module -Name Terminal-Icons -Force
 Write-Host "✔ Dependencies" -ForegroundColor Green
 
 Write-Host "Oh My Posh..." -ForegroundColor Cyan
-winget install --id JanDeDobbeleer.OhMyPosh --exact --source winget --accept-package-agreements --accept-source-agreements --silent
+winget install JanDeDobbeleer.OhMyPosh --source winget --silent
 Write-Host "✔ Oh My Posh" -ForegroundColor Green
 
 Write-Host "Zoxide..." -ForegroundColor Cyan
-winget install --id ajeetdsouza.zoxide --exact --source winget --accept-package-agreements --accept-source-agreements --silent
+winget install ajeetdsouza.zoxide --source winget --silent
 Write-Host "✔ Zoxide" -ForegroundColor Green
 
 Write-Host "✔ Complete" -ForegroundColor Green
