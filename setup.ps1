@@ -29,11 +29,16 @@ Invoke-WebRequest -Uri https://github.com/o9-9/powershell-profile/raw/main/Micro
 Write-Host "✔ Profile" -ForegroundColor Green
 
 Write-Host "Theme..." -ForegroundColor Cyan
-Invoke-WebRequest -Uri https://github.com/o9-9/powershell-profile/raw/main/ohmyposh/zen.toml -OutFile (Split-Path $Profile)
+$themeDir = "$env:USERPROFILE\.config\ohmyposh"
+$themeFile = Join-Path $themeDir "mocha.omp.yaml"
+if (-not (Test-Path $themeFile)) {
+    New-Item -ItemType Directory -Path $themeDir -Force | Out-Null
+    Invoke-WebRequest -Uri "https://github.com/o9-9/powershell-profile/raw/main/ohmyposh/mocha.omp.yaml" -OutFile $themeFile
+}
 Write-Host "✔ Theme" -ForegroundColor Green
 
 Write-Host "Fonts..." -ForegroundColor Cyan
-Invoke-WebRequest -Uri https://github.com/o9-9/powershell-profile/stuff/fonts.zip -OutFile fonts.zip
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/o9-9/powershell-profile/main/stuff/fonts.zip" -OutFile "$env:TEMP\fonts.zip"
 Expand-Archive -Path fonts.zip
 Get-ChildItem fonts -Filter *.ttf | ForEach-Object {
     ((New-Object -ComObject Shell.Application).Namespace(0x14)).CopyHere($_.FullName)
